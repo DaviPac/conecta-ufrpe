@@ -10,11 +10,15 @@ export class SigaaService {
   private jsessionid: WritableSignal<string> = signal("")
   private viewState: WritableSignal<string> = signal("")
 
-  private turmas: WritableSignal<Turma[]> = signal([])
-  private nome: WritableSignal<string> = signal("")
-  private avaliacoes: WritableSignal<Avaliacao[]> = signal([])
-  private cargaHoraria: WritableSignal<CargaHoraria | null> = signal(null)
-  private indices: WritableSignal<IndicesAcademicos | null> = signal(null)
+  turmas: WritableSignal<Turma[]> = signal([])
+  nome: WritableSignal<string> = signal("")
+  avaliacoes: WritableSignal<Avaliacao[]> = signal([])
+  cargaHoraria: WritableSignal<CargaHoraria | null> = signal(null)
+  indices: WritableSignal<IndicesAcademicos | null> = signal(null)
+
+  isAuthenticated() {
+    return this.jsessionid().length > 0 && this.viewState().length > 0
+  }
 
   async login(username: string, password: string) {
     const headers: HeadersInit = {

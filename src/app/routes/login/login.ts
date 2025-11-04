@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { SigaaService } from '../../services/sigaaService/sigaa.service'
+import { Router } from '@angular/router'
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,7 @@ export class Login {
   loading = signal(false)
   error = signal('')
   sucesso = signal(false)
+  private router: Router = inject(Router)
   private sigaaService: SigaaService = inject(SigaaService)
 
   async onSubmit() {
@@ -30,6 +32,7 @@ export class Login {
       console.log('Login OK! JSESSIONID:', jsessionid)
 
       await this.sigaaService.fetchMainData()
+      this.router.navigate(['/'])
 
       this.sucesso.set(true)
     } catch (err: any) {
