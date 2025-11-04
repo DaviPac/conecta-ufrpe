@@ -4,6 +4,7 @@ import {
   CargaHoraria,
   IndicesAcademicos,
   MainDataResponse,
+  NotasResponse,
   Turma,
   TurmaDetailResponse,
 } from '../../models/sigaa.models';
@@ -74,6 +75,41 @@ export class SigaaService {
     this.fetchTurmas();
   }
 
+  async fetchNotas() {
+    if (!this.jsessionid().length || !this.viewState().length)
+      throw new Error('jsessionid ou viewstate inválidos');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + this.jsessionid(),
+    };
+    const res = await fetch(`${this.domain}/notas`, {
+      method: 'POST',
+      body: JSON.stringify({ viewState: this.viewState() }),
+      headers: headers,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'erro ao buscar turma');
+    const notasData = data as NotasResponse
+    console.log(data)
+    this.turmas.update(prev => {
+      notasData.notas.forEach(n => {
+        if (!n) return
+        const turma = prev.find(t => t.nome === n?.nome)
+        if (turma) {
+          turma.notas = n
+        }
+        if (turma && turma.nome === this.currentTurma()?.nome)
+          this.currentTurma.update(prevT => {
+          if (prevT) prevT.notas = n
+          return prevT
+        });
+      })
+      return prev
+    })
+    this.jsessionid.set(notasData.jsessionid)
+    this.viewState.set(notasData.viewState)
+  }
+
   async getCalendarioUrl(): Promise<string> {
     if (this.calendarioUrl()) return this.calendarioUrl()!;
     const res = await fetch(`${this.domain}/calendario/url`);
@@ -111,6 +147,7 @@ export class SigaaService {
   }
 
   async fetchTurmas() {
+    await this.fetchNotas()
     for (const turma of this.turmas()) {
       await this.getTurmaDetail(turma);
     }

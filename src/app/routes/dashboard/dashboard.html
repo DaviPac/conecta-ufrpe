@@ -1,7 +1,7 @@
 <div class="bg-gray-50 dark:bg-gray-900 min-h-screen p-4 md:p-8 transition-colors duration-300">
   <div class="max-w-4xl mx-auto">
     <h1
-      class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 pb-3 border-b border-gray-200 dark:border-gray-700"
+      class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 pb-3 border-b border-gray-200 dark:border-gray-700"
     >
       {{ nome() }}
     </h1>
@@ -9,10 +9,10 @@
     <div class="space-y-4">
       @for (turma of turmas(); track turma.nome) {
         <div
-          class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-5 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-500"
+          class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-3 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-500"
           (click)="openTurma(turma)"
         >
-          <h2 class="text-xl font-semibold text-blue-700 dark:text-blue-400 mb-3">
+          <h2 class="text-md font-semibold text-blue-700 dark:text-blue-400 mb-3">
             {{ turma.nome }}
           </h2>
 
