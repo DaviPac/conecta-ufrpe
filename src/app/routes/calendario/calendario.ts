@@ -20,7 +20,7 @@ export class Calendario implements OnInit {
   async ngOnInit() {
     try {
       this.iframeLoading.set(true)
-      const rawUrl = await this.sigaaService.getCalendarioUrl();
+      const rawUrl = this.sigaaService.getCalendarioUrl();
       if (rawUrl) {
         const viewer = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(rawUrl)}`;
         this.calendarioUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(viewer));

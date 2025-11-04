@@ -25,7 +25,6 @@ export class SigaaService {
   avaliacoes: WritableSignal<Avaliacao[]> = signal([]);
   cargaHoraria: WritableSignal<CargaHoraria | null> = signal(null);
   indices: WritableSignal<IndicesAcademicos | null> = signal(null);
-  calendarioUrl: WritableSignal<string | null> = signal(null);
   currentTurma: WritableSignal<Turma | null> = signal(null);
 
   constructor() {
@@ -48,7 +47,6 @@ export class SigaaService {
     this.avaliacoes.set([])
     this.cargaHoraria.set(null)
     this.indices.set(null)
-    this.calendarioUrl.set(null)
     this.currentTurma.set(null)
     this.viewState.set('')
     this.currentTurma.set(null)
@@ -151,12 +149,7 @@ export class SigaaService {
     localStorage.setItem("viewState", notasData.viewState)
   }
 
-  async getCalendarioUrl(): Promise<string> {
-    if (this.calendarioUrl()) return this.calendarioUrl()!;
-    const res = await fetch(`${this.domain}/calendario/url`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'erro ao buscar url do calendario');
-    this.calendarioUrl.set(`${this.domain}/calendario`);
+  getCalendarioUrl(): string {
     return `${this.domain}/calendario`;
   }
 
