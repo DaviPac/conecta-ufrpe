@@ -107,6 +107,8 @@ export class SigaaService {
       const error = e as Error
       localStorage.removeItem('jsessionid')
       localStorage.removeItem('viewState')
+      this.jsessionid.set('')
+      this.viewState.set('')
       alert(error.message)
       this.router.navigate(['/login'])
     }
