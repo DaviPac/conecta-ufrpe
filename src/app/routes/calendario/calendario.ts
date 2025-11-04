@@ -13,6 +13,9 @@ export class Calendario implements OnInit {
 
   calendarioUrl: WritableSignal<SafeResourceUrl | null> = signal(null);
   carregando = signal(true);
+  iframeLoading: WritableSignal<boolean> = signal(true);
+
+  onIframeLoad = () => this.iframeLoading.set(false)
 
   async ngOnInit() {
     try {
