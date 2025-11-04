@@ -1,0 +1,22 @@
+<div class="login-container">
+  <h2>Login SIGAA</h2>
+
+  <form (submit)="onSubmit(); $event.preventDefault()">
+    <label>
+      Usuário:
+      <input type="text" [value]="username()" (input)="username.set($any($event.target).value)">
+    </label>
+
+    <label>
+      Senha:
+      <input type="password" [value]="password()" (input)="password.set($any($event.target).value)">
+    </label>
+
+    <button type="submit" [disabled]="loading()">
+      {{ loading() ? 'Entrando...' : 'Entrar' }}
+    </button>
+  </form>
+
+  <p *ngIf="error()" style="color: red;">{{ error() }}</p>
+  <p *ngIf="sucesso()" style="color: green;">Login realizado com sucesso!</p>
+</div>
