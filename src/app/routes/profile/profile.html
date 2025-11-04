@@ -1,20 +1,27 @@
-<section class="rounded-lg bg-white p-6 shadow-lg">
-  <h2 class="mb-6 text-2xl font-bold text-gray-800">
+<section
+  class="rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800 transition-colors duration-300"
+>
+  <h2
+    class="mb-6 text-2xl font-bold text-gray-800 dark:text-gray-100"
+  >
     Progresso da Carga Horária
   </h2>
 
-  <!-- Barra de Progresso Total -->
   <div>
     <div class="mb-2 flex justify-between">
-      <span class="text-base font-bold text-indigo-700">Progresso Total</span>
-      <span class="text-base font-bold text-indigo-700">
+      <span class="text-base font-bold text-indigo-700 dark:text-indigo-400">
+        Progresso Total
+      </span>
+      <span class="text-base font-bold text-indigo-700 dark:text-indigo-400">
         {{ percentual | number : '1.1-1' }}%
       </span>
     </div>
 
-    <div class="mb-2 h-4 w-full rounded-full bg-gray-200 shadow-inner">
+    <div
+      class="mb-2 h-4 w-full rounded-full bg-gray-200 dark:bg-gray-700 shadow-inner"
+    >
       <div
-        class="h-4 rounded-full bg-indigo-600 transition-all duration-500 ease-out"
+        class="h-4 rounded-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-500 ease-out"
         [style.width.%]="percentual"
         role="progressbar"
         [attr.aria-valuenow]="percentual"
@@ -23,28 +30,70 @@
       ></div>
     </div>
 
-    <div class="flex justify-between text-sm font-medium text-gray-500">
+    <div
+      class="flex justify-between text-sm font-medium text-gray-500 dark:text-gray-400"
+    >
       <span>{{ totalConcluido | number : '1.0-0' }}h Concluídas</span>
       <span>{{ total | number : '1.0-0' }}h Totais</span>
     </div>
   </div>
 
-  <hr class="my-6 border-t border-gray-200" />
+  <hr class="my-6 border-t border-gray-200 dark:border-gray-700" />
 
   <!-- Detalhes Pendentes -->
   <div>
-    <h3 class="mb-4 text-lg font-semibold text-gray-700">Horas Pendentes</h3>
+    <h3 class="mb-4 text-lg font-semibold text-gray-700 dark:text-gray-200">
+      Horas Pendentes
+    </h3>
     <div class="space-y-2">
       @for (item of pendingItemsData; track item.label) {
         <div
-        class="flex justify-between items-baseline border-b border-gray-100 py-3"
+          class="flex justify-between items-baseline border-b border-gray-100 dark:border-gray-700 py-3"
         >
-            <span class="text-sm font-medium text-gray-600">{{ item.label }}</span>
-            <span class="text-lg font-semibold text-orange-600">
+          <span class="text-sm font-medium text-gray-600 dark:text-gray-300">
+            {{ item.label }}
+          </span>
+          <span class="text-lg font-semibold text-orange-600 dark:text-orange-400">
             {{ item.horas }}h
-            </span>
+          </span>
         </div>
       }
     </div>
   </div>
 </section>
+
+<div
+  class="p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-md max-w-md mx-auto transition-colors duration-300"
+>
+  <h2
+    class="text-xl font-semibold mb-4 text-center text-gray-700 dark:text-gray-100"
+  >
+    Índices Acadêmicos
+  </h2>
+
+  <div class="grid grid-cols-2 gap-3 text-sm">
+    <div class="font-medium text-gray-600 dark:text-gray-300">MC:</div>
+    <div class="text-gray-800 dark:text-gray-100">{{ indices?.mc }}</div>
+
+    <div class="font-medium text-gray-600 dark:text-gray-300">IRA:</div>
+    <div class="text-gray-800 dark:text-gray-100">{{ indices?.ira }}</div>
+
+    <div class="font-medium text-gray-600 dark:text-gray-300">MCN:</div>
+    <div class="text-gray-800 dark:text-gray-100">{{ indices?.mcn }}</div>
+
+    <div class="font-medium text-gray-600 dark:text-gray-300">IECH:</div>
+    <div class="text-gray-800 dark:text-gray-100">{{ indices?.iech }}</div>
+
+    <div class="font-medium text-gray-600 dark:text-gray-300">IEPL:</div>
+    <div class="text-gray-800 dark:text-gray-100">{{ indices?.iepl }}</div>
+
+    <div class="font-medium text-gray-600 dark:text-gray-300">IEA:</div>
+    <div class="text-gray-800 dark:text-gray-100">{{ indices?.iea }}</div>
+
+    <div class="font-medium text-gray-600 dark:text-gray-300">IEAN:</div>
+    <div class="text-gray-800 dark:text-gray-100">{{ indices?.iean }}</div>
+
+    <div class="font-medium text-gray-600 dark:text-gray-300">IECHP:</div>
+    <div class="text-gray-800 dark:text-gray-100">{{ indices?.iechp }}</div>
+  </div>
+</div>

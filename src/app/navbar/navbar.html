@@ -40,7 +40,7 @@
               </a>
 
               <a
-                [routerLink]="['/']"
+                [routerLink]="['/profile']"
                 routerLinkActive="text-blue-600 font-bold bg-blue-50 dark:text-blue-400 dark:bg-gray-800"
                 class="flex items-center gap-2 text-gray-500 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
               >
@@ -59,7 +59,7 @@
                   <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
                   <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
-                Meus Grupos
+                Meus dados
               </a>
             </div>
           </div>
@@ -125,7 +125,7 @@
               [routerLink]="['/']"
               class="text-2xl font-bold text-blue-600 dark:text-blue-500 cursor-pointer"
             >
-              SmartFinance
+              Sigaa
             </a>
           </div>
         </div>
@@ -163,34 +163,6 @@
           <path d="M9 21V9" />
         </svg>
         <span class="text-xs font-medium">Home</span>
-      </a>
-
-      <a
-        [routerLink]="['/']"
-        routerLinkActive
-        #rlaGroups="routerLinkActive"
-        class="flex flex-col items-center justify-center hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-        [class.text-blue-600]="rlaGroups.isActive"
-        [class.dark:text-blue-400]="rlaGroups.isActive"
-        [class.text-gray-500]="!rlaGroups.isActive"
-        [class.dark:text-gray-300]="!rlaGroups.isActive"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="w-6 h-6"
-        >
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-        <span class="text-xs font-medium">Grupos</span>
       </a>
 
       <a
@@ -234,7 +206,7 @@
               [routerLink]="['/']"
               class="text-2xl font-bold text-blue-600 dark:text-blue-500 cursor-pointer"
             >
-              SmartFinance
+              Sigaa
             </a>
           </div>
         </div>
