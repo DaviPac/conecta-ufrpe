@@ -1,7 +1,8 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { formatarHorarios, parseFaltas } from '../../utils/formatters';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-turma-detalhes',
@@ -9,13 +10,18 @@ import { SigaaService } from '../../services/sigaaService/sigaa.service';
   imports: [CommonModule],
   templateUrl: './turma-detail.html',
 })
-export class TurmaDetail {
+export class TurmaDetail implements OnInit {
   private sigaaService: SigaaService = inject(SigaaService);
+  private router: Router = inject(Router)
   turma = this.sigaaService.currentTurma;
   avaliacoes = this.sigaaService.avaliacoes;
   formatarHorarios = formatarHorarios;
   parseFaltas = parseFaltas;
   Number = Number
+
+  ngOnInit(): void {
+      if (!this.sigaaService.currentTurma()) this.router.navigate(['/'])
+  }
 
   avaliacoesDaTurma = computed(() => {
     const turmaAtual = this.turma();

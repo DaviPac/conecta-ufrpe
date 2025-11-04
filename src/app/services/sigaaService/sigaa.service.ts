@@ -1,4 +1,4 @@
-import { Injectable, WritableSignal, signal } from '@angular/core';
+import { Injectable, WritableSignal, inject, signal } from '@angular/core';
 import {
   Avaliacao,
   CargaHoraria,
@@ -8,6 +8,7 @@ import {
   Turma,
   TurmaDetailResponse,
 } from '../../models/sigaa.models';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
@@ -17,6 +18,8 @@ export class SigaaService {
   private jsessionid: WritableSignal<string> = signal('');
   private viewState: WritableSignal<string> = signal('');
 
+  private router: Router = inject(Router)
+
   turmas: WritableSignal<Turma[]> = signal([]);
   nome: WritableSignal<string> = signal('');
   avaliacoes: WritableSignal<Avaliacao[]> = signal([]);
@@ -25,8 +28,33 @@ export class SigaaService {
   calendarioUrl: WritableSignal<string | null> = signal(null);
   currentTurma: WritableSignal<Turma | null> = signal(null);
 
+  constructor() {
+    const jsessionid = localStorage.getItem("jsessionid")
+    const viewState = localStorage.getItem("viewState")
+    if (jsessionid && viewState) {
+      this.jsessionid.set(jsessionid)
+      this.viewState.set(viewState)
+    }
+    if (this.jsessionid().length && this.viewState().length) this.fetchMainData()
+  }
+
   isAuthenticated() {
     return this.jsessionid().length > 0 && this.viewState().length > 0;
+  }
+
+  logout() {
+    this.turmas.set([])
+    this.nome.set('')
+    this.avaliacoes.set([])
+    this.cargaHoraria.set(null)
+    this.indices.set(null)
+    this.calendarioUrl.set(null)
+    this.currentTurma.set(null)
+    this.viewState.set('')
+    this.currentTurma.set(null)
+    this.jsessionid.set('')
+    localStorage.clear()
+    this.router.navigate(['/login'])
   }
 
   async login(username: string, password: string) {
@@ -45,34 +73,45 @@ export class SigaaService {
       throw new Error(data.error || 'Erro desconhecido na API');
     }
     this.jsessionid.set(data.jsessionid);
+    localStorage.setItem("jsessionid", data.jsessionid)
     return data.jsessionid;
   }
 
   async fetchMainData() {
-    if (!this.jsessionid().length) throw new Error('jsessionid inválido');
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + this.jsessionid(),
-    };
-    const res = await fetch(`${this.domain}/main-data`, {
-      headers: headers,
-    });
-    const data = await res.json();
-    console.log('fetch main data:');
-    console.log(data);
+    try {
+      if (!this.jsessionid().length) throw new Error('jsessionid inválido');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + this.jsessionid(),
+      };
+      const res = await fetch(`${this.domain}/main-data`, {
+        headers: headers,
+      });
+      const data = await res.json();
+      console.log('fetch main data:');
+      console.log(data);
 
-    if (!res.ok || !data.jsessionid) {
-      throw new Error(data.error || 'Erro desconhecido na API');
+      if (!res.ok || !data.jsessionid) {
+        throw new Error(data.error || 'Erro desconhecido na API');
+      }
+      const mainDataRes = data as MainDataResponse;
+      this.avaliacoes.set(mainDataRes.avaliacoes);
+      this.cargaHoraria.set(mainDataRes.cargaHoraria);
+      this.indices.set(mainDataRes.indices);
+      this.jsessionid.set(mainDataRes.jsessionid);
+      localStorage.setItem("jsessionid", mainDataRes.jsessionid)
+      this.nome.set(mainDataRes.nome);
+      this.turmas.set(mainDataRes.turmas);
+      this.viewState.set(mainDataRes.viewState);
+      localStorage.setItem("viewState", mainDataRes.viewState)
+      this.fetchTurmas();
+    } catch (e) {
+      const error = e as Error
+      localStorage.removeItem('jsessionid')
+      localStorage.removeItem('viewState')
+      alert(error.message)
+      this.router.navigate(['/login'])
     }
-    const mainDataRes = data as MainDataResponse;
-    this.avaliacoes.set(mainDataRes.avaliacoes);
-    this.cargaHoraria.set(mainDataRes.cargaHoraria);
-    this.indices.set(mainDataRes.indices);
-    this.jsessionid.set(mainDataRes.jsessionid);
-    this.nome.set(mainDataRes.nome);
-    this.turmas.set(mainDataRes.turmas);
-    this.viewState.set(mainDataRes.viewState);
-    this.fetchTurmas();
   }
 
   async fetchNotas() {
@@ -107,7 +146,9 @@ export class SigaaService {
       return prev
     })
     this.jsessionid.set(notasData.jsessionid)
+    localStorage.setItem("jsessionid", notasData.jsessionid)
     this.viewState.set(notasData.viewState)
+    localStorage.setItem("viewState", notasData.viewState)
   }
 
   async getCalendarioUrl(): Promise<string> {
@@ -115,8 +156,8 @@ export class SigaaService {
     const res = await fetch(`${this.domain}/calendario/url`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'erro ao buscar url do calendario');
-    this.calendarioUrl.set(data.url);
-    return data.url;
+    this.calendarioUrl.set(`${this.domain}/calendario`);
+    return `${this.domain}/calendario`;
   }
 
   async getTurmaDetail(turma: Turma) {
@@ -143,7 +184,9 @@ export class SigaaService {
       return prev;
     });
     this.jsessionid.set(turmaData.jsessionid);
+    localStorage.setItem("jsessionid", turmaData.jsessionid)
     this.viewState.set(turmaData.viewState);
+    localStorage.setItem("viewState", turmaData.viewState)
   }
 
   async fetchTurmas() {

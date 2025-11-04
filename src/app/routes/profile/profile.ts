@@ -13,6 +13,10 @@ export class Profile {
   carga = this.sigaaService.cargaHoraria();
   indices = this.sigaaService.indices();
 
+  onLogout() {
+    this.sigaaService.logout()
+  }
+
   get total(): number {
     return parseFloat(this.carga?.totalCurriculo || '0') || 0;
   }

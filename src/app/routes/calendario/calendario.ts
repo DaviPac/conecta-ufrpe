@@ -22,7 +22,7 @@ export class Calendario implements OnInit {
       this.iframeLoading.set(true)
       const rawUrl = await this.sigaaService.getCalendarioUrl();
       if (rawUrl) {
-        const viewer = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(rawUrl)}`;
+        const viewer = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(rawUrl)}`;
         this.calendarioUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(viewer));
       }
     } catch (err) {
