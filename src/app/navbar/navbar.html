@@ -1,0 +1,244 @@
+@if (isAuthenticated()) {
+  <nav
+    class="bg-white dark:bg-gray-900 shadow-md dark:border-b dark:border-gray-700 fixed top-0 left-0 right-0 z-50 hidden md:block"
+  >
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <a
+              [routerLink]="['/']"
+              class="text-2xl font-bold text-blue-600 dark:text-blue-500 cursor-pointer"
+            >
+              Sigaa
+            </a>
+          </div>
+
+          <div class="hidden md:block">
+            <div class="ml-10 flex items-baseline space-x-4">
+              <a
+                [routerLink]="['/']"
+                [routerLinkActiveOptions]="{ exact: true }"
+                routerLinkActive="text-blue-600 font-bold bg-blue-50 dark:text-blue-400 dark:bg-gray-800"
+                class="flex items-center gap-2 text-gray-500 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="w-5 h-5"
+                >
+                  <rect width="18" height="18" x="3" y="3" rx="2" />
+                  <path d="M3 9h18" />
+                  <path d="M9 21V9" />
+                </svg>
+                Home
+              </a>
+
+              <a
+                [routerLink]="['/']"
+                routerLinkActive="text-blue-600 font-bold bg-blue-50 dark:text-blue-400 dark:bg-gray-800"
+                class="flex items-center gap-2 text-gray-500 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="w-5 h-5"
+                >
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                Meus Grupos
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="hidden md:block">
+          <div class="ml-4 flex items-center md:ml-6 gap-3">
+            <button
+              class="flex items-center justify-center h-8 w-8 rounded-full bg-blue-500 text-white font-semibold text-sm"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-user-icon lucide-user"
+              >
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </button>
+
+            <button
+              (click)="logout()"
+              class="p-1 rounded-full text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-500"
+              title="Sair"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="w-5 h-5"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" x2="9" y1="12" y2="12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        </div>
+    </div>
+  </nav>
+
+  <nav
+    class="bg-white dark:bg-gray-900 shadow-md dark:border-b dark:border-gray-700 top-0 left-0 right-0 md:hidden -mb-16"
+  >
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <a
+              [routerLink]="['/']"
+              class="text-2xl font-bold text-blue-600 dark:text-blue-500 cursor-pointer"
+            >
+              SmartFinance
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <nav
+    class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700"
+  >
+    <div class="flex justify-around items-center h-16 max-w-7xl mx-auto px-4">
+      <a
+        [routerLink]="['/']"
+        [routerLinkActiveOptions]="{ exact: true }"
+        routerLinkActive
+        #rlaHome="routerLinkActive"
+        class="flex flex-col items-center justify-center hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+        [class.text-blue-600]="rlaHome.isActive"
+        [class.dark:text-blue-400]="rlaHome.isActive"
+        [class.text-gray-500]="!rlaHome.isActive"
+        [class.dark:text-gray-300]="!rlaHome.isActive"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="w-6 h-6"
+        >
+          <rect width="18" height="18" x="3" y="3" rx="2" />
+          <path d="M3 9h18" />
+          <path d="M9 21V9" />
+        </svg>
+        <span class="text-xs font-medium">Home</span>
+      </a>
+
+      <a
+        [routerLink]="['/']"
+        routerLinkActive
+        #rlaGroups="routerLinkActive"
+        class="flex flex-col items-center justify-center hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+        [class.text-blue-600]="rlaGroups.isActive"
+        [class.dark:text-blue-400]="rlaGroups.isActive"
+        [class.text-gray-500]="!rlaGroups.isActive"
+        [class.dark:text-gray-300]="!rlaGroups.isActive"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="w-6 h-6"
+        >
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+        <span class="text-xs font-medium">Grupos</span>
+      </a>
+
+      <a
+        [routerLink]="['/profile']"
+        routerLinkActive
+        #rlaProfile="routerLinkActive"
+        class="flex flex-col items-center justify-center hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+        [class.text-blue-600]="rlaProfile.isActive"
+        [class.dark:text-blue-400]="rlaProfile.isActive"
+        [class.text-gray-500]="!rlaProfile.isActive"
+        [class.dark:text-gray-300]="!rlaProfile.isActive"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="w-6 h-6"
+        >
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        <span class="text-xs font-medium">Perfil</span>
+      </a>
+    </div>
+  </nav>
+} @else {
+  <nav
+    class="bg-white dark:bg-gray-900 shadow-md dark:border-b dark:border-gray-700 fixed top-0 left-0 right-0 z-50"
+  >
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <a
+              [routerLink]="['/']"
+              class="text-2xl font-bold text-blue-600 dark:text-blue-500 cursor-pointer"
+            >
+              SmartFinance
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+}
