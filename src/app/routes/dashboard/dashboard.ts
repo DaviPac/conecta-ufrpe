@@ -9,8 +9,8 @@ import { formatarHorarios } from '../../utils/formatters';
   styleUrl: './dashboard.scss',
 })
 export class Dashboard {
-  private sigaaService: SigaaService = inject(SigaaService)
-  turmas = this.sigaaService.turmas
-  nome = this.sigaaService.nome
-  formatarHorarios = formatarHorarios
+  private sigaaService: SigaaService = inject(SigaaService);
+  turmas = this.sigaaService.turmas;
+  nome = this.sigaaService.nome;
+  formatarHorarios = formatarHorarios;
 }

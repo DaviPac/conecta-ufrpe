@@ -9,9 +9,9 @@ import { DecimalPipe } from '@angular/common';
   styleUrl: './profile.scss',
 })
 export class Profile {
-  private sigaaService: SigaaService = inject(SigaaService)
-  carga = this.sigaaService.cargaHoraria()
-  indices = this.sigaaService.indices()
+  private sigaaService: SigaaService = inject(SigaaService);
+  carga = this.sigaaService.cargaHoraria();
+  indices = this.sigaaService.indices();
 
   get total(): number {
     return parseFloat(this.carga?.totalCurriculo || '0') || 0;

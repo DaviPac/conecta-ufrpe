@@ -1,13 +1,16 @@
-import { Notas } from "../models/sigaa.models";
+import { Notas } from '../models/sigaa.models';
 
 /**
  * Converte o código de faltas em texto legível.
  */
 export function parseFaltas(faltas: number): string | number {
   switch (faltas) {
-    case -2: return "carregando...";
-    case -1: return "não lançada";
-    default: return faltas;
+    case -2:
+      return 'carregando...';
+    case -1:
+      return 'não lançada';
+    default:
+      return faltas;
   }
 }
 
@@ -16,18 +19,16 @@ export function parseFaltas(faltas: number): string | number {
  */
 export function formatarNotas(notasObj: Notas | null | undefined): string {
   if (notasObj === null || notasObj === undefined || !notasObj.notas) {
-    return "carregando...";
+    return 'carregando...';
   }
-  
+
   const entries = Object.entries(notasObj.notas);
-  
+
   if (entries.length === 0) {
-    return "Nenhuma nota lançada";
+    return 'Nenhuma nota lançada';
   }
-  
-  return entries
-    .map(([key, value]) => `${key}: ${value}`)
-    .join(', ');
+
+  return entries.map(([key, value]) => `${key}: ${value}`).join(', ');
 }
 
 // Em ../utils/formatters.ts
@@ -43,15 +44,14 @@ const diasMap: Record<string, string> = {
 };
 
 const turnoMap: Record<string, string> = {
-  'M': 'Manhã',
-  'T': 'Tarde',
-  'N': 'Noite',
+  M: 'Manhã',
+  T: 'Tarde',
+  N: 'Noite',
 };
 
 // --- (Seus imports e funções parseFaltas/formatarNotas existentes) ---
 // ...
 // ...
-
 
 // ===================================================================
 //          INÍCIO DA LÓGICA DE FORMATAÇÃO DE HORÁRIOS
@@ -71,21 +71,21 @@ interface HorarioDetalhado {
  * 'T3' => Tarde, 3º horário
  */
 const horariosMap: Record<string, Record<string, HorarioDetalhado>> = {
-  'M': {
+  M: {
     '1': { start: '08:00', end: '08:50' },
     '2': { start: '09:00', end: '09:50' },
     '3': { start: '10:00', end: '10:50' },
     '4': { start: '11:00', end: '11:50' },
     '5': { start: '12:00', end: '12:50' },
   },
-  'T': {
+  T: {
     '1': { start: '13:00', end: '14:00' },
     '2': { start: '14:00', end: '15:00' },
     '3': { start: '15:00', end: '16:00' },
     '4': { start: '16:00', end: '17:00' },
     '5': { start: '17:00', end: '18:00' },
   },
-  'N': {
+  N: {
     '1': { start: '19:00', end: '19:50' },
     '2': { start: '20:00', end: '20:50' },
     '3': { start: '21:00', end: '21:50' },
@@ -110,11 +110,11 @@ function parseHorarioString(horarioStr: string): string {
   // Formata os dias: "24" -> "Seg, Qua"
   const diasFormatados = diasStr
     .split('')
-    .map(dia => diasMap[dia] || '?')
+    .map((dia) => diasMap[dia] || '?')
     .join(', ');
 
   // --- Lógica de busca de horário ---
-  
+
   // Pega o primeiro e o último período. Ex: "345" -> '3' e '5'
   const primeiroPeriodo = horasStr[0];
   const ultimoPeriodo = horasStr[horasStr.length - 1];
@@ -133,7 +133,7 @@ function parseHorarioString(horarioStr: string): string {
   // Se falhar, retorna o formato antigo (Ex: "Seg, Qua Tarde (3, 4)")
   const turnoFormatado = turnoMap[turnoStr] || '?';
   const horasFormatadas = horasStr.split('').join(', ');
-  
+
   return `${diasFormatados} ${turnoFormatado} (${horasFormatadas})`;
 }
 
@@ -155,16 +155,16 @@ export function formatarHorarios(horarios: string[] | undefined | null): string 
 // ===================================================================
 
 export function parseDataHora(str: string): Date {
-  const limpo = str.replace(/\s*\(.*\)\s*/g, "").trim();
-  const [dataStr, horaStr] = limpo.split(" ");
+  const limpo = str.replace(/\s*\(.*\)\s*/g, '').trim();
+  const [dataStr, horaStr] = limpo.split(' ');
 
-  const [dia, mes, ano] = dataStr.split("/").map(Number);
+  const [dia, mes, ano] = dataStr.split('/').map(Number);
 
   let hora = 0;
   let minuto = 0;
 
   if (horaStr) {
-    [hora, minuto] = horaStr.split(":").map(Number);
+    [hora, minuto] = horaStr.split(':').map(Number);
   }
 
   return new Date(ano, mes - 1, dia, hora, minuto);

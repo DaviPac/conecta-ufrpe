@@ -4,11 +4,9 @@ import { SigaaService } from '../services/sigaaService/sigaa.service';
 
 @Component({
   selector: 'app-navbar',
-  imports: [
-    RouterModule
-  ],
+  imports: [RouterModule],
   templateUrl: './navbar.html',
-  styleUrl: './navbar.scss'
+  styleUrl: './navbar.scss',
 })
 export class Navbar {
   private router = inject(Router);
@@ -17,9 +15,9 @@ export class Navbar {
   isMobileMenuOpen = signal<boolean>(false);
 
   toggleMobileMenu() {
-    this.isMobileMenuOpen.update(value => !value);
+    this.isMobileMenuOpen.update((value) => !value);
   }
-  
+
   async navigate(route: string) {
     await this.router.navigate([route]);
     this.isMobileMenuOpen.set(false);
@@ -35,7 +33,6 @@ export class Navbar {
   }
 
   isAuthenticated() {
-    return this.sigaaService.isAuthenticated()
+    return this.sigaaService.isAuthenticated();
   }
-
 }

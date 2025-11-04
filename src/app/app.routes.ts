@@ -5,7 +5,7 @@ import { authGuard } from './guards/auth-guard';
 import { Profile } from './routes/profile/profile';
 
 export const routes: Routes = [
-    { path: 'login', component: Login },
-    { path: '', component: Dashboard, canActivate: [authGuard] },
-    { path: 'profile', component: Profile, canActivate: [authGuard] }
+  { path: 'login', component: Login },
+  { path: '', component: Dashboard, canActivate: [authGuard] },
+  { path: 'profile', component: Profile, canActivate: [authGuard] },
 ];
