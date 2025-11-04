@@ -19,6 +19,7 @@ export class Calendario implements OnInit {
 
   async ngOnInit() {
     try {
+      this.iframeLoading.set(false)
       const rawUrl = await this.sigaaService.getCalendarioUrl();
       if (rawUrl) {
         const viewer = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(rawUrl)}`;
