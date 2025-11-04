@@ -19,7 +19,7 @@ export class SigaaService {
   nome: WritableSignal<string> = signal('');
   avaliacoes: WritableSignal<Avaliacao[]> = signal([]);
   cargaHoraria: WritableSignal<CargaHoraria | null> = signal(null);
-  indices: WritableSignal<IndicesAcademicos | null> = signal(null);
+  indices: WritableSignal<IndicesAcademicos | null> = signal(null)
 
   isAuthenticated() {
     return this.jsessionid().length > 0 && this.viewState().length > 0;
@@ -68,4 +68,7 @@ export class SigaaService {
     this.turmas.set(mainDataRes.turmas);
     this.viewState.set(mainDataRes.viewState);
   }
+
+  calendarioUrl = `${this.domain}/calendario`
+
 }

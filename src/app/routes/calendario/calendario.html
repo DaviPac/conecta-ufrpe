@@ -1,0 +1,16 @@
+<div class="bg-gray-50 min-h-screen flex flex-col items-center p-4">
+  <h1 class="text-2xl font-bold text-gray-800 mb-4">Calendário Acadêmico</h1>
+
+  @if (calendarioUrl) {
+    <div class="w-full max-w-4xl aspect-[3/4] rounded-lg overflow-hidden shadow-lg border border-gray-200">
+      <iframe
+        [src]="calendarioUrl"
+        class="w-full h-full"
+        frameborder="0"
+        allowfullscreen
+      ></iframe>
+    </div>
+  } @else {
+    <p class="text-gray-500">Carregando calendário...</p>
+  }
+</div>
