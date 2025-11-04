@@ -4,5 +4,6 @@
   "printWidth": 100,
   "tabWidth": 2,
   "trailingComma": "none",
-  "bracketSpacing": true
+  "bracketSpacing": true,
+  "htmlWhitespaceSensitivity": "ignore"
 }

@@ -1,25 +1,30 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, signal, WritableSignal } from '@angular/core';
 import { SafeResourceUrl, DomSanitizer } from '@angular/platform-browser';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
 
 @Component({
   selector: 'app-calendario',
-  imports: [],
   templateUrl: './calendario.html',
-  styleUrl: './calendario.scss',
+  styleUrls: ['./calendario.scss'],
 })
-export class Calendario {
+export class Calendario implements OnInit {
   private sigaaService = inject(SigaaService);
   private sanitizer = inject(DomSanitizer);
 
-  calendarioUrl: SafeResourceUrl | null = null;
+  calendarioUrl: WritableSignal<SafeResourceUrl | null> = signal(null);
+  carregando = signal(true);
 
-  constructor() {
-    const rawUrl = this.sigaaService.calendarioUrl;
-    if (rawUrl) {
-      this.calendarioUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-        `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(rawUrl)}`
-      );
+  async ngOnInit() {
+    try {
+      const rawUrl = await this.sigaaService.getCalendarioUrl();
+      if (rawUrl) {
+        const viewer = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(rawUrl)}`;
+        this.calendarioUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(viewer));
+      }
+    } catch (err) {
+      console.error('Erro ao carregar calendário:', err);
+    } finally {
+      this.carregando.set(false);
     }
   }
 }

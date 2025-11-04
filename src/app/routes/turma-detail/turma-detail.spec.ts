@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Calendario } from './calendario';
+import { TurmaDetail } from './turma-detail';
 
-describe('Calendario', () => {
-  let component: Calendario;
-  let fixture: ComponentFixture<Calendario>;
+describe('TurmaDetail', () => {
+  let component: TurmaDetail;
+  let fixture: ComponentFixture<TurmaDetail>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Calendario],
+      imports: [TurmaDetail],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Calendario);
+    fixture = TestBed.createComponent(TurmaDetail);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

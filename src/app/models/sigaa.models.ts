@@ -27,9 +27,9 @@ export interface TurmaInfo {
 export interface Turma {
   nome: string;
   faltas: number;
-  notas: Notas;
+  notas?: Notas;
   noticia: Noticia;
-  cronograma: CronogramaItem[];
+  cronograma?: CronogramaItem[];
   horarios: string[];
   info: TurmaInfo;
 }

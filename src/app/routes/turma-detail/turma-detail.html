@@ -1,0 +1,154 @@
+@if (turma()) {
+  <div class="max-w-lg mx-auto bg-gray-100 dark:bg-gray-900 min-h-screen p-4 font-sans">
+    <header class="mb-6">
+      <h1 class="text-3xl font-bold text-blue-800 dark:text-blue-300">{{ turma()!.nome }}</h1>
+    </header>
+
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 mb-6 dark:border dark:border-gray-700"
+    >
+      <h2
+        class="text-xl font-semibold text-gray-800 dark:text-gray-100 border-b dark:border-gray-700 pb-2 mb-4"
+      >
+        Minhas Notas
+      </h2>
+
+      <div class="space-y-3">
+        @if (turma()!.notas?.notas) {
+          <div class="mb-4">
+            @for (nota of turma()!.notas?.notas | keyvalue; track nota.key) {
+              <div
+                class="flex justify-between items-center py-2 border-b dark:border-gray-700 last:border-b-0"
+              >
+                <span class="text-gray-600 dark:text-gray-400 font-medium">{{ nota.key }}:</span>
+                <span class="text-lg font-bold text-blue-700 dark:text-blue-400">{{
+                  nota.value
+                }}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="text-gray-500 dark:text-gray-400 text-sm text-center italic">
+            Nenhuma nota parcial registrada.
+          </p>
+        }
+      </div>
+    </div>
+
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 mb-6 dark:border dark:border-gray-700"
+    >
+      <h2
+        class="text-xl font-semibold text-gray-800 dark:text-gray-100 border-b dark:border-gray-700 pb-2 mb-4"
+      >
+        Frequência
+      </h2>
+
+      <div class="space-y-3">
+        <div class="pt-2 space-y-2">
+          <div class="flex justify-between items-center text-sm">
+            <span class="text-gray-600 dark:text-gray-400">Faltas:</span>
+            <span class="font-medium text-gray-800 dark:text-gray-200">{{
+              parseFaltas(turma()!.faltas)
+            }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 mb-6 dark:border dark:border-gray-700"
+    >
+      <h2
+        class="text-xl font-semibold text-gray-800 dark:text-gray-100 border-b dark:border-gray-700 pb-2 mb-4"
+      >
+        Próximas Avaliações
+      </h2>
+
+      <div class="space-y-3">
+        @for (
+          avaliacao of avaliacoesDaTurma();
+          track avaliacao.data + avaliacao.nome + avaliacao.tipo + avaliacao.turmaNome
+        ) {
+          <div class="space-y-3">
+            <div
+              class="p-3 bg-blue-50 dark:bg-blue-900/50 rounded-md border border-blue-200 dark:border-blue-700"
+            >
+              <p class="font-semibold text-blue-800 dark:text-blue-200">
+                {{ avaliacao.nome }} ({{ avaliacao.tipo }})
+              </p>
+              <p class="text-sm text-gray-700 dark:text-gray-300">Data: {{ avaliacao.data }}</p>
+            </div>
+          </div>
+        } @empty {
+          <p class="text-gray-500 dark:text-gray-400 text-sm">
+            Nenhuma avaliação agendada para esta turma.
+          </p>
+        }
+      </div>
+    </div>
+
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 mb-6 dark:border dark:border-gray-700"
+    >
+      <h2
+        class="text-xl font-semibold text-gray-800 dark:text-gray-100 border-b dark:border-gray-700 pb-2 mb-4"
+      >
+        Horários
+      </h2>
+
+      <div classs="space-y-2">
+        <div
+          class="text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 p-3 rounded-md text-sm font-medium"
+        >
+          {{ formatarHorarios(turma()!.horarios) }}
+        </div>
+      </div>
+    </div>
+
+    @if (turma()!.noticia.titulo.length) {
+      <div
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 mb-6 dark:border dark:border-gray-700"
+      >
+        <h2
+          class="text-xl font-semibold text-gray-800 dark:text-gray-100 border-b dark:border-gray-700 pb-2 mb-4"
+        >
+          Notícia da Turma
+        </h2>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          {{ turma()!.noticia.titulo }}
+        </h3>
+        <div class="prose prose-sm dark:prose-invert text-gray-700 dark:text-gray-300 space-y-3">
+          @for (paragrafo of turma()!.noticia.conteudo; track paragrafo) {
+            {{ paragrafo }}
+          }
+        </div>
+      </div>
+    }
+
+    @if (turma()!.cronograma && turma()!.cronograma!.length) {
+      <div
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 mb-6 dark:border dark:border-gray-700"
+      >
+        <h2
+          class="text-xl font-semibold text-gray-800 dark:text-gray-100 border-b dark:border-gray-700 pb-2 mb-4"
+        >
+          Cronograma
+        </h2>
+        <ul class="space-y-4">
+          @for (item of turma()!.cronograma; track $index) {
+            <li class="flex items-start space-x-3">
+              <div
+                class="flex-shrink-0 h-2 w-2 bg-blue-500 dark:bg-blue-400 rounded-full mt-[7px]"
+              ></div>
+              <div>
+                <h4 class="font-semibold text-gray-800 dark:text-gray-100">{{ item.titulo }}</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ item.conteudo }}</p>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </div>
+}

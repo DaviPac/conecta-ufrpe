@@ -10,6 +10,7 @@
       @for (turma of turmas(); track turma.nome) {
         <div
           class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-5 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-500"
+          (click)="openTurma(turma)"
         >
           <h2 class="text-xl font-semibold text-blue-700 dark:text-blue-400 mb-3">
             {{ turma.nome }}

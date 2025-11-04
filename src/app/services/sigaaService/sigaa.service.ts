@@ -5,6 +5,7 @@ import {
   IndicesAcademicos,
   MainDataResponse,
   Turma,
+  TurmaDetailResponse,
 } from '../../models/sigaa.models';
 
 @Injectable({
@@ -19,7 +20,9 @@ export class SigaaService {
   nome: WritableSignal<string> = signal('');
   avaliacoes: WritableSignal<Avaliacao[]> = signal([]);
   cargaHoraria: WritableSignal<CargaHoraria | null> = signal(null);
-  indices: WritableSignal<IndicesAcademicos | null> = signal(null)
+  indices: WritableSignal<IndicesAcademicos | null> = signal(null);
+  calendarioUrl: WritableSignal<string | null> = signal(null);
+  currentTurma: WritableSignal<Turma | null> = signal(null);
 
   isAuthenticated() {
     return this.jsessionid().length > 0 && this.viewState().length > 0;
@@ -54,6 +57,7 @@ export class SigaaService {
       headers: headers,
     });
     const data = await res.json();
+    console.log('fetch main data:');
     console.log(data);
 
     if (!res.ok || !data.jsessionid) {
@@ -67,8 +71,50 @@ export class SigaaService {
     this.nome.set(mainDataRes.nome);
     this.turmas.set(mainDataRes.turmas);
     this.viewState.set(mainDataRes.viewState);
+    this.fetchTurmas();
   }
 
-  calendarioUrl = `${this.domain}/calendario`
+  async getCalendarioUrl(): Promise<string> {
+    if (this.calendarioUrl()) return this.calendarioUrl()!;
+    const res = await fetch(`${this.domain}/calendario/url`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'erro ao buscar url do calendario');
+    this.calendarioUrl.set(data.url);
+    return data.url;
+  }
 
+  async getTurmaDetail(turma: Turma) {
+    if (!this.jsessionid().length || !this.viewState().length)
+      throw new Error('jsessionid ou viewstate inválidos');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + this.jsessionid(),
+    };
+    const res = await fetch(`${this.domain}/turma`, {
+      method: 'POST',
+      body: JSON.stringify({ turma, viewState: this.viewState() }),
+      headers: headers,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'erro ao buscar turma');
+    const turmaData = data as TurmaDetailResponse;
+    this.turmas.update((prev) => {
+      const oldTurmaIdx = prev.findIndex((t) => t.nome === turma.nome);
+      if (oldTurmaIdx === -1) throw new Error('erro ao buscar turma: turma não encontrada');
+      prev[oldTurmaIdx] = { ...turmaData.turma, notas: prev[oldTurmaIdx].notas };
+      if (prev[oldTurmaIdx].nome === this.currentTurma()?.nome)
+        this.currentTurma.set(prev[oldTurmaIdx]);
+      return prev;
+    });
+    this.jsessionid.set(turmaData.jsessionid);
+    this.viewState.set(turmaData.viewState);
+  }
+
+  async fetchTurmas() {
+    for (const turma of this.turmas()) {
+      await this.getTurmaDetail(turma);
+    }
+    console.log('fetch turmas:');
+    console.log(this.turmas());
+  }
 }
