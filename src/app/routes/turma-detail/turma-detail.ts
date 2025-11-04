@@ -15,6 +15,7 @@ export class TurmaDetail {
   avaliacoes = this.sigaaService.avaliacoes;
   formatarHorarios = formatarHorarios;
   parseFaltas = parseFaltas;
+  Number = Number
 
   avaliacoesDaTurma = computed(() => {
     const turmaAtual = this.turma();
