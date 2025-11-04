@@ -1,14 +1,13 @@
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 p-4 lg:p-6">
-  
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 md:p-6">
   <div class="lg:col-span-2">
     <section
-      class="rounded-2xl bg-white p-4 lg:p-6 shadow-lg dark:bg-gray-800 transition-colors duration-300"
+      class="rounded-2xl bg-white p-4 md:p-6 shadow-lg dark:bg-gray-800 transition-colors duration-300"
     >
-      <h2 class="mb-3 lg:mb-4 text-xl lg:text-2xl font-bold text-gray-800 dark:text-gray-100">
+      <h2 class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100">
         Progresso da Carga Horária
       </h2>
 
-      <div class="rounded-lg bg-indigo-50 p-3 lg:p-4 dark:bg-gray-700/50">
+      <div class="rounded-lg bg-indigo-50 p-2 md:p-4 dark:bg-gray-700/50">
         <div class="mb-2 flex items-baseline justify-between">
           <span class="text-base font-semibold text-indigo-700 dark:text-indigo-300">
             Progresso Total
@@ -17,9 +16,7 @@
             {{ percentual | number: '1.1-1' }}%
           </span>
         </div>
-        <div
-          class="mb-2 h-5 w-full rounded-full bg-gray-200 dark:bg-gray-600 shadow-inner"
-        >
+        <div class="mb-2 h-5 w-full rounded-full bg-gray-200 dark:bg-gray-600 shadow-inner">
           <div
             class="h-5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 dark:from-indigo-400 dark:to-indigo-500 transition-all duration-500 ease-out"
             [style.width.%]="percentual"
@@ -29,51 +26,50 @@
             aria-valuemax="100"
           ></div>
         </div>
-        <div
-          class="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400"
-        >
+
+        <div class="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400">
           <span>{{ totalConcluido | number: '1.0-0' }}h Concluídas</span>
           <span>{{ total | number: '1.0-0' }}h Totais</span>
         </div>
       </div>
 
-      <hr class="my-4 lg:my-6 border-t border-gray-200 dark:border-gray-700" />
+      <hr class="my-6 border-t border-gray-200 dark:border-gray-700" />
       <div>
-        <h3 class="mb-3 lg:mb-4 text-lg font-semibold text-gray-700 dark:text-gray-200">
+        <h3 class="mb-4 text-lg font-semibold text-gray-700 dark:text-gray-200">
           Detalhes de Horas Pendentes
         </h3>
         <div class="space-y-3">
           @for (item of pendingItemsData; track item.label) {
-          <div
-            class="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50"
-          >
-            <div class="flex items-center space-x-2">
-              <span class="text-gray-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="h-5 w-5"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                  />
-                </svg>
-              </span>
-              <span class="font-medium text-gray-700 dark:text-gray-200">
-                {{ item.label }}
+            <div
+              class="flex items-center justify-between rounded-lg bg-gray-50 p-1 md:p-3 dark:bg-gray-700/50"
+            >
+              <div class="flex items-center space-x-2">
+                <span class="text-gray-400">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="h-5 w-5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                    />
+                  </svg>
+                </span>
+                <span class="font-medium text-gray-700 dark:text-gray-200">
+                  {{ item.label }}
+                </span>
+              </div>
+              <span
+                class="rounded-full bg-orange-100 px-3 py-1 text-base font-bold text-orange-700 dark:bg-orange-800/50 dark:text-orange-300"
+              >
+                {{ item.horas }}h
               </span>
             </div>
-            <span
-              class="rounded-full bg-orange-100 px-3 py-1 text-base font-bold text-orange-700 dark:bg-orange-800/50 dark:text-orange-300"
-            >
-              {{ item.horas }}h
-            </span>
-          </div>
           }
         </div>
       </div>
@@ -82,27 +78,105 @@
 
   <div class="lg:col-span-1">
     <section
-      class="rounded-2xl bg-white p-4 lg:p-6 shadow-lg dark:bg-gray-800 transition-colors duration-300"
+      class="rounded-2xl bg-white p-4 md:p-6 shadow-lg dark:bg-gray-800 transition-colors duration-300"
     >
-      <h2 class="text-xl lg:text-2xl font-bold mb-4 lg:mb-6 text-center text-gray-800 dark:text-gray-100">
+      <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-gray-100">
         Índices Acadêmicos
       </h2>
 
       <div class="space-y-3 text-sm">
         <div class="flex justify-between items-center">
-          <span
-            class="font-medium text-gray-600 dark:text-gray-300"
-            title="Média de Conclusão"
-          >
+          <span class="font-medium text-gray-600 dark:text-gray-300" title="Média de Conclusão">
             MC:
           </span>
-          <span
-            class="text-base font-semibold text-gray-800 dark:text-gray-100"
-          >
+          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
             {{ indices?.mc }}
           </span>
         </div>
+        <div class="flex justify-between items-center">
+          <span
+            class="font-medium text-gray-600 dark:text-gray-300"
+            title="Média de Conclusão Normalizada"
+          >
+            MCN:
+          </span>
+          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
+            {{ indices?.mcn }}
+          </span>
         </div>
+
+        <div class="flex justify-between items-center">
+          <span
+            class="font-medium text-gray-600 dark:text-gray-300"
+            title="Índice de Rendimento Acadêmico"
+          >
+            IRA:
+          </span>
+          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
+            {{ indices?.ira }}
+          </span>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <span
+            class="font-medium text-gray-600 dark:text-gray-300"
+            title="Índice de Eficiência em Carga Horária"
+          >
+            IECH:
+          </span>
+          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
+            {{ indices?.iech }}
+          </span>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <span
+            class="font-medium text-gray-600 dark:text-gray-300"
+            title="Índice de Eficiência em Períodos Letivos"
+          >
+            IEPL:
+          </span>
+          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
+            {{ indices?.iepl }}
+          </span>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <span
+            class="font-medium text-gray-600 dark:text-gray-300"
+            title="Índice de Eficiência Acadêmica"
+          >
+            IEA:
+          </span>
+          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
+            {{ indices?.iea }}
+          </span>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <span
+            class="font-medium text-gray-600 dark:text-gray-300"
+            title="Índice de Eficiência em Acadêmica Normalizada"
+          >
+            IEAN:
+          </span>
+          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
+            {{ indices?.iean }}
+          </span>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <span
+            class="font-medium text-gray-600 dark:text-gray-300"
+            title="Índice de Eficiência em Carga Horária por Periodo"
+          >
+            IECHP:
+          </span>
+          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
+            {{ indices?.iechp }}
+          </span>
+        </div>
+      </div>
     </section>
   </div>
 </div>
