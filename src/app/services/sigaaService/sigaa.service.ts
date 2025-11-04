@@ -39,7 +39,7 @@ export class SigaaService {
     if (!this.jsessionid().length) throw new Error("jsessionid inválido")
     const headers: HeadersInit = {
       "Content-Type": "application/json",
-      "Authorization": "Bearer" + this.jsessionid()
+      "Authorization": "Bearer " + this.jsessionid()
     }
     const res = await fetch(`${this.domain}/main-data`, {
       headers: headers
