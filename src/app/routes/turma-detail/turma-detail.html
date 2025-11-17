@@ -118,10 +118,10 @@
           Notícia da Turma
         </h2>
         <h3 class="font-medium text-gray-900 dark:text-gray-100 mb-2">
-          {{ turma()!.noticia.titulo }}
+          {{ turma().noticia.titulo }}
         </h3>
         <div class="prose prose-sm dark:prose-invert text-gray-700 dark:text-gray-300 break-words">
-          @for (paragrafo of turma()!.noticia.conteudo; track paragrafo) {
+          @for (paragrafo of turma().noticia.conteudo; track paragrafo) {
             <p>{{ paragrafo }}</p>
           }
         </div>

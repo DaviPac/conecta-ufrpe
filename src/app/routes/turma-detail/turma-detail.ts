@@ -13,14 +13,19 @@ import { Router } from '@angular/router';
 export class TurmaDetail implements OnInit {
   private sigaaService: SigaaService = inject(SigaaService);
   private router: Router = inject(Router)
-  turma = this.sigaaService.currentTurma;
+  turma = computed(() => {
+    const turmas = this.sigaaService.turmas()
+    const idx = this.sigaaService.currentTurmaIdx()
+    if (idx === null) return turmas[0]
+    return turmas[idx]
+  })
   avaliacoes = this.sigaaService.avaliacoes;
   formatarHorarios = formatarHorarios;
   parseFaltas = parseFaltas;
   Number = Number
 
   ngOnInit(): void {
-      if (!this.sigaaService.currentTurma()) this.router.navigate(['/'])
+      if (this.sigaaService.currentTurmaIdx === null) this.router.navigate(['/'])
   }
 
   avaliacoesDaTurma = computed(() => {

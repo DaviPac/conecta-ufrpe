@@ -26,6 +26,7 @@ export class SigaaService {
   cargaHoraria: WritableSignal<CargaHoraria | null> = signal(null);
   indices: WritableSignal<IndicesAcademicos | null> = signal(null);
   currentTurma: WritableSignal<Turma | null> = signal(null);
+  currentTurmaIdx: WritableSignal<number | null> = signal(null);
 
   constructor() {
     const jsessionid = localStorage.getItem("jsessionid")
@@ -50,6 +51,7 @@ export class SigaaService {
     this.currentTurma.set(null)
     this.viewState.set('')
     this.currentTurma.set(null)
+    this.currentTurmaIdx.set(null)
     this.jsessionid.set('')
     localStorage.clear()
     this.router.navigate(['/login'])
@@ -138,10 +140,12 @@ export class SigaaService {
           turma.notas = n
         }
         if (turma && turma.nome === this.currentTurma()?.nome)
-          this.currentTurma.update(prevT => {
-          if (prevT) prevT.notas = n
-          return prevT
-        });
+          this.turmas.update(prev =>
+            prev.map(t => {
+              const n = notasData.notas.find(x => x?.nome === t.nome)
+              return n ? { ...t, notas: n } : t
+            })
+          )
       })
       return prev
     })
@@ -170,14 +174,14 @@ export class SigaaService {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'erro ao buscar turma');
     const turmaData = data as TurmaDetailResponse;
-    this.turmas.update((prev) => {
-      const oldTurmaIdx = prev.findIndex((t) => t.nome === turma.nome);
-      if (oldTurmaIdx === -1) throw new Error('erro ao buscar turma: turma não encontrada');
-      prev[oldTurmaIdx] = { ...turmaData.turma, notas: prev[oldTurmaIdx].notas };
-      if (prev[oldTurmaIdx].nome === this.currentTurma()?.nome)
-        this.currentTurma.set(prev[oldTurmaIdx]);
-      return prev;
-    });
+    this.turmas.update(prev =>
+      prev.map(t =>
+        t.nome === turma.nome
+          ? { ...turmaData.turma, notas: t.notas }
+          : t
+      )
+    )
+
     this.jsessionid.set(turmaData.jsessionid);
     localStorage.setItem("jsessionid", turmaData.jsessionid)
     this.viewState.set(turmaData.viewState);
