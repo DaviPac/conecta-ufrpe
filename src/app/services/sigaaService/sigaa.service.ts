@@ -15,6 +15,7 @@ import { Router } from '@angular/router';
 })
 export class SigaaService {
   private domain = 'https://sigaa-ufrpe-api-production.up.railway.app';
+  //private domain = 'http://localhost:8080';
   private jsessionid: WritableSignal<string> = signal('');
   private viewState: WritableSignal<string> = signal('');
 
@@ -27,6 +28,9 @@ export class SigaaService {
   indices: WritableSignal<IndicesAcademicos | null> = signal(null);
   currentTurma: WritableSignal<Turma | null> = signal(null);
   currentTurmaIdx: WritableSignal<number | null> = signal(null);
+
+  username: string = '';
+  password: string = '';
 
   constructor() {
     const jsessionid = localStorage.getItem("jsessionid")
@@ -74,6 +78,8 @@ export class SigaaService {
     }
     this.jsessionid.set(data.jsessionid);
     localStorage.setItem("jsessionid", data.jsessionid)
+    this.username = username;
+    this.password = password;
     return data.jsessionid;
   }
 
@@ -111,7 +117,7 @@ export class SigaaService {
       localStorage.removeItem('viewState')
       this.jsessionid.set('')
       this.viewState.set('')
-      alert(error.message)
+      if (!this.router.url.includes('login')) alert(error.message)
       this.router.navigate(['/login'])
     }
   }

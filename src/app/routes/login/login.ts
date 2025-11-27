@@ -16,6 +16,7 @@ export class Login implements OnInit {
   loading = signal(false);
   error = signal('');
   sucesso = signal(false);
+  loginRetries = 0;
   private router: Router = inject(Router);
   private sigaaService: SigaaService = inject(SigaaService);
 
@@ -41,6 +42,12 @@ export class Login implements OnInit {
       }
 
       await this.sigaaService.fetchMainData();
+      if (this.sigaaService.nome() === '' && this.loginRetries < 5) {
+        this.loginRetries++;
+        this.onSubmit();
+        this.loginRetries--;
+        if (this.loginRetries !== 0) return;
+      }
       this.router.navigate(['/']);
 
       this.sucesso.set(true);

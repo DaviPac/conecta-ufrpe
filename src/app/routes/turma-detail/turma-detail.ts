@@ -13,6 +13,8 @@ import { Router } from '@angular/router';
 export class TurmaDetail implements OnInit {
   private sigaaService: SigaaService = inject(SigaaService);
   private router: Router = inject(Router)
+  private uid = 0;
+  id = () => this.uid++;
   turma = computed(() => {
     const turmas = this.sigaaService.turmas()
     const idx = this.sigaaService.currentTurmaIdx()

@@ -13,6 +13,8 @@ import { Noticia, Turma } from '../../models/sigaa.models';
 export class Dashboard {
   private sigaaService: SigaaService = inject(SigaaService);
   private router: Router = inject(Router);
+  private uid = 0;
+  id = () => this.uid++;
   turmas = this.sigaaService.turmas;
   nome = this.sigaaService.nome;
   avaliacoes = this.sigaaService.avaliacoes
