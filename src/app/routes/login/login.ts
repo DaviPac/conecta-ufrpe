@@ -44,7 +44,7 @@ export class Login implements OnInit {
       await this.sigaaService.fetchMainData();
       if (this.sigaaService.nome() === '' && this.loginRetries < 5) {
         this.loginRetries++;
-        this.onSubmit();
+        await this.onSubmit();
         this.loginRetries--;
         if (this.loginRetries !== 0) return;
       }
