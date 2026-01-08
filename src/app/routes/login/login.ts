@@ -1,31 +1,38 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { Router } from '@angular/router';
+import { SigaaService } from '../../services/sigaaService/sigaa.service';
+import { MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
+import { CheckboxModule } from 'primeng/checkbox';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-login',
-  imports: [CommonModule],
+  imports: [ButtonModule, ToastModule, CheckboxModule, FormsModule],
   templateUrl: './login.html',
   styleUrl: './login.scss',
+  providers: [MessageService],
 })
 export class Login implements OnInit {
   username = signal('');
   password = signal('');
-  rememberMe = signal(false);
   loading = signal(false);
   error = signal('');
   sucesso = signal(false);
+  rememberMe = false;
   loginRetries = 0;
   private router: Router = inject(Router);
   private sigaaService: SigaaService = inject(SigaaService);
 
+  constructor(private messageService: MessageService) {}
+
   ngOnInit(): void {
-      const username = localStorage.getItem("username")
-      const password = localStorage.getItem("password")
-      if (!username || !password) return
-      this.username.set(username)
-      this.password.set(password)
+    const username = localStorage.getItem('username');
+    const password = localStorage.getItem('password');
+    if (!username || !password) return;
+    this.username.set(username);
+    this.password.set(password);
   }
 
   async onSubmit() {
@@ -36,9 +43,9 @@ export class Login implements OnInit {
     try {
       const jsessionid = await this.sigaaService.login(this.username(), this.password());
       console.log('Login OK! JSESSIONID:', jsessionid);
-      if (this.rememberMe()) {
-        localStorage.setItem("username", this.username())
-        localStorage.setItem("password", this.password())
+      if (this.rememberMe) {
+        localStorage.setItem('username', this.username());
+        localStorage.setItem('password', this.password());
       }
 
       await this.sigaaService.fetchMainData();
@@ -54,8 +61,17 @@ export class Login implements OnInit {
     } catch (err: any) {
       console.error(err);
       this.error.set(err.message || 'Erro no login');
+      this.showToast();
     } finally {
       this.loading.set(false);
     }
+  }
+
+  showToast() {
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Falha ao realizar login',
+      detail: 'Ops! Algo deu errado',
+    });
   }
 }
