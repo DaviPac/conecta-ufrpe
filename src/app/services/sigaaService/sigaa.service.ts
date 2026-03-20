@@ -170,6 +170,22 @@ export class SigaaService {
     return `${this.domain}/calendario`;
   }
 
+  async getOgCalendarioUrl(): Promise<string> {
+    if (!this.jsessionid().length || !this.viewState().length)
+      throw new Error('jsessionid ou viewstate inválidos');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + this.jsessionid(),
+    };
+    const res = await fetch(`${this.domain}/calendario/url`, {
+      method: 'GET',
+      headers: headers,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'erro ao buscar url do calendário');
+    return data.url as string;
+  }
+
   async getTurmaDetail(turma: Turma) {
     if (!this.jsessionid().length || !this.viewState().length)
       throw new Error('jsessionid ou viewstate inválidos');

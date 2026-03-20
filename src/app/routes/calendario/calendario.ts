@@ -104,19 +104,12 @@ export class Calendario implements OnInit {
     }
   }
 
-  abrirNoNavegador() {
-    const pdfData = this.sigaaService.pdfCache();
-    if (!pdfData) return;
-
-    // Criamos um Blob a partir dos bytes em cache
-    const blob = new Blob([pdfData.buffer as ArrayBuffer], { type: 'application/pdf' });
-    const blobUrl = window.URL.createObjectURL(blob);
-
-    // Abrimos essa URL de memória em uma nova aba
-    window.open(blobUrl, '_blank');
-
-    // Importante: Não revogue imediatamente, senão a nova aba perde o acesso ao arquivo
-    // O navegador limpa isso ao fechar a aba ou você pode limpar após um delay
-    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10000);
+  async abrirNoNavegador() {
+    const originalUrl = await this.sigaaService.getOgCalendarioUrl()
+    if (originalUrl) {
+      window.open(originalUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      console.error('URL original do calendário não disponível');
+    }
   }
 }
