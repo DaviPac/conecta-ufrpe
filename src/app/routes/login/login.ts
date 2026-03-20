@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { MessageService } from 'primeng/api';
@@ -11,7 +11,8 @@ import { ToastModule } from 'primeng/toast';
 import { IftaLabelModule } from 'primeng/iftalabel';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PasswordModule } from 'primeng/password';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DialogModule } from 'primeng/dialog';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-login',
@@ -27,6 +28,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
     PasswordModule,
     IftaLabelModule,
     ReactiveFormsModule,
+    DialogModule
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
@@ -41,10 +43,15 @@ export class Login implements OnInit {
   loading = false;
   errorMessage = '';
   loginRetries = 0;
+  showPrivacyNotice = false;
 
   constructor(private messageService: MessageService, private router: Router, private sigaaService: SigaaService) {}
 
   ngOnInit(): void {
+    const hasAcceptedPrivacy = localStorage.getItem('privacyAccepted');
+    if (!hasAcceptedPrivacy) {
+      this.showPrivacyNotice = true;
+    }
     const username = localStorage.getItem('username');
     const password = localStorage.getItem('password');
     if (!username || !password) return;
@@ -86,7 +93,7 @@ export class Login implements OnInit {
         this.router.navigate(['/']);
       } catch (err: any) {
         this.errorMessage = err.message ? err.message : 'Falha ao efetuar login';
-        this.showToast('Falha ao efetuar login', 'Ops! Algo deu errado.');
+        this.showToast('Falha ao efetuar login', this.errorMessage);
       }
     }
       this.loading = false;
@@ -98,5 +105,10 @@ export class Login implements OnInit {
       summary: title,
       detail: message,
     });
+  }
+
+  acceptPrivacy() {
+    localStorage.setItem('privacyAccepted', 'true');
+    this.showPrivacyNotice = false;
   }
 }

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { formatarHorarios } from '../../utils/formatters';
 import { Router } from '@angular/router';
@@ -15,6 +15,8 @@ export class Dashboard {
   private sigaaService: SigaaService = inject(SigaaService);
   private router: Router = inject(Router);
   private uid = 0;
+  private destroyRef = inject(DestroyRef);
+
   id = () => this.uid++;
   turmas = this.sigaaService.turmas;
   nome = this.sigaaService.nome;
@@ -25,6 +27,7 @@ export class Dashboard {
       .map(t => [t.noticia, t.nome] as [Noticia, string]);
   });
   currentNoticiaIdx = signal(0)
+  now = signal(new Date());
   currentNoticia = computed((): [Noticia, string] | null => {
     const noticias = this.noticias();
     const idx = this.currentNoticiaIdx();
@@ -32,6 +35,16 @@ export class Dashboard {
     if (!noticias.length) return null;
     return noticias[idx] ?? null;
   });
+
+
+  constructor() {
+    // Atualiza o relógio interno a cada 60 segundos
+    const timer = setInterval(() => this.now.set(new Date()), 60000);
+    // Limpa o timer se o componente for destruído (boa prática)
+    this.destroyRef.onDestroy(() => clearInterval(timer));
+  }
+
+
   showNextNoticia() {
     const len = this.noticias().length;
     if (!len) return;
@@ -68,17 +81,16 @@ export class Dashboard {
   }).format(new Date());
 
   aulasDeHoje = computed(() => {
-    // getDay(): 0 = Dom, 1 = Seg ... 6 = Sáb
-    // SIGAA: 1 = Dom, 2 = Seg ... 7 = Sáb
-    const hojeSigaa = (new Date().getDay() + 1).toString();
-    const agora = new Date();
+    // Usamos this.now() em vez de new Date() para que o Angular saiba que
+    // essa função deve ser recalculada a cada minuto!
+    const agora = this.now(); 
+    const hojeSigaa = (agora.getDay() + 1).toString();
     const horaAtualEmMinutos = agora.getHours() * 60 + agora.getMinutes();
 
-    // Mapa de minutos do início de cada período baseado no seu utils/formatters
     const startTimes: Record<string, Record<string, number>> = {
-      M: { '1': 480, '2': 540, '3': 600, '4': 660, '5': 720 }, // 08:00, 09:00...
-      T: { '1': 780, '2': 840, '3': 900, '4': 960, '5': 1020, '6': 1080 }, // 13:00, 14:00...
-      N: { '1': 1110, '2': 1160, '3': 1210, '4': 1260 }, // 18:30, 19:20...
+      M: { '1': 480, '2': 540, '3': 600, '4': 660, '5': 720 },
+      T: { '1': 780, '2': 840, '3': 900, '4': 960, '5': 1020, '6': 1080 },
+      N: { '1': 1110, '2': 1160, '3': 1210, '4': 1260 },
     };
 
     const aulasHoje: any[] = [];
@@ -90,29 +102,70 @@ export class Dashboard {
         const match = horarioStr.match(/^([2-7]+)([MTN])([1-9]+)$/);
         if (match && match[1].includes(hojeSigaa)) {
           const turno = match[2];
-          const inicioPeriodo = match[3][0];
+          const periodos = match[3];
           
-          // Pega o horário de início em minutos para poder ordenar e comparar
+          const inicioPeriodo = periodos[0]; 
+          const fimPeriodo = periodos[periodos.length - 1]; 
+          
           const startEmMinutos = startTimes[turno]?.[inicioPeriodo] || 0;
+          const startDoUltimo = startTimes[turno]?.[fimPeriodo] || startEmMinutos;
+          const duracaoBloco = turno === 'N' ? 50 : 60;
+          const endEmMinutos = startDoUltimo + duracaoBloco;
+
+          const isPast = horaAtualEmMinutos > endEmMinutos;
+          const isNow = horaAtualEmMinutos >= startEmMinutos && horaAtualEmMinutos <= endEmMinutos;
+
+          let progresso = 0;
+          let minutosRestantes = 0;
+          let tempoRestanteFormatado = ''; // <-- NOVA VARIÁVEL
+
+          if (isNow) {
+            const duracaoTotal = endEmMinutos - startEmMinutos;
+            const tempoDecorrido = horaAtualEmMinutos - startEmMinutos;
+            progresso = Math.min(100, Math.max(0, (tempoDecorrido / duracaoTotal) * 100));
+            minutosRestantes = endEmMinutos - horaAtualEmMinutos;
+
+            // <-- NOVA LÓGICA DE FORMATAÇÃO -->
+            if (minutosRestantes >= 60) {
+              const horas = Math.floor(minutosRestantes / 60);
+              const mins = minutosRestantes % 60;
+              tempoRestanteFormatado = mins > 0 ? `${horas}h ${mins}m` : `${horas}h`;
+            } else {
+              tempoRestanteFormatado = `${minutosRestantes} min`;
+            }
+          }
 
           aulasHoje.push({
             turma: turma,
             horarioFormatado: this.formatarHorarios([horarioStr]),
             startMinutos: startEmMinutos,
-            isNext: false, // Será calculado abaixo
-            isPast: startEmMinutos < horaAtualEmMinutos // Se já passou da hora de início
+            isNext: false,
+            isPast: isPast,
+            isNow: isNow,
+            progresso: progresso,
+            minutosRestantes: minutosRestantes, 
+            tempoRestanteFormatado: tempoRestanteFormatado // <-- ENVIANDO PARA O HTML
           });
         }
       });
     });
 
-    // Ordena as aulas cronologicamente (da mais cedo para a mais tarde)
     aulasHoje.sort((a, b) => a.startMinutos - b.startMinutos);
 
-    // Encontra a primeira aula que AINDA NÃO PASSOU e marca como "Próxima"
-    const nextClass = aulasHoje.find(aula => !aula.isPast);
+    const nextClass = aulasHoje.find(aula => !aula.isPast && !aula.isNow);
     if (nextClass) {
       nextClass.isNext = true;
+      
+      const minutosAteProxima = nextClass.startMinutos - horaAtualEmMinutos;
+      nextClass.minutosAteProxima = minutosAteProxima;
+      
+      if (minutosAteProxima >= 60) {
+        const horas = Math.floor(minutosAteProxima / 60);
+        const mins = minutosAteProxima % 60;
+        nextClass.tempoAteProximaFormatado = mins > 0 ? `${horas}h ${mins}m` : `${horas}h`;
+      } else {
+        nextClass.tempoAteProximaFormatado = `${minutosAteProxima} min`;
+      }
     }
 
     return aulasHoje;

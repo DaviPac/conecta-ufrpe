@@ -82,3 +82,46 @@
   
   </div>
 </div>
+<p-dialog 
+    header="Sua Privacidade é Prioridade" 
+    [(visible)]="showPrivacyNotice" 
+    [modal]="true" 
+    [closable]="false" 
+    [style]="{ width: '90vw', 'max-width': '450px' }"
+    [draggable]="false"
+    [resizable]="false">
+    
+    <div class="flex flex-col gap-4 text-slate-600 leading-relaxed">
+        <p class="text-sm">
+            Esta é uma interface alternativa para o <strong>SIGAA</strong>. Não possuímos vínculo oficial com a UFRPE, mas buscamos oferecer uma experiência moderna e fluida.
+        </p>
+        
+        <ul class="list-none p-0 m-0 space-y-4 text-sm">
+            <li class="flex items-start">
+                <i class="pi pi-shield text-green-600 mr-3 mt-1 text-lg"></i>
+                <span><strong>Segurança:</strong> Seus dados trafegam exclusivamente via HTTPS, garantindo que a comunicação entre você e o portal seja criptografada.</span>
+            </li>
+            <li class="flex items-start">
+                <i class="pi pi-eye-slash text-green-600 mr-3 mt-1 text-lg"></i>
+                <span><strong>Privacidade:</strong> Não armazenamos suas credenciais ou dados acadêmicos. Atuamos apenas como uma ponte (proxy) em tempo real.</span>
+            </li>
+            <li class="flex items-start">
+                <i class="pi pi-github text-green-600 mr-3 mt-1 text-lg"></i>
+                <span><strong>Código Aberto:</strong> Por transparência, você pode auditar como tratamos seus dados em nosso repositório público.</span>
+            </li>
+        </ul>
+
+        <div class="bg-amber-50 p-3 rounded-lg border border-amber-100 text-xs text-amber-800 italic">
+            Ao continuar, você autoriza o processamento temporário de suas credenciais para realizar a autenticação junto ao sistema oficial.
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <button 
+            pButton 
+            label="Concordar e Acessar" 
+            (click)="acceptPrivacy()" 
+            class="p-button-primary w-full rounded-xl py-3 font-semibold">
+        </button>
+    </ng-template>
+</p-dialog>

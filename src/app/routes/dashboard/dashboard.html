@@ -79,17 +79,42 @@
             @for (aula of aulasDeHoje(); track $index) {
               <div 
                 class="relative bg-white/80 backdrop-blur-md rounded-2xl p-6 border transition-all duration-500 flex flex-col justify-between cursor-pointer hover:-translate-y-1 flex-none w-[85vw] sm:w-[320px] snap-center md:w-auto md:h-full"
+                [class.border-emerald-500]="aula.isNow"
+                [class.shadow-[0_12px_40px_rgba(16,185,129,0.15)]]="aula.isNow"
                 [class.border-blue-500]="aula.isNext"
                 [class.shadow-[0_12px_40px_rgba(37,99,235,0.15)]]="aula.isNext"
-                [class.border-white/60]="!aula.isNext"
-                [class.shadow-sm]="!aula.isNext"
+                [class.border-white/60]="!aula.isNext && !aula.isNow"
+                [class.shadow-sm]="!aula.isNext && !aula.isNow"
                 [class.opacity-60]="aula.isPast"
                 (click)="openTurma(aula.turma)">
 
-                @if (aula.isNext) {
-                  <span class="inline-block px-3 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-[10px] font-bold uppercase tracking-widest rounded-md mb-4 w-max border border-blue-100/50">
-                    <i class="pi pi-bolt text-[10px] mr-1"></i> Próxima Aula
+                @if (aula.isNow) {
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-widest rounded-md mb-4 w-max border border-emerald-200">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    Em Andamento
                   </span>
+                } @else if (aula.isNext) {
+                  <div class="flex items-center justify-between mb-4 w-full">
+                    <span class="inline-flex items-center px-3 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-[10px] font-bold uppercase tracking-widest rounded-md border border-blue-100/50">
+                      <i class="pi pi-bolt text-[10px] mr-1"></i> Próxima Aula
+                    </span>
+                    
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md border transition-colors"
+                          [class.bg-red-50]="aula.minutosAteProxima <= 15"
+                          [class.text-red-600]="aula.minutosAteProxima <= 15"
+                          [class.border-red-200]="aula.minutosAteProxima <= 15"
+                          [class.animate-pulse]="aula.minutosAteProxima <= 15"
+                          
+                          [class.bg-amber-50]="aula.minutosAteProxima > 15"
+                          [class.text-amber-600]="aula.minutosAteProxima > 15"
+                          [class.border-amber-200]="aula.minutosAteProxima > 15">
+                      <i class="pi pi-stopwatch text-[10px]"></i> 
+                      Começa em {{ aula.tempoAteProximaFormatado }}
+                    </span>
+                  </div>
                 } @else if (aula.isPast) {
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest rounded-md mb-4 w-max border border-slate-200">
                     <i class="pi pi-check text-[10px]"></i> Concluída
@@ -104,11 +129,31 @@
                   {{ aula.turma.nome }}
                 </h3>
 
+                @if (aula.isNow) {
+                  <div class="mb-4">
+                    <div class="flex justify-between items-end mb-1.5">
+                      <span class="text-[10px] font-bold text-emerald-600/80 uppercase tracking-widest">
+                        Progresso
+                      </span>
+                      <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        Faltam {{ aula.tempoRestanteFormatado }}
+                      </span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                      <div class="bg-emerald-500 h-1.5 rounded-full transition-all duration-1000 ease-out" 
+                          [style.width.%]="aula.progresso">
+                      </div>
+                    </div>
+                  </div>
+                }
+
                 <div class="mt-auto pt-4 flex items-center text-slate-500 border-t border-slate-100">
                   <div class="w-10 h-10 rounded-full flex items-center justify-center mr-4 transition-colors"
+                        [class.bg-emerald-50]="aula.isNow"
+                        [class.text-emerald-600]="aula.isNow"
                         [class.bg-blue-50]="aula.isNext"
                         [class.text-blue-600]="aula.isNext"
-                        [class.bg-slate-50]="!aula.isNext">
+                        [class.bg-slate-50]="!aula.isNext && !aula.isNow">
                     <i class="pi pi-clock text-base"></i>
                   </div>
                   <div>
