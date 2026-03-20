@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router'; // <-- Importado RouterModule
 import { formatarHorarios, parseFaltas } from '../../utils/formatters';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
+import { LinkifyPipe } from '../../utils/linkify.pipe';
 
 @Component({
   selector: 'app-turma-detalhes',
   standalone: true,
-  imports: [CommonModule, RouterModule], // <-- Adicionado aqui
+  imports: [CommonModule, RouterModule, LinkifyPipe], // <-- Adicionado aqui
   templateUrl: './turma-detail.html',
 })
 export class TurmaDetail implements OnInit {

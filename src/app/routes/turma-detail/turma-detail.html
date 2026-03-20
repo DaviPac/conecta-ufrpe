@@ -88,13 +88,16 @@
       @if (turma()!.noticia.titulo.length) {
         <div class="bg-blue-50/50 rounded-2xl p-6 border border-blue-100 shadow-sm relative overflow-hidden">
           <div class="absolute left-0 top-0 h-full w-1 bg-blue-900"></div>
+          
           <h2 class="text-xs font-semibold tracking-wide text-blue-900 uppercase mb-4 flex items-center">
             <i class="pi pi-info-circle mr-2"></i> Último Comunicado
           </h2>
+          
           <h3 class="font-semibold text-slate-900 text-lg mb-3">{{ turma()!.noticia.titulo }}</h3>
-          <div class="prose prose-slate prose-sm max-w-none text-slate-700">
+          
+          <div class="prose prose-slate prose-sm max-w-none text-slate-700 break-words">
             @for (paragrafo of turma()!.noticia.conteudo; track paragrafo) {
-              <p>{{ paragrafo }}</p>
+              <p [innerHTML]="paragrafo | linkify"></p>
             }
           </div>
         </div>
