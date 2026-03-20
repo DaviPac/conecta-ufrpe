@@ -117,27 +117,57 @@
     <div class="flex flex-wrap justify-end gap-3 mt-8 border-t border-slate-200 pt-6">
       <button
         (click)="emitirVinculo()"
-        class="w-full sm:w-auto flex justify-center items-center gap-2 text-sm text-slate-600 bg-white border border-slate-300 py-2 px-4 rounded-lg hover:bg-slate-50 hover:text-amber-700 hover:border-amber-200 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+        [disabled]="isDownloadingVinculo()"
+        class="w-full sm:w-auto flex justify-center items-center gap-2 text-sm text-slate-600 bg-white border border-slate-300 py-2 px-4 rounded-lg hover:bg-slate-50 hover:text-amber-700 hover:border-amber-200 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-slate-600 disabled:hover:border-slate-300"
       >
-        <i class="pi pi-id-card"></i> Declaração de vínculo
+        @if (isDownloadingVinculo()) {
+          <i class="pi pi-spinner pi-spin"></i> Processando...
+        } @else {
+          <i class="pi pi-id-card"></i> Declaração de vínculo
+        }
       </button>
       
       <button
         (click)="emitirHistorico()"
-        class="w-full sm:w-auto flex justify-center items-center gap-2 text-sm text-slate-600 bg-white border border-slate-300 py-2 px-4 rounded-lg hover:bg-slate-50 hover:text-amber-700 hover:border-amber-200 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+        [disabled]="isDownloadingHistorico()"
+        class="w-full sm:w-auto flex justify-center items-center gap-2 text-sm text-slate-600 bg-white border border-slate-300 py-2 px-4 rounded-lg hover:bg-slate-50 hover:text-amber-700 hover:border-amber-200 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-slate-600 disabled:hover:border-slate-300"
       >
-        <i class="pi pi-history"></i> Emitir histórico
+        @if (isDownloadingHistorico()) {
+          <i class="pi pi-spinner pi-spin"></i> Processando...
+        } @else {
+          <i class="pi pi-history"></i> Emitir histórico
+        }
       </button>
 
       <button
         (click)="exportarPDF()"
-        class="w-full sm:w-auto flex justify-center items-center gap-2 text-sm text-slate-600 bg-white border border-slate-300 py-2 px-4 rounded-lg hover:bg-slate-50 hover:text-amber-700 hover:border-amber-200 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+        [disabled]="isDownloadingAtestado()"
+        class="w-full sm:w-auto flex justify-center items-center gap-2 text-sm text-slate-600 bg-white border border-slate-300 py-2 px-4 rounded-lg hover:bg-slate-50 hover:text-amber-700 hover:border-amber-200 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-slate-600 disabled:hover:border-slate-300"
       >
-        <i class="pi pi-file-pdf"></i> Atestado de matrícula
+        @if (isDownloadingAtestado()) {
+          <i class="pi pi-spinner pi-spin"></i> Gerando PDF...
+        } @else {
+          <i class="pi pi-file-pdf"></i> Atestado de matrícula
+        }
       </button>
     </div>
   </div>
 </div>
+
+@if (toastMessage()) {
+  <div class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-lg shadow-xl text-sm font-medium animate-fade-in"
+       [ngClass]="{
+         'bg-emerald-600 text-white': toastMessage()?.type === 'success',
+         'bg-red-600 text-white': toastMessage()?.type === 'error'
+       }">
+    @if (toastMessage()?.type === 'success') {
+      <i class="pi pi-check-circle text-lg"></i>
+    } @else {
+      <i class="pi pi-exclamation-circle text-lg"></i>
+    }
+    {{ toastMessage()?.text }}
+  </div>
+}
 @if (atestadoDados()) {
 <div id="template-atestado-ufrpe" class="fixed top-[-9999px] left-[-9999px] w-[780px] bg-white text-black" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px;">
  

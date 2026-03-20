@@ -18,116 +18,139 @@ export class Profile {
   carga = this.sigaaService.cargaHoraria;
   indices = this.sigaaService.indices;
 
-  tabelaHorarios = computed(() =>
-  buildTabelaHorarios(this.atestadoDados()?.turmas ?? [])
-);
+  // --- NOVOS SIGNALS DE ESTADO ---
+  isDownloadingAtestado = signal(false);
+  isDownloadingHistorico = signal(false);
+  isDownloadingVinculo = signal(false);
+  
+  toastMessage = signal<{ text: string, type: 'success' | 'error' } | null>(null);
+  // -------------------------------
 
-  // No componente
+  tabelaHorarios = computed(() =>
+    buildTabelaHorarios(this.atestadoDados()?.turmas ?? [])
+  );
+
   dataEmissao = computed(() =>
     new Date().toLocaleDateString('pt-BR', {
       day: '2-digit', month: '2-digit', year: 'numeric'
     })
   );
 
+  // Método auxiliar para exibir o Toast e sumir após 3 segundos
+  showToast(text: string, type: 'success' | 'error') {
+    this.toastMessage.set({ text, type });
+    setTimeout(() => this.toastMessage.set(null), 3000);
+  }
+
   async exportarPDF() {
-    const dados = await this.sigaaService.getAtestadoDados();
-    this.atestadoDados.set(dados);
+    if (this.isDownloadingAtestado()) return; // Previne múltiplos cliques
+    
+    this.isDownloadingAtestado.set(true);
+    
+    try {
+      const dados = await this.sigaaService.getAtestadoDados();
+      this.atestadoDados.set(dados);
 
-    setTimeout(async () => {
-      const data = document.getElementById('template-atestado-ufrpe');
-      if (!data) return;
+      // Transformamos o setTimeout em uma Promise para o bloco finally funcionar corretamente
+      await new Promise<void>((resolve, reject) => {
+        setTimeout(async () => {
+          try {
+            const data = document.getElementById('template-atestado-ufrpe');
+            if (!data) throw new Error('Template não encontrado');
 
-      const canvas = await html2canvas(data, {
-        scale: 3,
-        useCORS: true,
-        logging: false
+            const canvas = await html2canvas(data, {
+              scale: 3,
+              useCORS: true,
+              logging: false
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight(); 
+
+            let finalWidth = pdfWidth;
+            let finalHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            if (finalHeight > pdfHeight) {
+              finalHeight = pdfHeight - 10;
+              finalWidth = (canvas.width * finalHeight) / canvas.height;
+            }
+
+            const xOffset = (pdfWidth - finalWidth) / 2;
+            pdf.addImage(imgData, 'PNG', xOffset, 5, finalWidth, finalHeight); 
+            pdf.save(`Atestado_Matricula_${dados.matricula}.pdf`);
+
+            this.atestadoDados.set(null);
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        }, 100);
       });
 
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight(); // Altura máxima da página A4
-
-      // Calcula a altura proporcional da imagem
-      let finalWidth = pdfWidth;
-      let finalHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      // Se a imagem for maior que a página, reduzimos a proporção para caber na altura
-      if (finalHeight > pdfHeight) {
-        finalHeight = pdfHeight - 10; // Subtraímos 10mm para dar uma margem de respiro
-        finalWidth = (canvas.width * finalHeight) / canvas.height;
-      }
-
-      // Calcula o eixo X para centralizar a imagem caso ela tenha encolhido na largura
-      const xOffset = (pdfWidth - finalWidth) / 2;
-
-      pdf.addImage(imgData, 'PNG', xOffset, 5, finalWidth, finalHeight); // 5mm de margem no topo
-      pdf.save(`Atestado_Matricula_${dados.matricula}.pdf`);
-
-      this.atestadoDados.set(null);
-    }, 100);
+      this.showToast('Atestado baixado com sucesso!', 'success');
+    } catch (error) {
+      console.error('Erro ao gerar atestado:', error);
+      this.showToast('Erro ao baixar o atestado.', 'error');
+    } finally {
+      this.isDownloadingAtestado.set(false);
+    }
   }
 
   async emitirHistorico() {
+    if (this.isDownloadingHistorico()) return;
+    this.isDownloadingHistorico.set(true);
+
     try {
-      // 1. Busca o Blob (arquivo binário) do serviço
       const pdfBlob = await this.sigaaService.getHistoricoPdf();
-
-      // 2. Cria uma URL temporária no navegador para este Blob
       const url = window.URL.createObjectURL(pdfBlob);
-
-      // 3. Cria um link fantasma <a> no DOM
       const link = document.createElement('a');
       link.href = url;
       
-      // 4. Define o nome do arquivo (opcional, mas recomendado)
-      // Como não temos o nome ou matrícula fácil aqui, podemos usar um genérico ou tentar puxar do signal caso exista
       const matricula = this.atestadoDados()?.matricula || 'Aluno';
       link.download = `Historico_Academico_${matricula}.pdf`; 
 
-      // 5. Simula o clique para iniciar o download
       document.body.appendChild(link);
       link.click();
 
-      // 6. Limpeza (remove o link e revoga a URL para liberar memória)
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-
+      
+      this.showToast('Histórico baixado com sucesso!', 'success');
     } catch (error) {
       console.error('Erro ao baixar o histórico:', error);
-      // Aqui você pode adicionar um Toast ou Alert avisando o usuário sobre a falha
+      this.showToast('Erro ao baixar o histórico.', 'error');
+    } finally {
+      this.isDownloadingHistorico.set(false);
     }
   }
 
   async emitirVinculo() {
+    if (this.isDownloadingVinculo()) return;
+    this.isDownloadingVinculo.set(true);
+
     try {
-      // 1. Busca o Blob (arquivo binário) do serviço
       const pdfBlob = await this.sigaaService.getVinculoPdf();
-
-      // 2. Cria uma URL temporária no navegador para este Blob
       const url = window.URL.createObjectURL(pdfBlob);
-
-      // 3. Cria um link fantasma <a> no DOM
       const link = document.createElement('a');
       link.href = url;
       
-      // 4. Define o nome do arquivo (opcional, mas recomendado)
-      // Como não temos o nome ou matrícula fácil aqui, podemos usar um genérico ou tentar puxar do signal caso exista
       const matricula = this.atestadoDados()?.matricula || 'Aluno';
       link.download = `Declaração_Vínculo_${matricula}.pdf`; 
 
-      // 5. Simula o clique para iniciar o download
       document.body.appendChild(link);
       link.click();
 
-      // 6. Limpeza (remove o link e revoga a URL para liberar memória)
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-
+      
+      this.showToast('Declaração baixada com sucesso!', 'success');
     } catch (error) {
       console.error('Erro ao baixar a declaração de vínculo:', error);
-      // Aqui você pode adicionar um Toast ou Alert avisando o usuário sobre a falha
+      this.showToast('Erro ao baixar a declaração.', 'error');
+    } finally {
+      this.isDownloadingVinculo.set(false);
     }
   }
 

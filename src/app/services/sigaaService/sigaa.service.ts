@@ -50,6 +50,7 @@ export class SigaaService {
   }
 
   logout() {
+    const hasAcceptedPrivacy = localStorage.getItem('privacyAccepted');
     this.turmas.set([])
     this.nome.set('')
     this.avaliacoes.set([])
@@ -62,6 +63,7 @@ export class SigaaService {
     this.jsessionid.set('')
     localStorage.clear()
     this.router.navigate(['/login'])
+    localStorage.setItem('privacyAccepted', hasAcceptedPrivacy ?? 'false');
   }
 
   async login(username: string, password: string) {

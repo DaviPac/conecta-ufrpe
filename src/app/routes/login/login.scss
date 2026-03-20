@@ -107,3 +107,17 @@
     @apply bg-blue-800 border-blue-800 !important;
   }
 }
+
+
+
+/* Ajuste para telas pequenas (Mobile First) */
+@media screen and (max-width: 480px) {
+  ::ng-deep .p-toast {
+    width: 90vw !important; /* Ocupa 90% da largura da tela */
+    left: 5vw !important;  /* Centraliza horizontalmente */
+  }
+
+  ::ng-deep .p-toast-message-content {
+    padding: 1rem !important; /* Reduz o respiro interno para ganhar espaço */
+  }
+}
