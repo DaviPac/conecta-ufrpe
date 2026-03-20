@@ -1,53 +1,84 @@
-<div>
-  <div class="flex items-center justify-center">
-    <div
-      class="login-container shadow-2xl bg-white dark:bg-gray-900 p-8 rounded-lg dark:border dark:border-gray-700 w-full max-w-md"
-    >
-      <h2 class="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
-        Login SIGAA
-      </h2>
-
-      <form (submit)="onSubmit(); $event.preventDefault()" class="space-y-5">
-        <div>
-          <p-inputgroup class="py-2">
-            <p-inputgroup-addon>
-              <i class="pi pi-user"></i>
-            </p-inputgroup-addon>
-            <p-ifta-label>
-              <input id="username" name="username" type="text" pInputText fluid [(ngModel)]="username" [disabled]="loading" [invalid]="isUsernameInvalid">
-              <label for="username">Usuário</label>
-            </p-ifta-label>
-          </p-inputgroup>
-          <p-inputgroup class="py-2">
-            <p-inputgroup-addon>
-              <i class="pi pi-lock"></i>
-            </p-inputgroup-addon>
-            <p-ifta-label>
-              <p-password [(ngModel)]="password" inputId="password" name="password" feedback="false" toggleMask="true" [(ngModel)]="password" [disabled]="loading" [invalid]="isPasswordInvalid"/>
-              <label for="password">Senha</label>
-            </p-ifta-label>
-          </p-inputgroup>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <p-checkbox [(ngModel)]="rememberMe" [binary]="true" name="remembermMe" value="rememberMe" inputId="rememberMe"/>
-            <label for="rememberMe" class="ml-2 block text-sm text-gray-900 dark:text-gray-300 cursor-pointer">
-              Mantenha-me conectado
-            </label>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          [disabled]="loading"
-          class="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-blue-700 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {{ loading ? 'Entrando...' : 'Entrar' }}
-        </button>
-        <p-toast/>
-      </form>
+<div class="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans selection:bg-blue-900 selection:text-white">
+  <div class="bg-white p-10 md:p-12 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 w-full max-w-md">
+    
+    <div class="text-center mb-10">
+      <h1 class="text-3xl font-semibold tracking-tight text-slate-900 mb-1">SIGAA</h1>
+      <p class="text-sm text-slate-500 font-medium tracking-wide uppercase">Portal Acadêmico</p>
+      <div class="w-12 h-1 bg-blue-900 mx-auto mt-6 rounded-full"></div>
     </div>
-  </div>
 
+    <form (submit)="onSubmit(); $event.preventDefault()" class="space-y-6">
+      <div class="space-y-5">
+
+        <p-inputgroup class="custom-inputgroup">
+          <p-inputgroup-addon>
+            <i class="pi pi-user"></i> 
+          </p-inputgroup-addon>
+          
+          <p-ifta-label class="custom-ifta">
+            <input 
+              id="username" 
+              name="username" 
+              type="text" 
+              pInputText 
+              fluid 
+              [(ngModel)]="username" 
+              [disabled]="loading" 
+              [invalid]="isUsernameInvalid" 
+              class="custom-input"
+            >
+            <label for="username">Usuário</label>
+          </p-ifta-label>
+        </p-inputgroup>
+
+        <p-inputgroup class="custom-inputgroup">
+          <p-inputgroup-addon>
+            <i class="pi pi-lock"></i>
+          </p-inputgroup-addon>
+          
+          <p-ifta-label class="custom-ifta">
+            <p-password 
+              [(ngModel)]="password" 
+              inputId="password" 
+              name="password" 
+              [feedback]="false" 
+              [toggleMask]="true" 
+              [disabled]="loading" 
+              [invalid]="isPasswordInvalid" 
+              class="custom-password"
+            />
+            <label for="password" class="pointer-events-none">Senha</label>
+          </p-ifta-label>
+        </p-inputgroup>
+
+      </div>
+
+      <div class="flex items-center justify-between pt-2">
+        <div class="flex items-center">
+          <p-checkbox 
+            [(ngModel)]="rememberMe" 
+            [binary]="true" 
+            name="rememberMe" 
+            value="rememberMe" 
+            inputId="rememberMe"
+            class="custom-checkbox"
+          />
+          <label for="rememberMe" class="ml-2 block text-sm text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
+            Mantenha-me conectado
+          </label>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="loading"
+        class="w-full mt-6 bg-blue-900 text-white py-3.5 px-4 rounded-xl font-medium tracking-wide text-sm transition-all duration-300 shadow-md hover:bg-blue-800 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {{ loading ? 'Autenticando...' : 'Acessar Sistema' }}
+      </button>
+      
+      <p-toast/>
+    </form>
+  
+  </div>
 </div>

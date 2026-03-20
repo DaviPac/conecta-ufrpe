@@ -1,0 +1,109 @@
+
+/* --- Customização do InputGroup do PrimeNG --- */
+.custom-inputgroup {
+  @apply border-b border-slate-200 transition-colors;
+
+  &:focus-within {
+    @apply border-blue-900;
+  }
+
+  ::ng-deep p-inputgroup-addon {
+    @apply bg-white border-none text-slate-500;
+  }
+}
+
+/* --- Customização do Label Dinâmico --- */
+.custom-ifta {
+  ::ng-deep > label {
+    @apply text-slate-500;
+  }
+  
+  &:focus-within ::ng-deep > label {
+    @apply text-blue-900;
+  }
+}
+
+/* --- Input Nativo --- */
+.custom-input {
+  @apply bg-transparent border-none outline-none shadow-none text-slate-800 w-full font-normal;
+  
+  &:focus {
+    @apply ring-0 outline-none;
+  }
+}
+
+/* --- Componente de Senha (p-password) --- */
+.custom-password {
+  /* Adicionado relative e block para garantir que o ícone absoluto respeite esse container */
+  @apply w-full outline-none border-none relative block;
+
+  ::ng-deep input {
+    /* Adicionado relative e z-10 para o input não sobrepor o ícone */
+    @apply bg-transparent border-none outline-none shadow-none text-slate-800 w-full font-normal pr-10 relative z-10; 
+    
+    &:focus {
+      @apply ring-0 outline-none;
+    }
+
+    /* Oculta os ícones nativos de revelação de senha em navegadores Edge/Webkit */
+    &::-ms-reveal,
+    &::-ms-clear {
+      display: none !important;
+    }
+    &::-webkit-credentials-auto-fill-button {
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+  }
+ 
+ /* Abrange todos os estados (mask/unmask) e variações de versão do PrimeNG */
+  ::ng-deep .p-password-show-icon,
+  ::ng-deep .p-password-hide-icon,
+  ::ng-deep .p-password-mask-icon,
+  ::ng-deep .p-password-unmask-icon, /* A MÁGICA QUE FALTAVA AQUI */
+  ::ng-deep svg.p-icon,
+  ::ng-deep i.pi-eye,
+  ::ng-deep i.pi-eye-slash {
+    /* top-1/2 e -translate-y-1/2 garantem que o ícone fique centralizado e clicável */
+    @apply absolute right-3 translate-y-1/4 z-[50] pointer-events-auto cursor-pointer text-slate-400 transition-colors !important;
+    
+    &:hover {
+      @apply text-slate-600 !important;
+    }
+  }
+}
+
+/* --- Componente de Checkbox --- */
+.custom-checkbox {
+  @apply text-slate-400;
+
+  /* 1. Estilos base da caixinha */
+  ::ng-deep .p-checkbox-box {
+    @apply bg-white border border-slate-300 rounded transition-colors;
+
+    /* Estado de Foco (Acessibilidade via Teclado) */
+    &.p-focus {
+      @apply border-blue-900 ring-2 ring-blue-900/20 !important;
+    }
+
+    /* Estado Marcado (Highlight) - Base */
+    &.p-highlight {
+      @apply bg-blue-900 border-blue-900 text-white !important;
+
+      /* Garante que o ícone de check (V) fique branco */
+      .p-checkbox-icon {
+        @apply text-white !important;
+      }
+    }
+  }
+
+  /* 2. Hover QUANDO NÃO está marcado */
+  &:hover ::ng-deep .p-checkbox-box:not(.p-highlight) {
+    @apply bg-slate-50 border-slate-400 !important;
+  }
+
+  /* 3. Hover QUANDO ESTÁ marcado (A regra que mata o verde!) */
+  &:hover ::ng-deep .p-checkbox-box.p-highlight {
+    @apply bg-blue-800 border-blue-800 !important;
+  }
+}

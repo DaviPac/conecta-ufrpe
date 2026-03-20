@@ -1,53 +1,62 @@
 import { Component, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule, Router } from '@angular/router'; // <-- Importado RouterModule
 import { formatarHorarios, parseFaltas } from '../../utils/formatters';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-turma-detalhes',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule], // <-- Adicionado aqui
   templateUrl: './turma-detail.html',
 })
 export class TurmaDetail implements OnInit {
   private sigaaService: SigaaService = inject(SigaaService);
-  private router: Router = inject(Router)
-  private uid = 0;
-  id = () => this.uid++;
-  turma = computed(() => {
-    const turmas = this.sigaaService.turmas()
-    const idx = this.sigaaService.currentTurmaIdx()
-    if (idx === null) return turmas[0]
-    return turmas[idx]
-  })
-  avaliacoes = this.sigaaService.avaliacoes;
+  private router: Router = inject(Router);
+  
   formatarHorarios = formatarHorarios;
   parseFaltas = parseFaltas;
-  Number = Number
+  Number = Number;
 
-  ngOnInit(): void {
-      if (this.sigaaService.currentTurmaIdx === null) this.router.navigate(['/'])
-  }
+  turma = computed(() => {
+    const turmas = this.sigaaService.turmas();
+    const idx = this.sigaaService.currentTurmaIdx();
+    if (idx === null) return turmas[0];
+    return turmas[idx];
+  });
 
   avaliacoesDaTurma = computed(() => {
     const turmaAtual = this.turma();
-    const todasAvaliacoes = this.avaliacoes();
+    const todasAvaliacoes = this.sigaaService.avaliacoes();
     if (!turmaAtual || !todasAvaliacoes) return [];
     return todasAvaliacoes.filter((av) => av.turmaNome === turmaAtual.nome);
   });
 
-  getSituacaoClass(situacao: string): string {
-    switch (situacao.toLowerCase()) {
-      case 'aprovado':
-        return 'text-green-600';
-      case 'reprovado':
-        return 'text-red-600';
-      case 'em recuperação':
-      case 'prova final':
-        return 'text-yellow-600';
-      default:
-        return 'text-gray-700';
-    }
+  ngOnInit(): void {
+      // Correção: Adicionado os parênteses () para pegar o valor do Signal
+      if (this.sigaaService.currentTurmaIdx() === null) {
+        this.router.navigate(['/']);
+      }
+  }
+
+  // Helpers para deixar o HTML mais limpo e seguro
+  get hasNotas(): boolean {
+    const notas = this.turma()?.notas?.notas;
+    return !!notas && Object.keys(notas).length > 0;
+  }
+
+  get faltasDisplay(): string | number {
+    const faltas = this.turma()?.faltas;
+    return faltas !== undefined ? this.parseFaltas(faltas) : 'não lançada';
+  }
+
+  get hasMuitasFaltas(): boolean {
+    const faltas = this.turma()?.faltas;
+    return typeof faltas === 'number' && faltas > 10;
+  }
+
+  get hasCronograma(): boolean {
+    const cronograma = this.turma()?.cronograma;
+    return !!cronograma && cronograma.length > 0;
   }
 }

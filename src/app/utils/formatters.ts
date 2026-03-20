@@ -84,12 +84,13 @@ const horariosMap: Record<string, Record<string, HorarioDetalhado>> = {
     '3': { start: '15:00', end: '16:00' },
     '4': { start: '16:00', end: '17:00' },
     '5': { start: '17:00', end: '18:00' },
+    '6': { start: '18:00', end: '19:00' },
   },
   N: {
-    '1': { start: '19:00', end: '19:50' },
-    '2': { start: '20:00', end: '20:50' },
-    '3': { start: '21:00', end: '21:50' },
-    '4': { start: '22:00', end: '22:50' },
+    '1': { start: '18:30', end: '19:20' },
+    '2': { start: '19:20', end: '20:10' },
+    '3': { start: '20:10', end: '21:00' },
+    '4': { start: '21:00', end: '21:50' },
   },
 };
 

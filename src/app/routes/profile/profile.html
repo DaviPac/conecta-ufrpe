@@ -1,194 +1,115 @@
-<header class="p-6 flex justify-between items-center mb-4 md:mb-6">
-  <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
-    Meu Painel Acadêmico
-  </h1>
-  <button
-    (click)="onLogout()"
-    class="bg-red-600 text-sm text-white py-2 px-4 rounded-md font-semibold hover:bg-red-700 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-  >
-    Sair
-  </button>
-</header>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 md:p-6">
-  <div class="lg:col-span-2">
-    <section
-      class="rounded-2xl bg-white p-4 md:p-6 shadow-lg dark:bg-gray-800 transition-colors duration-300"
-    >
-      <h2 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
-        Progresso da Carga Horária
-      </h2>
-
-      <div class="rounded-lg bg-indigo-50 p-1 px-4 md:p-4 dark:bg-gray-700/50">
-        <div class="mb-2 flex items-baseline justify-between">
-          <span class="text-md font-semibold text-indigo-700 dark:text-indigo-300">
-            Progresso Total
-          </span>
-          <span class="text-md font-bold text-indigo-700 dark:text-indigo-300">
-            {{ percentual | number: '1.1-1' }}%
-          </span>
-        </div>
-        <div class="h-3 w-full rounded-full bg-gray-200 dark:bg-gray-600 shadow-inner">
-          <div
-            class="h-3 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 dark:from-indigo-400 dark:to-indigo-500 transition-all duration-500 ease-out"
-            [style.width.%]="percentual"
-            role="progressbar"
-            [attr.aria-valuenow]="percentual"
-            aria-valuemin="0"
-            aria-valuemax="100"
-          ></div>
-        </div>
-
-        <div class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400">
-          <span>{{ totalConcluido | number: '1.0-0' }}h Concluídas</span>
-          <span>{{ total | number: '1.0-0' }}h Totais</span>
-        </div>
-      </div>
-
-      <hr class="my-4 border-t border-gray-200 dark:border-gray-700" />
+<div class="bg-slate-50 min-h-screen pt-24 md:pt-28 pb-10 px-4 md:px-8 font-sans">
+  <div class="max-w-7xl mx-auto">
+    <header class="flex justify-between items-end mb-8 border-b border-slate-200 pb-4">
       <div>
-        <h3 class="mb-2 text-lg font-semibold text-gray-700 dark:text-gray-200">
-          Detalhes de Horas Pendentes
-        </h3>
-        <div class="space-y-2">
-          @for (item of pendingItemsData; track item.label) {
-            <div
-              class="flex items-center justify-between rounded-lg bg-gray-50 p-1 md:p-3 dark:bg-gray-700/50"
-            >
-              <div class="flex items-center space-x-1">
-                <span class="text-gray-400">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="h-4 w-4"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
-                </span>
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">
-                  {{ item.label }}
-                </span>
-              </div>
-              <span
-                class="rounded-full bg-orange-100 px-2 py-1 text-sm font-bold text-orange-700 dark:bg-orange-800/50 dark:text-orange-300"
-              >
-                {{ item.horas }}h
+        <h1 class="text-2xl md:text-3xl font-light text-slate-800">Dossiê Acadêmico</h1>
+        <p class="text-slate-500 mt-1 text-sm">Histórico e índices de desempenho</p>
+      </div>
+      <button
+        (click)="onLogout()"
+        class="hidden md:flex items-center gap-2 text-sm text-slate-600 bg-white border border-slate-300 py-2 px-4 rounded-lg hover:bg-slate-50 hover:text-red-700 transition-all focus:outline-none focus:ring-2 focus:ring-slate-200"
+      >
+        <i class="pi pi-sign-out"></i> Encerrar Sessão
+      </button>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <div class="lg:col-span-2 space-y-8">
+        <section class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+          <h2 class="mb-8 text-sm font-semibold tracking-wide text-slate-500 uppercase flex items-center gap-2">
+            <i class="pi pi-chart-pie text-blue-900"></i> Integralização Curricular
+          </h2>
+
+          <div class="mb-10">
+            <div class="mb-3 flex items-end justify-between">
+              <span class="text-4xl font-light text-slate-900">
+                {{ percentual | number: '1.1-1' }}<span class="text-xl text-slate-400">%</span>
               </span>
+              <div class="text-right text-sm font-medium text-slate-500">
+                <span>{{ totalConcluido | number: '1.0-0' }}h / {{ total | number: '1.0-0' }}h</span>
+              </div>
             </div>
-          }
-        </div>
+            
+            <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+              <div
+                class="h-full rounded-full bg-blue-900 transition-all duration-1000 ease-out relative"
+                [style.width.%]="percentual"
+                role="progressbar"
+                [attr.aria-valuenow]="percentual"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                <div class="absolute top-0 right-0 bottom-0 left-0 bg-gradient-to-r from-transparent to-white/20"></div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="mb-4 text-xs font-semibold tracking-wide text-slate-500 uppercase border-b border-slate-100 pb-2">
+              Detalhamento de Carga Horária Pendente
+            </h3>
+            <div class="space-y-3 mt-4">
+              @for (item of pendingItemsData; track item.label) {
+                <div class="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                  <div class="flex items-center space-x-3">
+                    <div class="h-2 w-2 rounded-full bg-slate-300"></div>
+                    <span class="text-sm text-slate-700 font-medium">
+                      {{ item.label }}
+                    </span>
+                  </div>
+                  <span class="text-sm font-semibold text-slate-900">
+                    {{ item.horas }}h
+                  </span>
+                </div>
+              }
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
-  </div>
 
-  <div class="lg:col-span-1">
-    <section
-      class="rounded-2xl bg-white p-4 md:p-6 shadow-lg dark:bg-gray-800 transition-colors duration-300"
-    >
-      <h2 class="text-lg font-semibold text-center text-gray-800 dark:text-gray-100">
-        Índices Acadêmicos
-      </h2>
-      <hr class="my-2 border-t border-gray-200 dark:border-gray-700" />
+      <div class="lg:col-span-1">
+        <section class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 h-full">
+          <h2 class="mb-6 text-sm font-semibold tracking-wide text-slate-500 uppercase flex items-center justify-center gap-2 border-b border-slate-100 pb-4">
+            <i class="pi pi-list text-amber-700"></i> Índices Oficiais
+          </h2>
 
-      <div class="space-y-3 text-sm">
-        <div class="flex justify-between items-center">
-          <span class="font-medium text-gray-600 dark:text-gray-300" title="Média de Conclusão">
-            MC:
-          </span>
-          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
-            {{ indices?.mc }}
-          </span>
-        </div>
-        <div class="flex justify-between items-center">
-          <span
-            class="font-medium text-gray-600 dark:text-gray-300"
-            title="Média de Conclusão Normalizada"
-          >
-            MCN:
-          </span>
-          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
-            {{ indices?.mcn }}
-          </span>
-        </div>
-
-        <div class="flex justify-between items-center">
-          <span
-            class="font-medium text-gray-600 dark:text-gray-300"
-            title="Índice de Rendimento Acadêmico"
-          >
-            IRA:
-          </span>
-          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
-            {{ indices?.ira }}
-          </span>
-        </div>
-
-        <div class="flex justify-between items-center">
-          <span
-            class="font-medium text-gray-600 dark:text-gray-300"
-            title="Índice de Eficiência em Carga Horária"
-          >
-            IECH:
-          </span>
-          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
-            {{ indices?.iech }}
-          </span>
-        </div>
-
-        <div class="flex justify-between items-center">
-          <span
-            class="font-medium text-gray-600 dark:text-gray-300"
-            title="Índice de Eficiência em Períodos Letivos"
-          >
-            IEPL:
-          </span>
-          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
-            {{ indices?.iepl }}
-          </span>
-        </div>
-
-        <div class="flex justify-between items-center">
-          <span
-            class="font-medium text-gray-600 dark:text-gray-300"
-            title="Índice de Eficiência Acadêmica"
-          >
-            IEA:
-          </span>
-          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
-            {{ indices?.iea }}
-          </span>
-        </div>
-
-        <div class="flex justify-between items-center">
-          <span
-            class="font-medium text-gray-600 dark:text-gray-300"
-            title="Índice de Eficiência em Acadêmica Normalizada"
-          >
-            IEAN:
-          </span>
-          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
-            {{ indices?.iean }}
-          </span>
-        </div>
-
-        <div class="flex justify-between items-center">
-          <span
-            class="font-medium text-gray-600 dark:text-gray-300"
-            title="Índice de Eficiência em Carga Horária por Periodo"
-          >
-            IECHP:
-          </span>
-          <span class="text-base font-semibold text-gray-800 dark:text-gray-100">
-            {{ indices?.iechp }}
-          </span>
-        </div>
+          <div class="space-y-5 mt-6">
+            <div class="flex justify-between items-center group">
+              <span class="text-sm font-medium text-slate-500 cursor-help" title="Média de Conclusão">MC</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices?.mc }}</span>
+            </div>
+            <div class="flex justify-between items-center group">
+              <span class="text-sm font-medium text-slate-500 cursor-help" title="Média de Conclusão Normalizada">MCN</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices?.mcn }}</span>
+            </div>
+            <div class="flex justify-between items-center group">
+              <span class="text-sm font-medium text-slate-500 cursor-help" title="Índice de Rendimento Acadêmico">IRA</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices?.ira }}</span>
+            </div>
+            <div class="flex justify-between items-center group">
+              <span class="text-sm font-medium text-slate-500 cursor-help" title="Índice de Eficiência em Carga Horária">IECH</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices?.iech }}</span>
+            </div>
+            <div class="flex justify-between items-center group">
+              <span class="text-sm font-medium text-slate-500 cursor-help" title="Índice de Eficiência em Períodos Letivos">IEPL</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices?.iepl }}</span>
+            </div>
+            <div class="flex justify-between items-center group">
+              <span class="text-sm font-medium text-slate-500 cursor-help" title="Índice de Eficiência Acadêmica">IEA</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices?.iea }}</span>
+            </div>
+            <div class="flex justify-between items-center group">
+              <span class="text-sm font-medium text-slate-500 cursor-help" title="Índice de Eficiência em Acadêmica Normalizada">IEAN</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices?.iean }}</span>
+            </div>
+            <div class="flex justify-between items-center group">
+              <span class="text-sm font-medium text-slate-500 cursor-help" title="Índice de Eficiência em Carga Horária por Periodo">IECHP</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices?.iechp }}</span>
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
+    </div>
   </div>
 </div>

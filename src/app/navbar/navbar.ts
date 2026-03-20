@@ -24,8 +24,7 @@ export class Navbar {
   }
 
   logout() {
-    //this.sigaaService.logout();
-    this.router.navigate(['/login']);
+    this.sigaaService.logout();
   }
 
   nome(): string | undefined {
