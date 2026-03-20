@@ -7,6 +7,7 @@ import {
   NotasResponse,
   Turma,
   TurmaDetailResponse,
+  AtestadoMatricula
 } from '../../models/sigaa.models';
 import { Router } from '@angular/router';
 
@@ -28,6 +29,8 @@ export class SigaaService {
   indices: WritableSignal<IndicesAcademicos | null> = signal(null);
   currentTurma: WritableSignal<Turma | null> = signal(null);
   currentTurmaIdx: WritableSignal<number | null> = signal(null);
+
+  pdfCache: WritableSignal<Uint8Array | undefined> = signal(undefined);
 
   username: string = '';
   password: string = '';
@@ -201,5 +204,84 @@ export class SigaaService {
     }
     console.log('fetch turmas:');
     console.log(this.turmas());
+  }
+
+  async getAtestadoDados(): Promise<AtestadoMatricula> {
+    const res = await fetch(`${this.domain}/matricula`, {
+        method: 'POST',
+        body: JSON.stringify({ viewState: this.viewState() }),
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + this.jsessionid()
+        },
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Erro desconhecido ao buscar atestado de matrícula');
+    }
+
+    const data = await res.json();
+    return data as AtestadoMatricula;
+  }
+
+  async getVinculoPdf(): Promise<Blob> {
+    const token = this.jsessionid();
+    const viewState = this.viewState();
+
+    if (!token || !viewState) {
+      throw new Error('Sessão inválida ou expirada');
+    }
+
+    const res = await fetch(`${this.domain}/vinculo`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify({ viewState }),
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Erro ao baixar declaração de vínculo';
+      try {
+        const errorData = await res.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch {}
+      throw new Error(errorMessage);
+    }
+
+    const blob = await res.blob();
+    return blob;
+  }
+
+  async getHistoricoPdf(): Promise<Blob> {
+    const token = this.jsessionid();
+    const viewState = this.viewState();
+
+    if (!token || !viewState) {
+      throw new Error('Sessão inválida ou expirada');
+    }
+
+    const res = await fetch(`${this.domain}/historico`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify({ viewState }),
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Erro ao baixar histórico';
+      try {
+        const errorData = await res.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch {}
+      throw new Error(errorMessage);
+    }
+
+    const blob = await res.blob();
+    return blob;
   }
 }

@@ -84,3 +84,24 @@ export interface NotasResponse {
   jsessionid: string;
   viewState: string;
 }
+
+export interface TurmaMatricula {
+  codigo: string;
+  nome: string;
+  professor: string;
+  local: string;
+  tipo: string;
+  status: "MATRICULADO" | "INDEFERIDO" | string;
+  horario: string;
+}
+
+export interface AtestadoMatricula {
+  periodoLetivo: string;
+  matricula: string;
+  vinculo: string;
+  nome: string;
+  nivel: string;
+  curso: string;
+  turmas: TurmaMatricula[];
+  codigoVerificacao: string;
+}

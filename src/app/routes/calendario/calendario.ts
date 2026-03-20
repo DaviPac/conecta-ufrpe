@@ -1,26 +1,23 @@
 import { Component, inject, OnInit, signal, WritableSignal } from '@angular/core';
-import { SafeResourceUrl, DomSanitizer } from '@angular/platform-browser';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
+import { PdfViewerModule } from 'ng2-pdf-viewer';
 
 @Component({
   selector: 'app-calendario',
   templateUrl: './calendario.html',
   styleUrls: ['./calendario.scss'],
+  imports: [PdfViewerModule]
 })
 export class Calendario implements OnInit {
   private sigaaService = inject(SigaaService);
-  private sanitizer = inject(DomSanitizer);
 
-  calendarioUrl: WritableSignal<SafeResourceUrl | null> = signal(null);
+  // Agora guardamos o PDF diretamente na memória em vez de uma URL sanitizada
+  pdfSrc: WritableSignal<Uint8Array | undefined> = signal(undefined);
   rawUrlSignal: WritableSignal<string | null> = signal(null);
-  carregando = signal(true);
-  iframeLoading: WritableSignal<boolean> = signal(true);
-  erro = signal(false);
   
-  // Novo sinal para controlar o estado do botão de download
+  carregando = signal(true);
+  erro = signal(false);
   isDownloading = signal(false);
-
-  onIframeLoad = () => this.iframeLoading.set(false);
 
   ngOnInit() {
     this.carregarCalendario();
@@ -29,17 +26,38 @@ export class Calendario implements OnInit {
   async carregarCalendario() {
     this.erro.set(false);
     this.carregando.set(true);
-    this.iframeLoading.set(true);
 
     try {
       const rawUrl = this.sigaaService.getCalendarioUrl();
-      if (rawUrl) {
-        this.rawUrlSignal.set(rawUrl);
-        const viewer = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(rawUrl)}`;
-        this.calendarioUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(viewer));
-      } else {
+      if (!rawUrl) {
         this.erro.set(true);
+        return;
       }
+      this.rawUrlSignal.set(rawUrl);
+
+      // 1. Verifica o Cache
+      const pdfEmCache = this.sigaaService.pdfCache();
+      if (pdfEmCache) {
+        // O SEGREDO: Passamos uma CÓPIA exata do array para o visualizador.
+        // Assim, se o PDF.js consumir o buffer, o cache do serviço continua a salvo!
+        this.pdfSrc.set(new Uint8Array(pdfEmCache)); 
+        this.carregando.set(false);
+        return;
+      }
+
+      // 2. Se não tem cache, faz o fetch
+      const response = await fetch(rawUrl);
+      if (!response.ok) throw new Error('Falha na rede ao buscar o documento');
+      
+      const buffer = await response.arrayBuffer();
+      const pdfData = new Uint8Array(buffer);
+
+      // 3. Salva a versão original no cache do serviço
+      this.sigaaService.pdfCache.set(pdfData);
+      
+      // 4. Passa uma CÓPIA para o componente visualizar
+      this.pdfSrc.set(new Uint8Array(pdfData));
+      
     } catch (err) {
       console.error('Erro ao carregar calendário:', err);
       this.erro.set(true);
@@ -49,44 +67,38 @@ export class Calendario implements OnInit {
   }
 
   recarregar() {
-    this.calendarioUrl.set(null); 
+    this.pdfSrc.set(undefined);
+    // Limpa o cache também caso o usuário force o recarregamento
+    this.sigaaService.pdfCache.set(undefined); 
     setTimeout(() => this.carregarCalendario(), 50);
   }
 
-  // Nova função para forçar o download via Blob
+  // O seu método baixarPdf() continua exatamente o mesmo!
   async baixarPdf() {
-    const url = this.rawUrlSignal();
-    if (!url || this.isDownloading()) return;
+    // Pega o array de bytes que já está na memória
+    const pdfData = this.sigaaService.pdfCache();
+    
+    if (!pdfData || this.isDownloading()) return;
 
     this.isDownloading.set(true);
 
     try {
-      // Faz a requisição do arquivo
-      const response = await fetch(url);
-      
-      if (!response.ok) throw new Error('Falha na rede ao tentar baixar o arquivo');
-      
-      // Converte a resposta em um Blob (arquivo binário)
-      const blob = await response.blob();
-      
-      // Cria uma URL local e temporária para o Blob
+      // Cria o arquivo PDF instantaneamente a partir da memória
+      const blob = new Blob([pdfData.buffer as ArrayBuffer], { type: 'application/pdf' });
       const blobUrl = window.URL.createObjectURL(blob);
       
-      // Cria um elemento <a> invisível para forçar o download
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = 'Calendario_Academico_UFRPE.pdf'; // Nome do arquivo a ser salvo
+      link.download = 'Calendario_Academico_UFRPE.pdf';
       document.body.appendChild(link);
       
-      link.click(); // Simula o clique
+      link.click();
       
-      // Limpeza da memória
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
 
     } catch (error) {
-      console.error('Erro ao baixar o PDF:', error);
-      // Aqui seria um ótimo lugar para chamar aquele Toast de erro!
+      console.error('Erro ao processar download:', error);
     } finally {
       this.isDownloading.set(false);
     }

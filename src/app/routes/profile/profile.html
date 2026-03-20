@@ -1,15 +1,18 @@
 <div class="bg-slate-50 min-h-screen pt-24 md:pt-28 pb-10 px-4 md:px-8 font-sans">
   <div class="max-w-7xl mx-auto">
-    <header class="flex justify-between items-end mb-8 border-b border-slate-200 pb-4">
+    <header class="flex justify-between items-center mb-8 border-b border-slate-200 pb-4">
       <div>
         <h1 class="text-2xl md:text-3xl font-light text-slate-800">Dossiê Acadêmico</h1>
         <p class="text-slate-500 mt-1 text-sm">Histórico e índices de desempenho</p>
       </div>
+      
       <button
         (click)="onLogout()"
-        class="hidden md:flex items-center gap-2 text-sm text-slate-600 bg-white border border-slate-300 py-2 px-4 rounded-lg hover:bg-slate-50 hover:text-red-700 transition-all focus:outline-none focus:ring-2 focus:ring-slate-200"
+        class="flex md:hidden items-center gap-2 text-sm text-slate-500 bg-transparent py-2 px-3 md:px-4 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-100"
+        title="Encerrar Sessão"
       >
-        <i class="pi pi-sign-out"></i> Encerrar Sessão
+        <i class="pi pi-sign-out text-lg"></i> 
+        <span class="md:hidden font-medium">Sair</span>
       </button>
     </header>
 
@@ -77,39 +80,188 @@
           <div class="space-y-5 mt-6">
             <div class="flex justify-between items-center group">
               <span class="text-sm font-medium text-slate-500 cursor-help" title="Média de Conclusão">MC</span>
-              <span class="text-lg font-semibold text-blue-900">{{ indices?.mc }}</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices()?.mc }}</span>
             </div>
             <div class="flex justify-between items-center group">
               <span class="text-sm font-medium text-slate-500 cursor-help" title="Média de Conclusão Normalizada">MCN</span>
-              <span class="text-lg font-semibold text-blue-900">{{ indices?.mcn }}</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices()?.mcn }}</span>
             </div>
             <div class="flex justify-between items-center group">
               <span class="text-sm font-medium text-slate-500 cursor-help" title="Índice de Rendimento Acadêmico">IRA</span>
-              <span class="text-lg font-semibold text-blue-900">{{ indices?.ira }}</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices()?.ira }}</span>
             </div>
             <div class="flex justify-between items-center group">
               <span class="text-sm font-medium text-slate-500 cursor-help" title="Índice de Eficiência em Carga Horária">IECH</span>
-              <span class="text-lg font-semibold text-blue-900">{{ indices?.iech }}</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices()?.iech }}</span>
             </div>
             <div class="flex justify-between items-center group">
               <span class="text-sm font-medium text-slate-500 cursor-help" title="Índice de Eficiência em Períodos Letivos">IEPL</span>
-              <span class="text-lg font-semibold text-blue-900">{{ indices?.iepl }}</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices()?.iepl }}</span>
             </div>
             <div class="flex justify-between items-center group">
               <span class="text-sm font-medium text-slate-500 cursor-help" title="Índice de Eficiência Acadêmica">IEA</span>
-              <span class="text-lg font-semibold text-blue-900">{{ indices?.iea }}</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices()?.iea }}</span>
             </div>
             <div class="flex justify-between items-center group">
               <span class="text-sm font-medium text-slate-500 cursor-help" title="Índice de Eficiência em Acadêmica Normalizada">IEAN</span>
-              <span class="text-lg font-semibold text-blue-900">{{ indices?.iean }}</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices()?.iean }}</span>
             </div>
             <div class="flex justify-between items-center group">
               <span class="text-sm font-medium text-slate-500 cursor-help" title="Índice de Eficiência em Carga Horária por Periodo">IECHP</span>
-              <span class="text-lg font-semibold text-blue-900">{{ indices?.iechp }}</span>
+              <span class="text-lg font-semibold text-blue-900">{{ indices()?.iechp }}</span>
             </div>
           </div>
         </section>
       </div>
     </div>
+    <div class="flex flex-wrap justify-end gap-3 mt-8 border-t border-slate-200 pt-6">
+      <button
+        (click)="emitirVinculo()"
+        class="w-full sm:w-auto flex justify-center items-center gap-2 text-sm text-slate-600 bg-white border border-slate-300 py-2 px-4 rounded-lg hover:bg-slate-50 hover:text-amber-700 hover:border-amber-200 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+      >
+        <i class="pi pi-id-card"></i> Declaração de vínculo
+      </button>
+      
+      <button
+        (click)="emitirHistorico()"
+        class="w-full sm:w-auto flex justify-center items-center gap-2 text-sm text-slate-600 bg-white border border-slate-300 py-2 px-4 rounded-lg hover:bg-slate-50 hover:text-amber-700 hover:border-amber-200 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+      >
+        <i class="pi pi-history"></i> Emitir histórico
+      </button>
+
+      <button
+        (click)="exportarPDF()"
+        class="w-full sm:w-auto flex justify-center items-center gap-2 text-sm text-slate-600 bg-white border border-slate-300 py-2 px-4 rounded-lg hover:bg-slate-50 hover:text-amber-700 hover:border-amber-200 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+      >
+        <i class="pi pi-file-pdf"></i> Atestado de matrícula
+      </button>
+    </div>
   </div>
 </div>
+@if (atestadoDados()) {
+<div id="template-atestado-ufrpe" class="fixed top-[-9999px] left-[-9999px] w-[780px] bg-white text-black" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px;">
+ 
+  <!-- ══ CABEÇALHO ══ -->
+  <div style="border: 1px solid #aaa;">
+    <div style="display:grid; grid-template-columns:160px 1fr 100px; align-items:center; padding:8px 12px; gap:8px; border-bottom:2px solid #555;">
+ 
+      <!-- Logotipo texto -->
+      <div style="font-size:9.5px; font-weight:bold; text-align:center; color:#003366; border:1px solid #003366; padding:6px 4px; line-height:1.3;">
+        UNIVERSIDADE<br>FEDERAL RURAL<br>DE PERNAMBUCO
+      </div>
+ 
+      <!-- Título central -->
+      <div style="text-align:center; font-size:12px; font-weight:bold; line-height:1.6;">
+        Universidade Federal Rural de Pernambuco<br>
+        <span style="font-weight:normal; font-size:11.5px;">Sistema Integrado de Gestão de Atividades<br>Acadêmicas</span>
+      </div>
+    </div>
+ 
+    <!-- Emitido em -->
+    <div style="text-align:right; font-size:10px; padding:3px 12px 4px; border-bottom:1px solid #ccc; color:#333;">
+      Emitido em {{ dataEmissao() }}
+    </div>
+  </div>
+ 
+  <!-- ══ CORPO ══ -->
+  <div style="padding:10px 14px 14px; border:1px solid #aaa; border-top:none;">
+ 
+    <!-- Título Atestado -->
+    <div style="text-align:center; font-size:14px; font-weight:bold; text-decoration:underline; margin-bottom:10px; letter-spacing:0.5px;">
+      Atestado de Matrícula
+    </div>
+ 
+    <!-- Dados do aluno -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; font-size:11.5px; margin-bottom:12px;">
+      <div style="padding:2px 0;">Período Letivo: <strong>{{ atestadoDados()!.periodoLetivo }}</strong></div>
+      <div style="padding:2px 0;">Nível: <strong>{{ atestadoDados()!.nivel }}</strong></div>
+      <div style="padding:2px 0;">Matrícula: <strong>{{ atestadoDados()!.matricula }}</strong></div>
+      <div style="padding:2px 0;">Vínculo: <strong>{{ atestadoDados()!.vinculo }}</strong></div>
+      <div style="grid-column:1/-1; padding:2px 0;">Nome: <strong>{{ atestadoDados()!.nome }}</strong></div>
+      <div style="grid-column:1/-1; padding:2px 0;">Curso: <strong>{{ atestadoDados()!.curso }}</strong></div>
+    </div>
+ 
+    <!-- Turmas -->
+    <div style="font-weight:bold; font-size:11.5px; margin:10px 0 4px;">
+      Turmas Matriculadas: {{ atestadoDados()!.turmas.length }}
+    </div>
+ 
+    <table style="width:100%; border-collapse:collapse; font-size:11px;">
+      <thead>
+        <tr style="background:#e0e0e0;">
+          <th style="border:1px solid #999; padding:4px 6px; font-weight:bold; text-align:left;">Cód.</th>
+          <th style="border:1px solid #999; padding:4px 6px; font-weight:bold; text-align:left;">Componentes Curriculares/Docentes</th>
+          <th style="border:1px solid #999; padding:4px 6px; font-weight:bold; text-align:left;">Turma</th>
+          <th style="border:1px solid #999; padding:4px 6px; font-weight:bold; text-align:left;">Status</th>
+          <th style="border:1px solid #999; padding:4px 6px; font-weight:bold; text-align:left;">Horário</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (turma of atestadoDados()!.turmas; track turma.codigo) {
+        <tr>
+          <td style="border:1px solid #bbb; padding:3px 6px; vertical-align:top;">{{ turma.codigo }}</td>
+          <td style="border:1px solid #bbb; padding:3px 6px; vertical-align:top;">
+            <span style="font-weight:bold; display:block;">{{ turma.nome }}</span>
+            <span style="font-size:10px; color:#333;">{{ turma.professor }}</span><br>
+            <span style="font-size:10px; color:#333;"><strong>Tipo:</strong> {{ turma.tipo }}&nbsp;&nbsp;&nbsp;<strong>Local:</strong> {{ turma.local }}</span>
+          </td>
+          <td style="border:1px solid #bbb; padding:3px 6px; vertical-align:top; text-align:center;">01</td>
+          <td style="border:1px solid #bbb; padding:3px 6px; vertical-align:top;"
+              [style.color]="turma.status === 'MATRICULADO' ? '#000' : '#000'">
+            {{ turma.status }}
+          </td>
+          <td style="border:1px solid #bbb; padding:3px 6px; vertical-align:top; font-size:10px;">{{ turma.horario }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+ 
+    <!-- ══ TABELA DE HORÁRIOS ══ -->
+    <div style="font-weight:bold; font-size:11.5px; margin:14px 0 4px;">Tabela de Horários:</div>
+ 
+    <table style="width:100%; border-collapse:collapse; font-size:9.5px;">
+      <thead>
+        <tr>
+          <th style="background:#e0e0e0; border:1px solid #999; padding:3px 4px; text-align:center; font-weight:bold; font-size:10px;">Horários</th>
+          <th style="background:#e0e0e0; border:1px solid #999; padding:3px 4px; text-align:center; font-weight:bold; font-size:10px;">Dom</th>
+          <th style="background:#e0e0e0; border:1px solid #999; padding:3px 4px; text-align:center; font-weight:bold; font-size:10px;">Seg</th>
+          <th style="background:#e0e0e0; border:1px solid #999; padding:3px 4px; text-align:center; font-weight:bold; font-size:10px;">Ter</th>
+          <th style="background:#e0e0e0; border:1px solid #999; padding:3px 4px; text-align:center; font-weight:bold; font-size:10px;">Qua</th>
+          <th style="background:#e0e0e0; border:1px solid #999; padding:3px 4px; text-align:center; font-weight:bold; font-size:10px;">Qui</th>
+          <th style="background:#e0e0e0; border:1px solid #999; padding:3px 4px; text-align:center; font-weight:bold; font-size:10px;">Sex</th>
+          <th style="background:#e0e0e0; border:1px solid #999; padding:3px 4px; text-align:center; font-weight:bold; font-size:10px;">Sab</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (linha of tabelaHorarios(); track linha.faixa) {
+        <tr>
+          <td style="border:1px solid #ccc; padding:2px 4px; font-weight:bold; background:#f5f5f5; font-size:9px; white-space:nowrap; height:22px;">
+            {{ linha.faixa }}
+          </td>
+          @for (slot of linha.slots; track $index) {
+          <td style="border:1px solid #ccc; padding:2px 4px; text-align:center; height:22px; font-size:9px;"
+              [style.font-weight]="slot !== '---' ? 'bold' : 'normal'"
+              [style.color]="slot === '---' ? '#aaa' : '#000'">
+            {{ slot }}
+          </td>
+          }
+        </tr>
+        }
+      </tbody>
+    </table>
+ 
+    <!-- Atenção -->
+    <div style="margin-top:12px; border:1px solid #aaa; padding:6px 10px; font-size:10.5px; background:#fafafa;">
+      <p style="font-weight:bold; margin-bottom:2px; text-decoration:underline; text-transform:uppercase; text-align:center;">Atenção</p>
+      <p>
+        Para verificar a autenticidade deste documento acesse
+        <a href="https://sigs.ufrpe.br/sigaa/documentos/" style="color:#0000cc;">https://sigs.ufrpe.br/sigaa/documentos/</a>
+        informando a matrícula, a data de emissão e o código de verificação
+        <strong>{{ atestadoDados()!.codigoVerificacao }}</strong>
+      </p>
+    </div>
+ 
+  </div><!-- /corpo -->
+ 
+</div>
+}

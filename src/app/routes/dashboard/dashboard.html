@@ -37,7 +37,7 @@
             </div>
           </div>
           
-          <div class="p-8 md:p-12 min-h-[350px] flex flex-col justify-center relative z-10">
+          <div class="p-8 md:p-12 min-h-64 flex flex-col justify-center relative z-10">
             @if (currentNoticia(); as noticia) {
               <div class="space-y-6 animate-fade-in">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-700 text-[10px] font-bold tracking-widest uppercase">
@@ -46,9 +46,10 @@
                 <h3 class="text-2xl md:text-3xl font-bold text-slate-900 leading-tight tracking-tight">
                   {{ noticia[0].titulo }}
                 </h3>
+
                 <div class="prose prose-slate prose-lg max-w-full text-slate-600 leading-relaxed font-light">
                   @for (paragrafo of noticia[0].conteudo; track $index) {
-                    <p>{{ paragrafo }}</p>
+                    <p class="break-words" [innerHTML]="paragrafo | linkify"></p>
                   }
                 </div>
               </div>
@@ -58,6 +59,73 @@
                   <i class="pi pi-inbox text-2xl text-slate-400"></i>
                 </div>
                 <p class="text-sm font-medium text-slate-500 tracking-wide">Nenhum comunicado recente.</p>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="mt-10 animate-fade-in" style="animation-delay: 0.1s;">
+          <div class="flex items-center justify-between mb-5 px-2">
+            <h2 class="text-sm font-bold text-slate-800 flex items-center gap-3 uppercase tracking-wider">
+              <div class="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.6)]"></div>
+              Aulas de Hoje
+            </h2>
+            <span class="text-xs font-bold text-slate-500 bg-slate-200/50 backdrop-blur-sm px-3 py-1.5 rounded-full capitalize tracking-wide">
+              {{ dataDeHojeStr }}
+            </span>
+          </div>
+
+          <div class="flex overflow-x-auto snap-x snap-mandatory gap-5 pb-6 -mx-4 px-4 md:grid md:grid-cols-2 md:overflow-visible md:pb-0 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            
+            @for (aula of aulasDeHoje(); track $index) {
+              <div 
+                class="relative bg-white/80 backdrop-blur-md rounded-2xl p-6 border transition-all duration-500 flex flex-col justify-between cursor-pointer hover:-translate-y-1 flex-none w-[85vw] sm:w-[320px] snap-center md:w-auto md:h-full"
+                [class.border-blue-500]="aula.isNext"
+                [class.shadow-[0_12px_40px_rgba(37,99,235,0.15)]]="aula.isNext"
+                [class.border-white/60]="!aula.isNext"
+                [class.shadow-sm]="!aula.isNext"
+                [class.opacity-60]="aula.isPast"
+                (click)="openTurma(aula.turma)">
+
+                @if (aula.isNext) {
+                  <span class="inline-block px-3 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-[10px] font-bold uppercase tracking-widest rounded-md mb-4 w-max border border-blue-100/50">
+                    <i class="pi pi-bolt text-[10px] mr-1"></i> Próxima Aula
+                  </span>
+                } @else if (aula.isPast) {
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest rounded-md mb-4 w-max border border-slate-200">
+                    <i class="pi pi-check text-[10px]"></i> Concluída
+                  </span>
+                } @else {
+                  <span class="inline-block px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest rounded-md mb-4 w-max border border-slate-100">
+                    Programada
+                  </span>
+                }
+
+                <h3 class="text-lg font-bold text-slate-800 leading-snug mb-4 line-clamp-2 group-hover:text-blue-900 transition-colors">
+                  {{ aula.turma.nome }}
+                </h3>
+
+                <div class="mt-auto pt-4 flex items-center text-slate-500 border-t border-slate-100">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center mr-4 transition-colors"
+                        [class.bg-blue-50]="aula.isNext"
+                        [class.text-blue-600]="aula.isNext"
+                        [class.bg-slate-50]="!aula.isNext">
+                    <i class="pi pi-clock text-base"></i>
+                  </div>
+                  <div>
+                    <p class="text-[10px] font-bold tracking-widest uppercase text-slate-400 mb-0.5">Horário</p>
+                    <p class="text-sm font-semibold text-slate-700">
+                      {{ aula.horarioFormatado }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            } @empty {
+              <div class="md:col-span-2 bg-gradient-to-br from-white/80 to-slate-50/50 backdrop-blur-xl rounded-[2rem] p-10 border border-dashed border-slate-300/80 flex flex-col items-center justify-center text-center">
+                <div class="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mb-5 shadow-inner">
+                  <i class="pi pi-sun text-3xl text-amber-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2 tracking-tight">Dia Livre!</h3>
+                <p class="text-base text-slate-500 font-light">Você não tem aulas programadas para o dia de hoje. Aproveite para descansar ou adiantar trabalhos.</p>
               </div>
             }
           </div>
