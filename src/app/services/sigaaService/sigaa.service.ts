@@ -29,6 +29,7 @@ export class SigaaService {
   indices: WritableSignal<IndicesAcademicos | null> = signal(null);
   currentTurma: WritableSignal<Turma | null> = signal(null);
   currentTurmaIdx: WritableSignal<number | null> = signal(null);
+  fullyLoaded: WritableSignal<boolean> = signal(false);
 
   pdfCache: WritableSignal<Uint8Array | undefined> = signal(undefined);
 
@@ -112,6 +113,7 @@ export class SigaaService {
       this.jsessionid.set(mainDataRes.jsessionid);
       localStorage.setItem("jsessionid", mainDataRes.jsessionid)
       this.nome.set(mainDataRes.nome);
+      mainDataRes.turmas.forEach(t => t.isLoaded = false)
       this.turmas.set(mainDataRes.turmas);
       this.viewState.set(mainDataRes.viewState);
       localStorage.setItem("viewState", mainDataRes.viewState)
@@ -204,7 +206,7 @@ export class SigaaService {
     this.turmas.update(prev =>
       prev.map(t =>
         t.nome === turma.nome
-          ? { ...turmaData.turma, notas: t.notas }
+          ? { ...turmaData.turma, notas: t.notas, isLoaded: true }
           : t
       )
     )
@@ -220,6 +222,7 @@ export class SigaaService {
     for (const turma of this.turmas()) {
       await this.getTurmaDetail(turma);
     }
+    this.fullyLoaded.set(true);
     console.log('fetch turmas:');
     console.log(this.turmas());
   }

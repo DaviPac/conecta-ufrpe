@@ -35,6 +35,7 @@ export class Dashboard {
   // Referência ao container que fará o scroll horizontal
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
 
+  fullyLoaded = this.sigaaService.fullyLoaded;
   id = () => this.uid++;
   turmas = this.sigaaService.turmas;
   nome = this.sigaaService.nome;

@@ -22,6 +22,7 @@ export class Profile {
   isDownloadingAtestado = signal(false);
   isDownloadingHistorico = signal(false);
   isDownloadingVinculo = signal(false);
+  showIndicesDetails = signal(false);
   
   toastMessage = signal<{ text: string, type: 'success' | 'error' } | null>(null);
   // -------------------------------
@@ -35,6 +36,10 @@ export class Profile {
       day: '2-digit', month: '2-digit', year: 'numeric'
     })
   );
+
+  toggleIndicesDetails() {
+    this.showIndicesDetails.update(value => !value);
+  }
 
   // Método auxiliar para exibir o Toast e sumir após 3 segundos
   showToast(text: string, type: 'success' | 'error') {

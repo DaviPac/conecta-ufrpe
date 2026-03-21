@@ -32,6 +32,7 @@ export interface Turma {
   cronograma?: CronogramaItem[];
   horarios: string[];
   info: TurmaInfo;
+  isLoaded: boolean
 }
 
 export interface Avaliacao {

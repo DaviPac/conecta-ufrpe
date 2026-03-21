@@ -75,6 +75,12 @@
         <section class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 h-full">
           <h2 class="mb-6 text-sm font-semibold tracking-wide text-slate-500 uppercase flex items-center justify-center gap-2 border-b border-slate-100 pb-4">
             <i class="pi pi-list text-amber-700"></i> Índices Oficiais
+            <button 
+              (click)="toggleIndicesDetails()" 
+              class="absolute right-0 text-slate-400 hover:text-blue-600 transition-colors p-1 rounded-full hover:bg-slate-100"
+              title="Ver detalhes dos índices">
+              <i class="pi pi-info-circle text-lg"></i>
+            </button>
           </h2>
 
           <div class="space-y-5 mt-6">
@@ -111,6 +117,18 @@
               <span class="text-lg font-semibold text-blue-900">{{ indices()?.iechp }}</span>
             </div>
           </div>
+          @if (showIndicesDetails()) {
+            <div class="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-2 animate-fade-in">
+            <p><strong class="text-slate-700">MC:</strong> Média de Conclusão</p>
+            <p><strong class="text-slate-700">MCN:</strong> Média de Conclusão Normalizada</p>
+            <p><strong class="text-slate-700">IRA:</strong> Índice de Rendimento Acadêmico</p>
+            <p><strong class="text-slate-700">IECH:</strong> Índice de Eficiência em Carga Horária</p>
+            <p><strong class="text-slate-700">IEPL:</strong> Índice de Eficiência em Períodos Letivos</p>
+            <p><strong class="text-slate-700">IEA:</strong> Índice de Eficiência Acadêmica</p>
+            <p><strong class="text-slate-700">IEAN:</strong> Índice de Eficiência Acadêmica Normalizada</p>
+            <p><strong class="text-slate-700">IECHP:</strong> Índice de Eficiência em Carga Horária por Período</p>
+          </div>
+        }
         </section>
       </div>
     </div>
