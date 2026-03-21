@@ -1,8 +1,10 @@
 {
-  "name": "conecta-ufrpe",
-  "short_name": "conecta-ufrpe",
+  "name": "Conecta-UFRPE",
+  "short_name": "Conecta",
   "display": "standalone",
   "orientation": "portrait",
+  "theme_color": "#1976d2",
+  "background_color": "#ffffff",
   "scope": "./",
   "start_url": "./",
   "icons": [

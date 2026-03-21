@@ -5,6 +5,14 @@ import { Router } from '@angular/router';
 import { Noticia, Turma } from '../../models/sigaa.models';
 import { LinkifyPipe } from '../../utils/linkify.pipe';
 
+interface ActionLink {
+  url: string;
+  platform: string;
+  icon: string;
+  label: string;
+  colorClass: string;
+}
+
 @Component({
   selector: 'app-dashboard',
   imports: [LinkifyPipe],
@@ -34,6 +42,43 @@ export class Dashboard {
 
     if (!noticias.length) return null;
     return noticias[idx] ?? null;
+  });
+
+  actionLinksForCurrentNoticia = computed<ActionLink[]>(() => {
+    const noticiaTuple = this.currentNoticia();
+    if (!noticiaTuple) return [];
+    
+    // Junta todos os parágrafos para buscar os links
+    const conteudoCompleto = noticiaTuple[0].conteudo.join(' ');
+    
+    // Regex para extrair URLs
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const matches = conteudoCompleto.match(urlRegex) || [];
+    
+    const links: ActionLink[] = [];
+    const seenUrls = new Set<string>(); // Evita botões duplicados para o mesmo link
+
+    for (let url of matches) {
+      // Limpa pontuações que possam ter ficado grudadas no final da URL
+      url = url.replace(/[.,;!?)$]+$/, '');
+      
+      if (seenUrls.has(url)) continue;
+      seenUrls.add(url);
+
+      if (url.includes('classroom.google.com')) {
+        links.push({ url, platform: 'Classroom', icon: 'pi-book', label: 'Entrar no Classroom', colorClass: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' });
+      } else if (url.includes('t.me') || url.includes('telegram.org')) {
+        links.push({ url, platform: 'Telegram', icon: 'pi-telegram', label: 'Entrar no Telegram', colorClass: 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100' });
+      } else if (url.includes('discord.gg') || url.includes('discord.com')) {
+        links.push({ url, platform: 'Discord', icon: 'pi-discord', label: 'Entrar no Discord', colorClass: 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100' });
+      } else if (url.includes('chat.whatsapp.com')) {
+        links.push({ url, platform: 'WhatsApp', icon: 'pi-whatsapp', label: 'Entrar no Grupo', colorClass: 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100' });
+      } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        links.push({ url, platform: 'YouTube', icon: 'pi-youtube', label: 'Assistir Vídeo', colorClass: 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' });
+      }
+    }
+
+    return links;
   });
 
 
