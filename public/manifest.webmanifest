@@ -2,6 +2,7 @@
   "name": "conecta-ufrpe",
   "short_name": "conecta-ufrpe",
   "display": "standalone",
+  "orientation": "portrait",
   "scope": "./",
   "start_url": "./",
   "icons": [

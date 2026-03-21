@@ -1,0 +1,10 @@
+html, body {
+  overflow: hidden; /* Remove o scroll do navegador */
+  height: 100%;
+}
+
+.min-h-screen {
+  height: 100vh;
+  overflow-y: auto; /* O scroll acontece aqui dentro agora */
+  -webkit-overflow-scrolling: touch;
+}
