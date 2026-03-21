@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, signal, ElementRef, ViewChild } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal, ElementRef, ViewChild, effect } from '@angular/core';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { formatarHorarios } from '../../utils/formatters';
 import { Router } from '@angular/router';
@@ -51,6 +51,13 @@ export class Dashboard {
         links: this.extrairLinks(t.noticia as Noticia)
       }));
   });
+
+  noticiasComClones = computed<NoticiaView[]>(() => {
+    const arr = this.noticias();
+    if (arr.length <= 1) return arr;
+    return [arr[arr.length - 1], ...arr, arr[0]];
+  });
+
   currentNoticiaIdx = signal(0)
   now = signal(new Date());
 
@@ -58,6 +65,19 @@ export class Dashboard {
   constructor() {
     const timer = setInterval(() => this.now.set(new Date()), 60000);
     this.destroyRef.onDestroy(() => clearInterval(timer));
+    effect(() => {
+      const temClones = this.noticiasComClones().length > 1;
+      const el = this.scrollContainer?.nativeElement;
+      
+      if (temClones && el) {
+        // Um pequeno timeout para garantir que o Angular já renderizou o DOM
+        setTimeout(() => {
+          if (el.scrollLeft === 0) {
+            this.teleportScroll(1); // Teletransporta para o Item 1 Real
+          }
+        }, 50);
+      }
+    });
   }
 
 
@@ -91,54 +111,96 @@ export class Dashboard {
 
   onScroll(event: Event) {
     if (this.isProgrammaticScroll) return;
+    
     const target = event.target as HTMLElement;
-    // Calcula qual slide está mais visível no momento
-    const index = Math.round(target.scrollLeft / target.clientWidth);
-    if (this.currentNoticiaIdx() !== index) {
-      this.currentNoticiaIdx.set(index);
+    const realCount = this.noticias().length;
+    
+    if (realCount <= 1) return;
+
+    const indexDom = Math.round(target.scrollLeft / target.clientWidth);
+
+    // 1. Atualiza a bolinha ativa instantaneamente para dar feedback ao usuário
+    if (indexDom > 0 && indexDom <= realCount) {
+      this.currentNoticiaIdx.set(indexDom - 1);
     }
+
+    // 2. O Segredo: Só faz o teletransporte quando o scroll (e a inércia) PARAR.
+    clearTimeout(this.scrollTimeout);
+    this.scrollTimeout = setTimeout(() => {
+      if (indexDom === 0) {
+        // Bateu no clone inicial -> Vai pro final real
+        this.teleportScroll(realCount);
+      } else if (indexDom === realCount + 1) {
+        // Bateu no clone final -> Vai pro início real
+        this.teleportScroll(1);
+      }
+    }, 150); // 150ms de silêncio de scroll significa que o snap terminou de "assentar"
   }
 
-  scrollToIndex(index: number) {
-    const len = this.noticias().length;
-    if (!len) return;
+  private teleportScroll(targetDomIndex: number) {
+    const el = this.scrollContainer.nativeElement;
 
-    const safeIndex = (index + len) % len;
+    // Força o navegador a ignorar qualquer animação CSS no momento do pulo
+    el.style.setProperty('scroll-behavior', 'auto', 'important');
+    el.style.setProperty('scroll-snap-type', 'none', 'important');
     
-    // Ativa a trava antes de iniciar o scroll programático e atualiza a UI imediatamente
+    // Executa o salto matemático
+    el.scrollLeft = el.clientWidth * targetDomIndex;
+    
+    // Atualiza o estado
+    this.currentNoticiaIdx.set(targetDomIndex - 1);
+
+    // O "Pulo do Gato": Usamos 2 requestAnimationFrames seguidos.
+    // Isso garante que o navegador primeiro "pinte" a tela na nova posição crua, 
+    // e SÓ DEPOIS devolva a capacidade de scroll suave e snap.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.style.removeProperty('scroll-behavior');
+        el.style.removeProperty('scroll-snap-type');
+      });
+    });
+  }
+
+  private performSmoothScroll(targetDomIndex: number) {
+    const el = this.scrollContainer.nativeElement;
+    const realCount = this.noticias().length;
+
     this.isProgrammaticScroll = true;
-    this.currentNoticiaIdx.set(safeIndex);
-
-    if (this.scrollContainer) {
-      const el = this.scrollContainer.nativeElement;
-      el.scrollTo({ left: el.clientWidth * safeIndex, behavior: 'smooth' });
+    
+    // Atualiza a bolinha imediatamente ao clicar na seta
+    if (targetDomIndex > 0 && targetDomIndex <= realCount) {
+      this.currentNoticiaIdx.set(targetDomIndex - 1);
     }
+    
+    el.scrollTo({ left: el.clientWidth * targetDomIndex, behavior: 'smooth' });
 
-    // Limpa qualquer timeout anterior e agenda a liberação da trava 
-    // após o tempo estimado do "smooth scroll" (geralmente em torno de 500ms)
     clearTimeout(this.scrollTimeout);
     this.scrollTimeout = setTimeout(() => {
       this.isProgrammaticScroll = false;
-    }, 500); 
+
+      // Analisa se o scroll programático nos jogou para um clone e ajusta em silêncio
+      if (targetDomIndex === 0) {
+        this.teleportScroll(realCount);
+      } else if (targetDomIndex === realCount + 1) {
+        this.teleportScroll(1);
+      }
+    }, 600); // 600ms é tempo suficiente para a animação do botão ser concluída
   }
 
+  // Seus métodos de clique agora apenas chamam o scroll programático:
+  scrollToIndex(realIndex: number) {
+    if (this.noticias().length <= 1) return;
+    this.performSmoothScroll(realIndex + 1);
+  }
 
   showNextNoticia() {
-    const len = this.noticias().length;
-    if (!len) return;
-
-    // Calcula o próximo índice e chama a função que faz o scroll
-    const nextIdx = (this.currentNoticiaIdx() + 1) % len;
-    this.scrollToIndex(nextIdx);
+    if (this.noticias().length <= 1) return;
+    this.performSmoothScroll((this.currentNoticiaIdx() + 1) + 1);
   }
 
   showPassedNoticia() {
-    const len = this.noticias().length;
-    if (!len) return;
-
-    // Calcula o índice anterior e chama a função que faz o scroll
-    const prevIdx = (this.currentNoticiaIdx() - 1 + len) % len;
-    this.scrollToIndex(prevIdx);
+    if (this.noticias().length <= 1) return;
+    this.performSmoothScroll((this.currentNoticiaIdx() + 1) - 1);
   }
   
   noticiasPageStr = computed(() => {

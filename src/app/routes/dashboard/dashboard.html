@@ -29,7 +29,7 @@
               }
             </h2>
             
-            <div class="hidden md:flex items-center space-x-4 bg-slate-50/80 rounded-full px-2 py-1 border border-slate-100">
+            <div class="flex items-center space-x-4 bg-slate-50/80 rounded-full px-2 py-1 border border-slate-100">
               <button (click)="showPassedNoticia()" class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-blue-950 hover:bg-white shadow-sm transition-all" aria-label="Notícia anterior">
                 <i class="pi pi-angle-left text-sm"></i>
               </button>
@@ -49,7 +49,7 @@
                   (scroll)="onScroll($event)"
                   class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar smooth-scroll">
                   
-                @for (item of noticias(); track item.noticia.titulo) {
+                @for (item of noticiasComClones(); track $index) {
                   <div class="min-w-full w-full snap-center flex-shrink-0 p-8 md:p-12 min-h-64 flex flex-col justify-center">
                     <div class="space-y-6 animate-fade-in">
                       <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-700 text-[10px] font-bold tracking-widest uppercase">
