@@ -115,15 +115,20 @@ export class Dashboard {
     const len = this.noticias().length;
     if (!len) return;
 
-    this.currentNoticiaIdx.update(prev => (prev + 1) % len);
+    // Calcula o próximo índice e chama a função que faz o scroll
+    const nextIdx = (this.currentNoticiaIdx() + 1) % len;
+    this.scrollToIndex(nextIdx);
   }
 
   showPassedNoticia() {
     const len = this.noticias().length;
     if (!len) return;
 
-    this.currentNoticiaIdx.update(prev => (prev - 1 + len) % len);
+    // Calcula o índice anterior e chama a função que faz o scroll
+    const prevIdx = (this.currentNoticiaIdx() - 1 + len) % len;
+    this.scrollToIndex(prevIdx);
   }
+  
   noticiasPageStr = computed(() => {
     const currentNoticiaIdx = this.currentNoticiaIdx()
     const noticias = this.noticias()
