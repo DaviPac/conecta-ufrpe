@@ -16,10 +16,10 @@
       
       <div class="lg:col-span-8">
         <div class="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 overflow-hidden transition-all duration-500 hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)] group relative">
-          
+                  
           <div class="absolute -top-24 -right-24 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl group-hover:bg-amber-400/20 transition-all duration-700 pointer-events-none"></div>
 
-          <div class="flex items-center justify-between px-8 py-5 border-b border-slate-100/50 bg-white/50">
+          <div class="flex items-center justify-between px-8 py-5 border-b border-slate-100/50 bg-white/50 relative z-10">
             <h2 class="text-sm font-bold text-slate-800 flex items-center gap-3 uppercase tracking-wider">
               <div class="w-2 h-2 rounded-full bg-amber-600 shadow-[0_0_8px_rgba(217,119,6,0.6)]"></div>
               Mural de Comunicações
@@ -28,7 +28,7 @@
               <button (click)="showPassedNoticia()" class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-blue-950 hover:bg-white shadow-sm transition-all" aria-label="Notícia anterior">
                 <i class="pi pi-angle-left text-sm"></i>
               </button>
-              <span class="text-xs font-bold text-slate-500 tracking-widest">
+              <span class="text-xs font-bold text-slate-500 tracking-widest min-w-[32px] text-center">
                 {{ noticiasPageStr() }}
               </span>
               <button (click)="showNextNoticia()" class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-blue-950 hover:bg-white shadow-sm transition-all" aria-label="Próxima notícia">
@@ -37,36 +37,59 @@
             </div>
           </div>
           
-          <div class="p-8 md:p-12 min-h-64 flex flex-col justify-center relative z-10">
-            @if (currentNoticia(); as noticia) {
-              <div class="space-y-6 animate-fade-in">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-700 text-[10px] font-bold tracking-widest uppercase">
-                  <i class="pi pi-bolt text-[10px]"></i> {{ noticia[1] }}
-                </span>
-                <h3 class="text-2xl md:text-3xl font-bold text-slate-900 leading-tight tracking-tight">
-                  {{ noticia[0].titulo }}
-                </h3>
+          <div class="relative z-10">
+            @if (noticias().length > 0) {
+              
+              <div #scrollContainer 
+                  (scroll)="onScroll($event)"
+                  class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar smooth-scroll">
+                  
+                @for (item of noticias(); track item.noticia.titulo) {
+                  <div class="min-w-full w-full snap-center flex-shrink-0 p-8 md:p-12 min-h-64 flex flex-col justify-center">
+                    <div class="space-y-6 animate-fade-in">
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-700 text-[10px] font-bold tracking-widest uppercase">
+                        <i class="pi pi-bolt text-[10px]"></i> {{ item.nomeTurma }}
+                      </span>
+                      
+                      <h3 class="text-2xl md:text-3xl font-bold text-slate-900 leading-tight tracking-tight">
+                        {{ item.noticia.titulo }}
+                      </h3>
 
-                <div class="prose prose-slate prose-lg max-w-full text-slate-600 leading-relaxed font-light">
-                  @for (paragrafo of noticia[0].conteudo; track $index) {
-                    <p class="break-words" [innerHTML]="paragrafo | linkify"></p>
-                  }
-                </div>
-                @if (actionLinksForCurrentNoticia().length > 0) {
-                  <div class="mt-8 pt-6 border-t border-slate-100/60 flex flex-wrap gap-3 animate-fade-in">
-                    @for (link of actionLinksForCurrentNoticia(); track link.url) {
-                      <a [href]="link.url" target="_blank" rel="noopener noreferrer" 
-                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-md"
-                        [class]="link.colorClass">
-                        <i class="pi text-sm" [class]="link.icon"></i>
-                        {{ link.label }}
-                      </a>
-                    }
+                      <div class="prose prose-slate prose-lg max-w-full text-slate-600 leading-relaxed font-light">
+                        @for (paragrafo of item.noticia.conteudo; track $index) {
+                          <p class="break-words" [innerHTML]="paragrafo | linkify"></p>
+                        }
+                      </div>
+                      
+                      @if (item.links.length > 0) {
+                        <div class="mt-8 pt-6 border-t border-slate-100/60 flex flex-wrap gap-3 animate-fade-in">
+                          @for (link of item.links; track link.url) {
+                            <a [href]="link.url" target="_blank" rel="noopener noreferrer" 
+                              class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-md"
+                              [class]="link.colorClass">
+                              <i class="pi text-sm" [class]="link.icon"></i>
+                              {{ link.label }}
+                            </a>
+                          }
+                        </div>
+                      }
+                    </div>
                   </div>
                 }
               </div>
+
+              <div class="flex items-center justify-center gap-2 pb-6 pt-2">
+                @for (item of noticias(); track $index) {
+                  <button (click)="scrollToIndex($index)" 
+                          class="h-2 rounded-full transition-all duration-300 ease-out"
+                          [class]="currentNoticiaIdx() === $index ? 'w-6 bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]' : 'w-2 bg-slate-300 hover:bg-slate-400'"
+                          [attr.aria-label]="'Ir para notícia ' + ($index + 1)">
+                  </button>
+                }
+              </div>
+
             } @else {
-              <div class="flex flex-col items-center justify-center opacity-50">
+              <div class="p-8 md:p-12 min-h-64 flex flex-col items-center justify-center opacity-50">
                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
                   <i class="pi pi-inbox text-2xl text-slate-400"></i>
                 </div>

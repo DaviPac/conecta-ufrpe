@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal, ElementRef, ViewChild } from '@angular/core';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { formatarHorarios } from '../../utils/formatters';
 import { Router } from '@angular/router';
@@ -13,6 +13,13 @@ interface ActionLink {
   colorClass: string;
 }
 
+// Criamos uma interface para facilitar o uso no HTML
+interface NoticiaView {
+  noticia: Noticia;
+  nomeTurma: string;
+  links: ActionLink[];
+}
+
 @Component({
   selector: 'app-dashboard',
   imports: [LinkifyPipe],
@@ -25,43 +32,42 @@ export class Dashboard {
   private uid = 0;
   private destroyRef = inject(DestroyRef);
 
+  // Referência ao container que fará o scroll horizontal
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
+
   id = () => this.uid++;
   turmas = this.sigaaService.turmas;
   nome = this.sigaaService.nome;
   avaliacoes = this.sigaaService.avaliacoes
-  noticias = computed(() => {
+  noticias = computed<NoticiaView[]>(() => {
     return this.sigaaService.turmas()
       .filter(t => t.noticia?.titulo)
-      .map(t => [t.noticia, t.nome] as [Noticia, string]);
+      .map(t => ({
+        noticia: t.noticia as Noticia,
+        nomeTurma: t.nome,
+        links: this.extrairLinks(t.noticia as Noticia)
+      }));
   });
   currentNoticiaIdx = signal(0)
   now = signal(new Date());
-  currentNoticia = computed((): [Noticia, string] | null => {
-    const noticias = this.noticias();
-    const idx = this.currentNoticiaIdx();
 
-    if (!noticias.length) return null;
-    return noticias[idx] ?? null;
-  });
 
-  actionLinksForCurrentNoticia = computed<ActionLink[]>(() => {
-    const noticiaTuple = this.currentNoticia();
-    if (!noticiaTuple) return [];
-    
-    // Junta todos os parágrafos para buscar os links
-    const conteudoCompleto = noticiaTuple[0].conteudo.join(' ');
-    
-    // Regex para extrair URLs
+  constructor() {
+    const timer = setInterval(() => this.now.set(new Date()), 60000);
+    this.destroyRef.onDestroy(() => clearInterval(timer));
+  }
+
+
+  private extrairLinks(noticia: Noticia): ActionLink[] {
+    const conteudoCompleto = noticia.conteudo.join(' ');
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const matches = conteudoCompleto.match(urlRegex) || [];
     
     const links: ActionLink[] = [];
-    const seenUrls = new Set<string>(); // Evita botões duplicados para o mesmo link
+    const seenUrls = new Set<string>();
 
     for (let url of matches) {
-      // Limpa pontuações que possam ter ficado grudadas no final da URL
       url = url.replace(/[.,;!?)$]+$/, '');
-      
       if (seenUrls.has(url)) continue;
       seenUrls.add(url);
 
@@ -77,16 +83,30 @@ export class Dashboard {
         links.push({ url, platform: 'YouTube', icon: 'pi-youtube', label: 'Assistir Vídeo', colorClass: 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' });
       }
     }
-
     return links;
-  });
+  }
 
+  onScroll(event: Event) {
+    const target = event.target as HTMLElement;
+    // Calcula qual slide está mais visível no momento
+    const index = Math.round(target.scrollLeft / target.clientWidth);
+    if (this.currentNoticiaIdx() !== index) {
+      this.currentNoticiaIdx.set(index);
+    }
+  }
 
-  constructor() {
-    // Atualiza o relógio interno a cada 60 segundos
-    const timer = setInterval(() => this.now.set(new Date()), 60000);
-    // Limpa o timer se o componente for destruído (boa prática)
-    this.destroyRef.onDestroy(() => clearInterval(timer));
+  scrollToIndex(index: number) {
+    const len = this.noticias().length;
+    if (!len) return;
+
+    // Garante que o índice seja circular
+    const safeIndex = (index + len) % len;
+    this.currentNoticiaIdx.set(safeIndex);
+
+    if (this.scrollContainer) {
+      const el = this.scrollContainer.nativeElement;
+      el.scrollTo({ left: el.clientWidth * safeIndex, behavior: 'smooth' });
+    }
   }
 
 

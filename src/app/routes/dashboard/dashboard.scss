@@ -1,0 +1,16 @@
+.hide-scrollbar {
+  /* Oculta a scrollbar no Firefox */
+  scrollbar-width: none;
+  /* Oculta a scrollbar no IE e Edge */
+  -ms-overflow-style: none;
+
+  /* Oculta a scrollbar no Chrome, Safari e Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// Opcional: Garante que o scroll feito pelo JS (scrollTo) seja animado
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
