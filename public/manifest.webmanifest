@@ -3,8 +3,6 @@
   "short_name": "Conecta",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#1976d2",
-  "background_color": "#ffffff",
   "scope": "./",
   "start_url": "./",
   "icons": [
