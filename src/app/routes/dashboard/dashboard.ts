@@ -31,6 +31,8 @@ export class Dashboard {
   private router: Router = inject(Router);
   private uid = 0;
   private destroyRef = inject(DestroyRef);
+  private isProgrammaticScroll = false;
+  private scrollTimeout: any;
 
   // Referência ao container que fará o scroll horizontal
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
@@ -88,6 +90,7 @@ export class Dashboard {
   }
 
   onScroll(event: Event) {
+    if (this.isProgrammaticScroll) return;
     const target = event.target as HTMLElement;
     // Calcula qual slide está mais visível no momento
     const index = Math.round(target.scrollLeft / target.clientWidth);
@@ -100,14 +103,23 @@ export class Dashboard {
     const len = this.noticias().length;
     if (!len) return;
 
-    // Garante que o índice seja circular
     const safeIndex = (index + len) % len;
+    
+    // Ativa a trava antes de iniciar o scroll programático e atualiza a UI imediatamente
+    this.isProgrammaticScroll = true;
     this.currentNoticiaIdx.set(safeIndex);
 
     if (this.scrollContainer) {
       const el = this.scrollContainer.nativeElement;
       el.scrollTo({ left: el.clientWidth * safeIndex, behavior: 'smooth' });
     }
+
+    // Limpa qualquer timeout anterior e agenda a liberação da trava 
+    // após o tempo estimado do "smooth scroll" (geralmente em torno de 500ms)
+    clearTimeout(this.scrollTimeout);
+    this.scrollTimeout = setTimeout(() => {
+      this.isProgrammaticScroll = false;
+    }, 500); 
   }
 
 
