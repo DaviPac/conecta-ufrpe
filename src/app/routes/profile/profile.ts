@@ -5,10 +5,11 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { AtestadoMatricula } from '../../models/sigaa.models';
 import { buildTabelaHorarios } from '../../utils/horarios.helper';
+import { ClickOutsideDirective } from '../../click-outside';
 
 @Component({
   selector: 'app-profile',
-  imports: [DecimalPipe, CommonModule],
+  imports: [DecimalPipe, CommonModule, ClickOutsideDirective],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
 })
@@ -39,6 +40,10 @@ export class Profile {
 
   toggleIndicesDetails() {
     this.showIndicesDetails.update(value => !value);
+  }
+
+  closeIndicesDetails() {
+    this.showIndicesDetails.set(false);
   }
 
   // Método auxiliar para exibir o Toast e sumir após 3 segundos
