@@ -121,3 +121,9 @@
     padding: 1rem !important; /* Reduz o respiro interno para ganhar espaço */
   }
 }
+
+:host {
+  display: flex;
+  flex-grow: 1;
+  width: 100%;
+}
