@@ -60,4 +60,8 @@ export class TurmaDetail implements OnInit {
     const cronograma = this.turma()?.cronograma;
     return !!cronograma && cronograma.length > 0;
   }
+
+  get isLoading(): boolean {
+    return this.turma() ? !this.turma()!.isLoaded : true;
+  }
 }
