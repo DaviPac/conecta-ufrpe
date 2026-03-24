@@ -1,4 +1,6 @@
-import { Injectable, WritableSignal, signal } from '@angular/core';
+import { Injectable, WritableSignal, signal, inject } from '@angular/core';
+import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { filter } from 'rxjs';
 
 export interface StorageEstimate {
   usage: number;
@@ -19,7 +21,7 @@ export type UpdateStatus =
   | 'available'
   | 'updating'
   | 'up-to-date'
-  | 'not-supported' // sem SW ativo (localhost sem PWA instalado)
+  | 'not-supported'
   | 'error';
 
 @Injectable({ providedIn: 'root' })
@@ -28,13 +30,14 @@ export class PwaService {
   storageEstimate: WritableSignal<StorageEstimate | null> = signal(null);
   isLoadingStorage: WritableSignal<boolean> = signal(false);
   canInstall = signal<boolean>(false);
+  
   private deferredPrompt: any = null;
+  // 1. Injetamos o SwUpdate do Angular
+  private swUpdate = inject(SwUpdate);
 
-  private waitingWorker: ServiceWorker | null = null;
-
-  /** true somente quando há um SW ativo controlando a página */
   get isSwActive(): boolean {
-    return 'serviceWorker' in navigator && !!navigator.serviceWorker.controller;
+    // Retorna true se o Angular Service Worker estiver ativo no ambiente
+    return this.swUpdate.isEnabled;
   }
 
   constructor() {
@@ -44,16 +47,12 @@ export class PwaService {
 
   private listenForInstallPrompt(): void {
     window.addEventListener('beforeinstallprompt', (e) => {
-      // Previne o mini-infobar de aparecer em dispositivos móveis
       e.preventDefault();
-      // Guarda o evento para ser disparado depois
       this.deferredPrompt = e;
-      // Atualiza a interface avisando que pode instalar
       this.canInstall.set(true);
     });
 
     window.addEventListener('appinstalled', () => {
-      // Limpa o evento após a instalação concluída
       this.deferredPrompt = null;
       this.canInstall.set(false);
     });
@@ -62,52 +61,31 @@ export class PwaService {
   async installApp(): Promise<void> {
     if (!this.deferredPrompt) return;
     
-    // Mostra o prompt de instalação nativo
     this.deferredPrompt.prompt();
-    
-    // Aguarda a resposta do usuário
     const { outcome } = await this.deferredPrompt.userChoice;
     
     if (outcome === 'accepted') {
       this.canInstall.set(false);
     }
-    
-    // O prompt só pode ser usado uma vez
     this.deferredPrompt = null;
   }
 
-  // ─── Service Worker ────────────────────────────────────────────────────────
+  // ─── Service Worker (Usando Angular SwUpdate) ─────────────────────────────
 
   private listenForUpdates(): void {
-    if (!('serviceWorker' in navigator)) return;
+    if (!this.swUpdate.isEnabled) return;
 
-    navigator.serviceWorker.ready.then(registration => {
-      if (registration.waiting) {
-        this.waitingWorker = registration.waiting;
+    // Escuta ativamente caso o Service Worker encontre uma atualização sozinho 
+    // (com base na estratégia de registro registrationStrategy)
+    this.swUpdate.versionUpdates
+      .pipe(filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY'))
+      .subscribe(() => {
         this.updateStatus.set('available');
-      }
-
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        if (!newWorker) return;
-
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            this.waitingWorker = newWorker;
-            this.updateStatus.set('available');
-          }
-        });
       });
-    });
-
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
-    });
   }
 
   async checkForUpdate(): Promise<void> {
-    // Sem SW ativo: ambiente de dev / localhost sem PWA instalado
-    if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
+    if (!this.swUpdate.isEnabled) {
       this.updateStatus.set('not-supported');
       setTimeout(() => this.updateStatus.set('idle'), 3500);
       return;
@@ -116,55 +94,41 @@ export class PwaService {
     this.updateStatus.set('checking');
 
     try {
-      const registration = await navigator.serviceWorker.ready;
+      // checkForUpdate() força o ngsw-worker a baixar o ngsw.json e comparar hashes
+      const hasUpdate = await this.swUpdate.checkForUpdate();
       
-      // Pede ao navegador para buscar o novo Service Worker no servidor
-      await registration.update();
-
-      // Se encontrou uma nova versão, o SW entra no estado de "installing".
-      // Vamos aguardar o término da instalação dinamicamente em vez de usar setTimeout.
-      if (registration.installing) {
-        const newWorker = registration.installing;
-        
-        await new Promise<void>((resolve) => {
-          const listener = () => {
-            if (newWorker.state === 'installed' || newWorker.state === 'redundant') {
-              newWorker.removeEventListener('statechange', listener);
-              resolve();
-            }
-          };
-          
-          // Prevenção caso o status já tenha mudado muito rápido
-          if (newWorker.state === 'installed' || newWorker.state === 'redundant') {
-            resolve();
-          } else {
-            newWorker.addEventListener('statechange', listener);
-          }
-        });
-      }
-
-      // Após aguardar todo o processo, verificamos qual é o resultado real
-      if (registration.waiting) {
-        this.waitingWorker = registration.waiting;
+      if (hasUpdate) {
         this.updateStatus.set('available');
       } else {
-        // Se não tem nenhum SW em "waiting", realmente não havia atualização
         this.updateStatus.set('up-to-date');
         setTimeout(() => this.updateStatus.set('idle'), 3500);
       }
     } catch (e) {
+      console.error('Erro ao verificar atualização PWA:', e);
       this.updateStatus.set('error');
       setTimeout(() => this.updateStatus.set('idle'), 3500);
     }
   }
 
-  applyUpdate(): void {
-    if (!this.waitingWorker) return;
+  async applyUpdate(): Promise<void> {
+    if (!this.swUpdate.isEnabled) return;
+    
     this.updateStatus.set('updating');
-    this.waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+    
+    try {
+      // Informa ao Service Worker ativo para ativar imediatamente a nova versão
+      await this.swUpdate.activateUpdate();
+      
+      // Recarrega a página para carregar os novos arquivos do cache atualizado
+      window.location.reload();
+    } catch (error) {
+      console.error('Erro ao aplicar atualização PWA:', error);
+      this.updateStatus.set('error');
+      setTimeout(() => this.updateStatus.set('idle'), 3500);
+    }
   }
 
-  // ─── Storage ───────────────────────────────────────────────────────────────
+  // ─── Storage (Manteve-se igual) ────────────────────────────────────────────
 
   async loadStorageEstimate(): Promise<void> {
     this.isLoadingStorage.set(true);
@@ -204,10 +168,8 @@ export class PwaService {
           if (blob) size += blob.size;
         }
       }
-
       entries.push({ name, size, count: keys.length });
     }
-
     return entries;
   }
 
