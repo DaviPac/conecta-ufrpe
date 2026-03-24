@@ -226,9 +226,7 @@ export class SigaaService {
       this.viewState.set(mainDataRes.viewState);
       localStorage.setItem('viewState', mainDataRes.viewState);
       
-      // Dica extra: Coloque o 'await' aqui para que erros no fetchTurmas 
-      // sejam devidamente capturados por este try/catch
-      await this.fetchTurmas(); 
+      this.fetchTurmas(); 
       
     } catch (e) {
       const error = e as Error;
