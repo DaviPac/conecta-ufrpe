@@ -1,71 +1,393 @@
-<div class="bg-slate-50 min-h-screen flex flex-col items-center pt-24 md:pt-28 pb-10 px-4 md:px-8 font-sans">
-  
-  <header class="mb-10 w-full max-w-5xl flex flex-col md:flex-row justify-between items-start md:items-end border-b border-slate-200 pb-4 gap-4 md:gap-0">
-    <div class="text-left">
-      <p class="text-amber-700 text-xs font-semibold tracking-wider uppercase bg-amber-50 inline-block px-2 py-1 rounded mb-2 border border-amber-100">
-        Agenda Institucional
-      </p>
-      <h1 class="text-2xl md:text-3xl font-light text-slate-800">
-        Calendário Acadêmico
-      </h1>
+<div class="bg-slate-50 min-h-screen pt-20 md:pt-24 pb-24 md:pb-12 px-4 md:px-8 font-sans">
+  <div class="max-w-6xl mx-auto">
+
+    <!-- ── Header ── -->
+    <header class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 pb-6">
+      <div>
+        <p class="text-amber-700 text-[10px] font-bold tracking-widest uppercase bg-amber-50 inline-block px-2.5 py-1 rounded mb-2 border border-amber-100">
+          Agenda Acadêmica
+        </p>
+        <h1 class="text-2xl md:text-3xl font-light text-slate-800 tracking-tight">Horários & Calendário</h1>
+      </div>
+    </header>
+
+    <!-- ── Tabs ── -->
+    <div class="flex gap-1 bg-white border border-slate-200 rounded-2xl p-1 mb-3 w-full sm:w-auto sm:inline-flex shadow-sm">
+      
+      <button
+        (click)="abaAtiva.set('semana')"
+        [class.bg-blue-950]="abaAtiva() === 'semana'"
+        [class.text-white]="abaAtiva() === 'semana'"
+        [class.shadow-sm]="abaAtiva() === 'semana'"
+        [class.text-slate-500]="abaAtiva() !== 'semana'"
+        class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-1.5 sm:px-5 py-2 sm:py-2.5 text-[11px] sm:text-sm whitespace-nowrap font-semibold rounded-xl transition-all duration-200">
+        <i class="pi pi-table text-xs hidden sm:inline-block"></i>
+        <span>Grade Semanal</span>
+      </button>
+
+      <button
+        (click)="abaAtiva.set('mensal')"
+        [class.bg-blue-950]="abaAtiva() === 'mensal'"
+        [class.text-white]="abaAtiva() === 'mensal'"
+        [class.shadow-sm]="abaAtiva() === 'mensal'"
+        [class.text-slate-500]="abaAtiva() !== 'mensal'"
+        class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-1.5 sm:px-5 py-2 sm:py-2.5 text-[11px] sm:text-sm whitespace-nowrap font-semibold rounded-xl transition-all duration-200">
+        <i class="pi pi-calendar text-xs hidden sm:inline-block"></i>
+        <span>Calendário</span>
+      </button>
+
+      <button
+        (click)="abaAtiva.set('academico')"
+        [class.bg-blue-950]="abaAtiva() === 'academico'"
+        [class.text-white]="abaAtiva() === 'academico'"
+        [class.shadow-sm]="abaAtiva() === 'academico'"
+        [class.text-slate-500]="abaAtiva() !== 'academico'"
+        class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-1.5 sm:px-5 py-2 sm:py-2.5 text-[11px] sm:text-sm whitespace-nowrap font-semibold rounded-xl transition-all duration-200">
+        <i class="pi pi-file-pdf text-xs hidden sm:inline-block"></i>
+        <span>Acadêmico</span>
+      </button>
+
     </div>
 
-    @if (!carregando() && !erro() && rawUrlSignal()) {
-      <div class="flex items-center gap-2">
-        <button (click)="recarregar()" class="flex items-center justify-center p-2 text-slate-500 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-amber-700 transition-colors shadow-sm" title="Recarregar Visualizador">
-          <i class="pi pi-refresh"></i>
+    <!-- Botões do PDF só aparecem na aba Acadêmico -->
+    @if (abaAtiva() === 'academico' && !carregando() && !erro() && rawUrlSignal()) {
+      <div class="flex items-center gap-2 mb-3">
+        <button (click)="recarregar()"
+          class="flex items-center justify-center p-2 text-slate-500 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-amber-700 transition-colors shadow-sm"
+          title="Recarregar">
+          <i class="pi pi-refresh text-xs"></i>
         </button>
-        
-        <button (click)="abrirNoNavegador()" 
+        <button (click)="abrirNoNavegador()"
           class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-amber-700 transition-colors shadow-sm">
-          <i class="pi pi-external-link"></i>
+          <i class="pi pi-external-link text-xs"></i>
           <span class="hidden sm:inline">Abrir Guia</span>
         </button>
-
-        <button 
-          (click)="baixarPdf()" 
-          [disabled]="isDownloading()"
-          class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-700 rounded-lg hover:bg-amber-800 transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
-        >
+        <button (click)="baixarPdf()" [disabled]="isDownloading()"
+          class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-amber-700 rounded-lg hover:bg-amber-800 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
           @if (isDownloading()) {
-            <i class="pi pi-spin pi-spinner"></i>
-            <span>Baixando...</span>
+            <i class="pi pi-spin pi-spinner text-xs"></i><span>Baixando...</span>
           } @else {
-            <i class="pi pi-download"></i>
-            <span>Baixar PDF</span>
+            <i class="pi pi-download text-xs"></i><span>Baixar PDF</span>
           }
         </button>
       </div>
     }
-  </header>
 
-  @if (carregando()) {
-    <div class="flex flex-col items-center justify-center h-64">
-      <i class="pi pi-spin pi-spinner text-4xl text-amber-700 mb-4"></i>
-      <p class="text-slate-500 text-xs font-semibold tracking-wide uppercase">Sincronizando calendário...</p>
-    </div>
-  } @else if (erro()) {
-    <div class="w-full max-w-5xl aspect-[3/4] md:aspect-[16/9] flex flex-col items-center justify-center bg-white border border-red-200 rounded-2xl shadow-sm p-6 text-center">
-      <i class="pi pi-exclamation-triangle text-4xl text-red-400 mb-4"></i>
-      <h2 class="text-lg font-medium text-slate-800 mb-2">Falha ao carregar o calendário</h2>
-      <p class="text-slate-500 text-sm mb-6 max-w-md">Não foi possível conectar ao visualizador neste momento. Você pode tentar recarregar ou tentar novamente mais tarde.</p>
-      <button (click)="recarregar()" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 rounded hover:bg-red-100 transition-colors">
-        <i class="pi pi-refresh"></i> Tentar Novamente
-      </button>
-    </div>
-  } @else if (pdfSrc()) {
-    <div class="relative w-full max-w-5xl aspect-[3/4] md:aspect-[16/9] rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white p-1">
-      <div class="w-full h-full rounded-xl overflow-hidden bg-slate-50 relative">
-        
-        <pdf-viewer 
-          [src]="pdfSrc()" 
-          [render-text]="true" 
-          [original-size]="false" 
-          [fit-to-page]="true"
-          [show-all]="true"
-          class="w-full h-full block"
-        ></pdf-viewer>
+    <!-- ════════════════════════════════════════════════════════════
+         ABA 1 — GRADE SEMANAL
+         ════════════════════════════════════════════════════════════ -->
+    @if (abaAtiva() === 'semana') {
+      <div class="animate-fade-in">
 
+                <!-- Grade -->
+        <div class="w-full">
+
+          <div class="block md:hidden space-y-2">
+            @for (dia of DIAS_SEMANA; track dia.jsDay; let i = $index) {
+              <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+                  [class.border-blue-950]="isHoje(dia.jsDay)"
+                  [class.ring-1]="isHoje(dia.jsDay)"
+                  [class.ring-blue-950]="isHoje(dia.jsDay)">
+                
+                <div class="px-3 py-3 flex items-center justify-between border-b border-slate-100"
+                    [class.bg-blue-950]="isHoje(dia.jsDay)"
+                    [class.bg-slate-50]="!isHoje(dia.jsDay)">
+                  <span class="font-bold text-sm tracking-wide" 
+                        [class.text-white]="isHoje(dia.jsDay)" 
+                        [class.text-slate-700]="!isHoje(dia.jsDay)">
+                    {{ dia.label }}
+                  </span>
+                  <span class="text-xs font-medium" 
+                        [class.text-blue-300]="isHoje(dia.jsDay)" 
+                        [class.text-slate-400]="!isHoje(dia.jsDay)">
+                    {{ datasDaSemana()[i] }}
+                  </span>
+                </div>
+
+                <div class="p-3 flex flex-col gap-1">
+                  @for (slot of SLOTS_HORARIO; track slot.label; let si = $index) {
+                    @let aula = aulaEmSlot(dia.jsDay, si);
+                    @if (aula) {
+                      <div class="flex items-center gap-3 p-1 rounded-lg transition-colors cursor-default"
+                          [ngClass]="{
+                            'bg-blue-50 border border-blue-100': aula.cor === 'blue',
+                            'bg-teal-50 border border-teal-100': aula.cor === 'teal',
+                            'bg-amber-50 border border-amber-100': aula.cor === 'amber',
+                            'bg-purple-50 border border-purple-100': aula.cor === 'purple',
+                            'bg-rose-50 border border-rose-100': aula.cor === 'coral',
+                            'bg-green-50 border border-green-100': aula.cor === 'green',
+                            'bg-pink-50 border border-pink-100': aula.cor === 'pink'
+                          }">
+                        
+                        <div class="flex flex-col items-center justify-center min-w-[50px] pr-3 border-r"
+                            [ngClass]="{
+                              'border-blue-200 text-blue-600': aula.cor === 'blue',
+                              'border-teal-200 text-teal-600': aula.cor === 'teal',
+                              'border-amber-200 text-amber-600': aula.cor === 'amber',
+                              'border-purple-200 text-purple-600': aula.cor === 'purple',
+                              'border-rose-200 text-rose-600': aula.cor === 'coral',
+                              'border-green-200 text-green-600': aula.cor === 'green',
+                              'border-pink-200 text-pink-600': aula.cor === 'pink'
+                            }">
+                          <span class="text-[10px] font-medium tabular-nums leading-none">{{ aula.inicio }}</span>
+                          <span class="text-[9px] font-normal tabular-nums opacity-80 mt-1">{{ aula.fim }}</span>
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                          <p class="text-xs font-bold leading-snug line-clamp-2"
+                            [ngClass]="{
+                              'text-blue-800': aula.cor === 'blue',
+                              'text-teal-800': aula.cor === 'teal',
+                              'text-amber-800': aula.cor === 'amber',
+                              'text-purple-800': aula.cor === 'purple',
+                              'text-rose-800': aula.cor === 'coral',
+                              'text-green-800': aula.cor === 'green',
+                              'text-pink-800': aula.cor === 'pink'
+                            }">
+                            {{ aula.turma.nome }}
+                          </p>
+                        </div>
+                      </div>
+                    }
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full border-collapse" style="min-width: 560px;">
+                <thead>
+                  <tr class="border-b border-slate-100">
+                    <th class="w-16 md:w-20 py-4 px-3 text-right">
+                      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hora</span>
+                    </th>
+                    @for (dia of DIAS_SEMANA; track dia.jsDay; let i = $index) {
+                      <th class="py-4 px-2 text-center" [class.bg-blue-950]="isHoje(dia.jsDay)" [class.rounded-t-xl]="isHoje(dia.jsDay)">
+                        <div class="text-xs font-bold tracking-wide" [class.text-white]="isHoje(dia.jsDay)" [class.text-slate-700]="!isHoje(dia.jsDay)">
+                          {{ dia.label }}
+                        </div>
+                        <div class="text-[10px] mt-0.5" [class.text-blue-300]="isHoje(dia.jsDay)" [class.text-slate-400]="!isHoje(dia.jsDay)">
+                          {{ datasDaSemana()[i] }}
+                        </div>
+                      </th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (slot of SLOTS_HORARIO; track slot.label; let si = $index) {
+                    <tr class="border-b border-slate-50 last:border-0 group">
+                      <td class="py-2 px-3 text-right align-top">
+                        <span class="text-[10px] font-semibold text-slate-400 tabular-nums leading-tight block pt-1.5">{{ slot.label }}</span>
+                      </td>
+                      @for (dia of DIAS_SEMANA; track dia.jsDay) {
+                        <td class="py-1.5 px-1.5 align-top" [class.bg-blue-950/[0.03]]="isHoje(dia.jsDay)">
+                          @let aula = aulaEmSlot(dia.jsDay, si);
+                          @if (aula) {
+                            <div class="rounded-lg px-2 py-1.5 text-left transition-all duration-200 hover:scale-[1.02] cursor-default" ...>
+                              <p class="text-[10px] font-bold leading-snug line-clamp-2" ...>{{ nomeCurto(aula.turma.nome) }}</p>
+                              <p class="text-[9px] mt-0.5 font-medium tabular-nums" ...>{{ aula.inicio }}–{{ aula.fim }}</p>
+                            </div>
+                          }
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Legenda -->
+        @if (legendaCores().length > 0) {
+          <div class="mt-5 flex flex-wrap gap-3">
+            @for (item of legendaCores(); track item.turma.nome) {
+              <div class="flex items-center gap-2 text-xs text-slate-600 bg-white border border-slate-200 rounded-full px-3 py-1.5">
+                <div class="w-2.5 h-2.5 rounded-sm flex-shrink-0"
+                  [ngClass]="{
+                    'bg-blue-400': item.cor === 'blue',
+                    'bg-teal-400': item.cor === 'teal',
+                    'bg-amber-400': item.cor === 'amber',
+                    'bg-purple-400': item.cor === 'purple',
+                    'bg-rose-400': item.cor === 'coral',
+                    'bg-green-400': item.cor === 'green',
+                    'bg-pink-400': item.cor === 'pink'
+                  }">
+                </div>
+                <span class="font-medium truncate max-w-[160px]">{{ item.turma.nome }}</span>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Estado vazio -->
+        @if (legendaCores().length === 0) {
+          <div class="mt-8 flex flex-col items-center justify-center text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200">
+            <i class="pi pi-spin pi-spinner text-2xl text-amber-500 mb-3"></i>
+            <p class="text-sm font-medium text-slate-500">Carregando horários das turmas...</p>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ════════════════════════════════════════════════════════════
+         ABA 2 — CALENDÁRIO MENSAL
+         ════════════════════════════════════════════════════════════ -->
+    @if (abaAtiva() === 'mensal') {
+      <div class="animate-fade-in grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+        <!-- Mini calendário -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <!-- Navegação mês -->
+          <div class="flex items-center justify-between mb-5">
+            <button (click)="mudarMes(-1)"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all">
+              <i class="pi pi-angle-left text-sm"></i>
+            </button>
+            <span class="text-sm font-bold text-slate-800 capitalize tracking-wide">{{ mesAnoLabel() }}</span>
+            <button (click)="mudarMes(1)"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all">
+              <i class="pi pi-angle-right text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Labels dos dias da semana -->
+          <div class="grid grid-cols-7 mb-2">
+            @for (label of ['D','S','T','Q','Q','S','S']; track $index) {
+              <div class="text-center text-[10px] font-bold text-slate-400 py-1">{{ label }}</div>
+            }
+          </div>
+
+          <!-- Dias do mês -->
+          <div class="grid grid-cols-7 gap-y-1">
+            @for (item of diasDoMes(); track $index) {
+              <button
+                [disabled]="!item.mesAtual"
+                (click)="item.mesAtual && selecionarDia(item.dia)"
+                class="relative flex flex-col items-center justify-center h-9 w-full rounded-lg text-xs font-medium transition-all duration-150"
+                [class.text-slate-300]="!item.mesAtual"
+                [class.cursor-default]="!item.mesAtual"
+                [class.text-slate-700]="item.mesAtual && !eSelecionado(item.dia, item.mesAtual) && !eHoje(item.dia, item.mesAtual)"
+                [class.hover:bg-slate-100]="item.mesAtual && !eSelecionado(item.dia, item.mesAtual)"
+                [class.cursor-pointer]="item.mesAtual"
+                [class.bg-blue-950]="eSelecionado(item.dia, item.mesAtual)"
+                [class.text-white]="eSelecionado(item.dia, item.mesAtual)"
+                [class.font-bold]="eHoje(item.dia, item.mesAtual) || eSelecionado(item.dia, item.mesAtual)"
+                [class.text-blue-700]="eHoje(item.dia, item.mesAtual) && !eSelecionado(item.dia, item.mesAtual)">
+                {{ item.dia }}
+                <!-- Ponto indicador de aula -->
+                @if (item.mesAtual && item.temAula) {
+                  <div class="absolute bottom-1 w-1 h-1 rounded-full"
+                    [class.bg-blue-300]="eSelecionado(item.dia, item.mesAtual)"
+                    [class.bg-blue-500]="!eSelecionado(item.dia, item.mesAtual)">
+                  </div>
+                }
+              </button>
+            }
+          </div>
+
+          <!-- Legenda do calendário -->
+          <div class="mt-5 pt-4 border-t border-slate-100 flex items-center gap-3 text-xs text-slate-500">
+            <div class="flex items-center gap-1.5">
+              <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+              <span>Tem aulas</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="w-3 h-3 rounded bg-blue-950"></div>
+              <span>Selecionado</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detalhe do dia selecionado -->
+        <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Aulas do dia</p>
+              <h2 class="text-lg font-bold text-slate-800 capitalize">{{ diaSelecionadoLabel() }}</h2>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-blue-950 flex items-center justify-center">
+              <i class="pi pi-calendar text-white text-lg"></i>
+            </div>
+          </div>
+
+          @if (aulasDodiaSelecionado().length > 0) {
+            <div class="space-y-1">
+              @for (aula of aulasDodiaSelecionado(); track aula.turma.nome) {
+                <div class="flex items-start gap-4 p-2 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                  <!-- Dot de cor -->
+                  <div class="mt-1 w-2 h-2 rounded-full flex-shrink-0"
+                    [ngClass]="{
+                      'bg-blue-500': aula.cor === 'blue',
+                      'bg-teal-500': aula.cor === 'teal',
+                      'bg-amber-500': aula.cor === 'amber',
+                      'bg-purple-500': aula.cor === 'purple',
+                      'bg-rose-500': aula.cor === 'coral',
+                      'bg-green-500': aula.cor === 'green',
+                      'bg-pink-500': aula.cor === 'pink'
+                    }">
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-800 leading-snug mb-1">{{ aula.turma.nome }}</p>
+                    <div class="flex items-center gap-2 text-xs text-slate-500">
+                      <i class="pi pi-clock text-[10px]"></i>
+                      <span class="tabular-nums font-medium">{{ aula.horarioFormatado }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="flex flex-col items-center justify-center py-16 text-center">
+              <div class="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center mb-4">
+                <i class="pi pi-sun text-2xl text-amber-500"></i>
+              </div>
+              <h3 class="text-base font-bold text-slate-700 mb-1">Dia livre!</h3>
+              <p class="text-sm text-slate-400">Nenhuma aula programada para este dia.</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ════════════════════════════════════════════════════════════
+         ABA 3 — CALENDÁRIO ACADÊMICO (PDF existente)
+         ════════════════════════════════════════════════════════════ -->
+    <div [class.hidden]="abaAtiva() !== 'academico'" class="animate-fade-in">
+      <div class="animate-fade-in">
+        @if (carregando()) {
+          <div class="flex flex-col items-center justify-center h-64">
+            <i class="pi pi-spin pi-spinner text-4xl text-amber-700 mb-4"></i>
+            <p class="text-slate-500 text-xs font-semibold tracking-wide uppercase">Sincronizando calendário...</p>
+          </div>
+        } @else if (erro()) {
+          <div class="w-full flex flex-col items-center justify-center bg-white border border-red-200 rounded-2xl shadow-sm p-10 text-center">
+            <i class="pi pi-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+            <h2 class="text-lg font-medium text-slate-800 mb-2">Falha ao carregar o calendário</h2>
+            <p class="text-slate-500 text-sm mb-6 max-w-md">Não foi possível conectar ao visualizador neste momento.</p>
+            <button (click)="recarregar()" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+              <i class="pi pi-refresh"></i> Tentar Novamente
+            </button>
+          </div>
+        } @else if (pdfSrc()) {
+          <div class="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white p-1" style="aspect-ratio: 3/4;">
+            <div class="w-full h-full rounded-xl overflow-hidden bg-slate-50">
+              <pdf-viewer
+                [src]="pdfSrc()!"
+                [render-text]="true"
+                [original-size]="false"
+                [fit-to-page]="true"
+                [show-all]="true"
+                class="w-full h-full block">
+              </pdf-viewer>
+            </div>
+          </div>
+        }
       </div>
     </div>
-  }
+
+  </div>
+</div>
