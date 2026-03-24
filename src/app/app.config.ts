@@ -1,5 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, isDevMode} from '@angular/core';
-import { provideRouter } from '@angular/router';
+// 1. Adicione o withInMemoryScrolling na importação do router
+import { provideRouter, withInMemoryScrolling } from '@angular/router'; 
 import { provideServiceWorker } from '@angular/service-worker';
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeuix/themes/aura';
@@ -9,7 +10,13 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideRouter(routes),
+    
+    // 2. Adicione a configuração dentro do provideRouter
+    provideRouter(
+      routes,
+      withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })
+    ),
+    
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',
