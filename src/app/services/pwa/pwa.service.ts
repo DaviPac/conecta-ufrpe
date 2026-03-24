@@ -116,27 +116,44 @@ export class PwaService {
     this.updateStatus.set('checking');
 
     try {
-      const registration = await Promise.race([
-        navigator.serviceWorker.ready,
-        // Timeout de segurança: nunca deixa preso em 'checking'
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), 8000)
-        ),
-      ]) as ServiceWorkerRegistration;
-
+      const registration = await navigator.serviceWorker.ready;
+      
+      // Pede ao navegador para buscar o novo Service Worker no servidor
       await registration.update();
 
-      // Dá tempo ao SW de instalar (máx 3s)
-      await new Promise(r => setTimeout(r, 3000));
+      // Se encontrou uma nova versão, o SW entra no estado de "installing".
+      // Vamos aguardar o término da instalação dinamicamente em vez de usar setTimeout.
+      if (registration.installing) {
+        const newWorker = registration.installing;
+        
+        await new Promise<void>((resolve) => {
+          const listener = () => {
+            if (newWorker.state === 'installed' || newWorker.state === 'redundant') {
+              newWorker.removeEventListener('statechange', listener);
+              resolve();
+            }
+          };
+          
+          // Prevenção caso o status já tenha mudado muito rápido
+          if (newWorker.state === 'installed' || newWorker.state === 'redundant') {
+            resolve();
+          } else {
+            newWorker.addEventListener('statechange', listener);
+          }
+        });
+      }
 
-      // Se o listener já setou waitingWorker, status já é 'available'
-      if (this.updateStatus() === 'checking') {
+      // Após aguardar todo o processo, verificamos qual é o resultado real
+      if (registration.waiting) {
+        this.waitingWorker = registration.waiting;
+        this.updateStatus.set('available');
+      } else {
+        // Se não tem nenhum SW em "waiting", realmente não havia atualização
         this.updateStatus.set('up-to-date');
-        setTimeout(() => this.updateStatus.set('idle'), 3000);
+        setTimeout(() => this.updateStatus.set('idle'), 3500);
       }
     } catch (e) {
-      const isTimeout = (e as Error).message === 'timeout';
-      this.updateStatus.set(isTimeout ? 'not-supported' : 'error');
+      this.updateStatus.set('error');
       setTimeout(() => this.updateStatus.set('idle'), 3500);
     }
   }
