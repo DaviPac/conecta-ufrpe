@@ -129,10 +129,23 @@ export class SigaaService {
    * Retorna `true` se bem-sucedido, `false` caso contrário.
    */
   private async tryReauthenticate(): Promise<boolean> {
-    if (!this.username || !this.password) return false;
+
+    const storedUsername = localStorage.getItem("username");
+    const storedPassword = localStorage.getItem("password");
+
+    const credentials =
+      (this.username && this.password)
+        ? { username: this.username, password: this.password }
+        : (storedUsername && storedPassword)
+          ? { username: storedUsername, password: storedPassword }
+          : null;
+
+    if (!credentials) {
+      return false;
+    }
     try {
       this.isReauthenticating.set(true);
-      await this.login(this.username, this.password);
+      await this.login(credentials.username, credentials.password);
       // Atualiza viewState via main-data para que as próximas chamadas funcionem
       await this.fetchMainData();
       return true;
