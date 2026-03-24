@@ -1,7 +1,16 @@
 <div class="flex flex-col min-h-[100dvh] w-full text-zinc-100 font-sans bg-slate-50">
   <app-navbar />
-  
+
   <main class="flex-grow flex flex-col pt-10 pb-16 md:pb-0">
     <router-outlet />
   </main>
+
+  @if (sigaaService.isReauthenticating()) {
+    <div class="fixed bottom-6 inset-x-0 z-50 flex justify-center pointer-events-none">
+      <div class="flex items-center gap-2.5 bg-slate-800 text-slate-100 text-sm px-4 py-2.5 rounded-xl shadow-xl animate-slide-up">
+        <span class="size-3.5 rounded-full border-2 border-slate-500 border-t-blue-400 animate-spin"></span>
+        <span>Renovando sessão…</span>
+      </div>
+    </div>
+  }
 </div>

@@ -6,6 +6,7 @@ import { Profile } from './routes/profile/profile';
 import { Calendario } from './routes/calendario/calendario';
 import { TurmaDetail } from './routes/turma-detail/turma-detail';
 import { loginGuard } from './guards/login-guard';
+import { Settings } from './routes/settings/settings';
 
 export const routes: Routes = [
   { path: 'login', component: Login, canActivate: [loginGuard] },
@@ -13,4 +14,5 @@ export const routes: Routes = [
   { path: 'profile', component: Profile, canActivate: [authGuard] },
   { path: 'calendario', component: Calendario, canActivate: [authGuard] },
   { path: 'turma', component: TurmaDetail, canActivate: [authGuard] },
+  { path: 'settings', component: Settings, canActivate: [authGuard] },
 ];

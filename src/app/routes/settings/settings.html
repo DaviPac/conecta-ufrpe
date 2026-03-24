@@ -1,0 +1,119 @@
+<div class="settings-page">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header class="settings-header">
+    <h1 class="settings-title">Configurações</h1>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SEÇÃO: Atualização do app
+  ═══════════════════════════════════════════════════════════ -->
+  <section class="settings-section">
+    <h2 class="section-label">Aplicativo</h2>
+
+    <div class="card">
+      <div class="card-row">
+        <div class="card-row-info">
+          <span class="card-row-title">Versão do app</span>
+          <span class="card-row-sub">
+            @switch (pwaService.updateStatus()) {
+              @case ('checking')  { <span class="status-pill checking">Verificando…</span> }
+              @case ('available') { <span class="status-pill available">Atualização disponível</span> }
+              @case ('updating')  { <span class="status-pill updating">Atualizando…</span> }
+              @case ('up-to-date'){ <span class="status-pill ok">Você está na versão mais recente</span> }
+              @case ('error')         { <span class="status-pill error">Erro ao verificar</span> }
+              @case ('not-supported') { <span class="status-pill neutral">Indisponível fora do PWA</span> }
+              @default                { 
+                @if (pwaService.isSwActive) {
+                  <span class="status-pill neutral">Instalado via PWA</span> 
+                } @else {
+                  <span class="status-pill neutral">Acesso via Navegador</span> 
+                }
+              }
+            }
+          </span>
+        </div>
+
+        <div class="card-row-actions">
+          @if (pwaService.updateStatus() === 'available') {
+            <button class="btn btn-primary" (click)="onApplyUpdate()">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
+              Atualizar agora
+            </button>
+          } @else if (pwaService.canInstall()) {
+            <button class="btn btn-primary" (click)="onInstallApp()">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+              Instalar app
+            </button>
+          } @else {
+            <button
+              class="btn btn-ghost"
+              [disabled]="pwaService.updateStatus() === 'checking' || pwaService.updateStatus() === 'updating'"
+              (click)="onCheckUpdate()">
+              @if (pwaService.updateStatus() === 'checking') {
+                <span class="spinner-xs"></span>
+              } @else {
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
+              }
+              Verificar atualização
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SEÇÃO: Conta
+  ═══════════════════════════════════════════════════════════ -->
+  <section class="settings-section">
+    <h2 class="section-label">Conta</h2>
+
+    <div class="card">
+      <div class="card-row">
+        <div class="card-row-info">
+          <span class="card-row-title">{{ sigaaService.nome() }}</span>
+          <span class="card-row-sub">Sessão ativa no SIGAA</span>
+        </div>
+        <button class="btn btn-ghost" (click)="onLogout()">Sair</button>
+      </div>
+
+      <div class="card-divider"></div>
+
+      <div class="card-row">
+        <div class="card-row-info">
+          <span class="card-row-title">Apagar todos os dados</span>
+          <span class="card-row-sub">Remove caches, dados locais e encerra a sessão</span>
+        </div>
+        <button class="btn btn-danger-outline" (click)="requestClear('all')">Apagar</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     MODAL de confirmação
+═══════════════════════════════════════════════════════════ -->
+@if (confirmingClear()) {
+  <div class="modal-backdrop" (click)="cancelClear()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3 class="modal-title">
+        {{ confirmingClear() === 'all' ? 'Apagar todos os dados?' : 'Limpar caches?' }}
+      </h3>
+      <p class="modal-body">
+        @if (confirmingClear() === 'all') {
+          Isso removerá todos os caches, dados locais e encerrará sua sessão. Você precisará fazer login novamente.
+        } @else {
+          Os caches do app serão removidos. O app continuará funcionando, mas pode ficar mais lento até baixar os recursos novamente.
+        }
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="cancelClear()">Cancelar</button>
+        <button class="btn btn-danger" (click)="confirmClear()">
+          {{ confirmingClear() === 'all' ? 'Apagar tudo' : 'Limpar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

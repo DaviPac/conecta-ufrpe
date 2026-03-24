@@ -8,3 +8,18 @@ html, body {
   overflow-y: auto; /* O scroll acontece aqui dentro agora */
   -webkit-overflow-scrolling: touch;
 }
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.2s ease;
+}

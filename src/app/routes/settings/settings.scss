@@ -1,0 +1,206 @@
+// ─── Layout ────────────────────────────────────────────────────────────────
+
+.settings-page {
+  @apply max-w-2xl mx-auto px-4 py-6 flex flex-col gap-6;
+}
+
+.settings-header {
+  @apply pb-2;
+}
+
+.settings-title {
+  @apply text-2xl font-bold text-slate-800;
+}
+
+// ─── Sections ──────────────────────────────────────────────────────────────
+
+.settings-section {
+  @apply flex flex-col gap-2;
+}
+
+.section-label {
+  @apply text-xs font-semibold uppercase tracking-widest text-slate-400 px-1;
+}
+
+// ─── Card ──────────────────────────────────────────────────────────────────
+
+.card {
+  @apply bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col;
+}
+
+.card-row {
+  @apply flex items-center justify-between gap-4 px-5 py-4;
+}
+
+.card-row-info {
+  @apply flex flex-col gap-0.5 min-w-0;
+}
+
+.card-row-title {
+  @apply text-sm font-semibold text-slate-800 truncate;
+}
+
+.card-row-sub {
+  @apply text-xs text-slate-500;
+}
+
+.card-row-actions {
+  @apply flex items-center gap-2 shrink-0;
+}
+
+.card-divider {
+  @apply border-t border-slate-100 mx-5;
+}
+
+.card-actions {
+  @apply flex items-center justify-end gap-2 px-5 py-3 border-t border-slate-100;
+}
+
+// ─── Buttons ───────────────────────────────────────────────────────────────
+
+.btn {
+  @apply inline-flex items-center gap-1.5 text-sm font-medium rounded-xl px-3.5 py-2 transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none;
+
+  svg { @apply size-4 shrink-0; }
+}
+
+.btn-primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700 active:scale-95;
+}
+
+.btn-ghost {
+  @apply bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95;
+}
+
+.btn-danger-outline {
+  @apply border border-red-200 text-red-500 bg-red-50 hover:bg-red-100 active:scale-95;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-700 active:scale-95;
+}
+
+.btn-icon-danger {
+  @apply p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors;
+  svg { @apply size-4; }
+}
+
+// ─── Status pills ──────────────────────────────────────────────────────────
+
+.status-pill {
+  @apply inline-flex items-center gap-1 text-xs font-medium rounded-full px-2 py-0.5;
+
+  &.neutral  { @apply bg-slate-100 text-slate-500; }
+  &.checking { @apply bg-amber-50 text-amber-600; }
+  &.available{ @apply bg-blue-50 text-blue-600; }
+  &.updating { @apply bg-indigo-50 text-indigo-600; }
+  &.ok       { @apply bg-emerald-50 text-emerald-600; }
+  &.error    { @apply bg-red-50 text-red-500; }
+}
+
+// ─── Storage ───────────────────────────────────────────────────────────────
+
+.storage-overview {
+  @apply px-5 py-4 flex flex-col gap-2;
+}
+
+.storage-bar-track {
+  @apply w-full h-2 bg-slate-100 rounded-full overflow-hidden;
+}
+
+.storage-bar-fill {
+  @apply h-full bg-blue-500 rounded-full transition-all duration-500;
+  min-width: 2px;
+
+  &.storage-bar-warn   { @apply bg-amber-400; }
+  &.storage-bar-danger { @apply bg-red-500; }
+}
+
+.storage-meta {
+  @apply flex justify-between text-xs;
+}
+
+.storage-used  { @apply font-semibold text-slate-700; }
+.storage-quota { @apply text-slate-400; }
+
+// ─── Cache list ────────────────────────────────────────────────────────────
+
+.cache-list {
+  @apply border-t border-slate-100 divide-y divide-slate-100;
+}
+
+.cache-entry {
+  @apply flex items-center justify-between gap-3 px-5 py-3;
+}
+
+.cache-entry-info {
+  @apply flex flex-col gap-0.5 min-w-0;
+}
+
+.cache-name {
+  @apply text-xs font-mono text-slate-700 truncate;
+}
+
+.cache-meta {
+  @apply text-xs text-slate-400;
+}
+
+.empty-hint {
+  @apply text-sm text-slate-400 px-5 py-4;
+}
+
+// ─── Skeleton ──────────────────────────────────────────────────────────────
+
+.storage-skeleton {
+  @apply px-5 py-4 flex flex-col gap-2;
+}
+
+.skeleton-bar {
+  @apply h-2 w-full rounded-full bg-slate-100 animate-pulse;
+}
+
+.skeleton-text {
+  @apply h-3 w-40 rounded bg-slate-100 animate-pulse;
+}
+
+// ─── Modal ─────────────────────────────────────────────────────────────────
+
+.modal-backdrop {
+  @apply fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 backdrop-blur-sm px-4 pb-6 sm:pb-0;
+  animation: fade-in 0.15s ease;
+}
+
+.modal {
+  @apply bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 flex flex-col gap-4;
+  animation: slide-up 0.2s ease;
+}
+
+.modal-title {
+  @apply text-base font-bold text-slate-800;
+}
+
+.modal-body {
+  @apply text-sm text-slate-500 leading-relaxed;
+}
+
+.modal-actions {
+  @apply flex justify-end gap-2 pt-1;
+}
+
+// ─── Spinner ───────────────────────────────────────────────────────────────
+
+.spinner-xs {
+  @apply size-3.5 rounded-full border-2 border-slate-300 border-t-current animate-spin inline-block;
+}
+
+// ─── Animations ────────────────────────────────────────────────────────────
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
