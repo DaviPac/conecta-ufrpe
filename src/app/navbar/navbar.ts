@@ -1,8 +1,7 @@
-import { Component, OnInit, inject, signal, computed, ChangeDetectorRef, OnDestroy } from '@angular/core';
-import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 import { SigaaService } from '../services/sigaaService/sigaa.service';
 import { PwaService } from '../services/pwa/pwa.service';
-import { filter, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -10,28 +9,16 @@ import { filter, Subscription } from 'rxjs';
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss',
 })
-export class Navbar implements OnInit, OnDestroy {
+export class Navbar implements OnInit {
   private router = inject(Router);
   private sigaaService = inject(SigaaService);
   private pwaService = inject(PwaService);
-  private cdr = inject(ChangeDetectorRef);
-
-  private routerSub?: Subscription;
 
   isMobileMenuOpen = signal<boolean>(false);
   hasUpdate = computed(() => this.pwaService.updateStatus() === 'available');
 
-  // Adicionando o ciclo de vida ngOnInit
   ngOnInit(): void {
-    // Dispara a verificação de atualização assim que a navbar for renderizada
     this.pwaService.checkForUpdate();
-    this.routerSub = this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => this.cdr.markForCheck());
-  }
-
-  ngOnDestroy(): void {
-      this.routerSub?.unsubscribe();
   }
 
   toggleMobileMenu() {
