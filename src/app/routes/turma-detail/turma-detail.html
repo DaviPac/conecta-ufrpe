@@ -100,6 +100,16 @@
         </div>
       }
 
+      <!-- ✨ Assistente de Estudos IA -->
+      @if (!isLoading) {
+        <div class="mt-10">
+          <app-study-assistant
+            [turmaNome]="turma()!.nome"
+            [cronograma]="turma()!.cronograma"
+          />
+        </div>
+      }
+
       <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
         <h2 class="text-xs font-semibold tracking-wide text-slate-500 uppercase mb-6 flex items-center border-b border-slate-100 pb-3">
           <i class="pi pi-map mr-2 text-blue-900"></i> Plano de Ensino

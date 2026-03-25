@@ -1,14 +1,15 @@
 import { Component, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router'; // <-- Importado RouterModule
+import { RouterModule, Router } from '@angular/router';
 import { formatarHorarios, parseFaltas } from '../../utils/formatters';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { LinkifyPipe } from '../../utils/linkify.pipe';
+import { StudyAssistantComponent } from './study-assistant.component'; // <-- novo
 
 @Component({
   selector: 'app-turma-detalhes',
   standalone: true,
-  imports: [CommonModule, RouterModule, LinkifyPipe], // <-- Adicionado aqui
+  imports: [CommonModule, RouterModule, LinkifyPipe, StudyAssistantComponent], // <-- adicionado
   templateUrl: './turma-detail.html',
 })
 export class TurmaDetail implements OnInit {
@@ -34,13 +35,11 @@ export class TurmaDetail implements OnInit {
   });
 
   ngOnInit(): void {
-      // Correção: Adicionado os parênteses () para pegar o valor do Signal
-      if (this.sigaaService.currentTurmaIdx() === null) {
-        this.router.navigate(['/']);
-      }
+    if (this.sigaaService.currentTurmaIdx() === null) {
+      this.router.navigate(['/']);
+    }
   }
 
-  // Helpers para deixar o HTML mais limpo e seguro
   get hasNotas(): boolean {
     const notas = this.turma()?.notas?.notas;
     return !!notas && Object.keys(notas).length > 0;

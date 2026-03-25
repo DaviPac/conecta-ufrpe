@@ -5,9 +5,11 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeuix/themes/aura';
 import { routes } from './app.routes';
+import { provideMarkdown } from 'ngx-markdown'
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideMarkdown(),
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     

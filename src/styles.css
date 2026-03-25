@@ -1,3 +1,4 @@
+@import 'katex/dist/katex.min.css';
 @import "primeicons/primeicons.css";
 @tailwind base;
 @tailwind components;
