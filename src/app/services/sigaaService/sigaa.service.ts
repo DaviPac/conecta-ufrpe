@@ -51,6 +51,7 @@ export class SigaaService {
   currentTurma: WritableSignal<Turma | null> = signal(null);
   currentTurmaIdx: WritableSignal<number | null> = signal(null);
   fullyLoaded: WritableSignal<boolean> = signal(false);
+  hasOnlineData: WritableSignal<boolean> = signal(false);
 
   pdfCache: WritableSignal<Uint8Array | undefined> = signal(undefined);
 
@@ -320,6 +321,8 @@ export class SigaaService {
             alert('Erro ao carregar dados das turmas. Por favor, faça login novamente.');
           }
         }
+      }).then(() => {
+        this.hasOnlineData.set(true);
       });
 
     } catch (e) {

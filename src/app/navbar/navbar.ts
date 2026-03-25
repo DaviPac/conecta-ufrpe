@@ -11,7 +11,7 @@ import { PwaService } from '../services/pwa/pwa.service';
 })
 export class Navbar implements OnInit, OnDestroy {
   private router = inject(Router);
-  private sigaaService = inject(SigaaService);
+  sigaaService = inject(SigaaService);
   private pwaService = inject(PwaService);
 
   isOffline = signal<boolean>(!navigator.onLine);
