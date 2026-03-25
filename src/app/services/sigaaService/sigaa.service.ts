@@ -22,9 +22,6 @@ export class SigaaService {
 
   /** Visível ao template para exibir indicador de reautenticação */
   isReauthenticating: WritableSignal<boolean> = signal(false);
-  
-  /** Visível ao template para exibir indicador de busca de novos dados (background) */
-  isFetchingData: WritableSignal<boolean> = signal(false);
 
   private router: Router = inject(Router);
 
@@ -42,8 +39,9 @@ export class SigaaService {
   username: string = '';
   password: string = '';
 
+  // Chave simples de ofuscação para as credenciais no sessionStorage.
+  // Não é criptografia forte — apenas evita exposição em texto puro.
   private readonly CRED_KEY = 'sigaa_cred';
-  private readonly CACHE_KEY = 'sigaa_data_cache'; // Nova chave para o cache de dados
 
   constructor() {
     const jsessionid = localStorage.getItem('jsessionid');
@@ -53,53 +51,14 @@ export class SigaaService {
       this.viewState.set(viewState);
     }
     this.restoreCredentials();
-    
-    // 1. Carrega dados salvos para exibição instantânea
-    this.loadCache(); 
-
-    // 2. Dispara a atualização silenciosa em background
-    if (this.jsessionid().length && this.viewState().length) {
-      this.fetchMainData();
-    }
-  }
-
-  // ─── Cache de Dados Locais (Stale-while-revalidate) ─────────────────────────
-
-  private saveCache(): void {
-    const cacheData = {
-      nome: this.nome(),
-      avaliacoes: this.avaliacoes(),
-      cargaHoraria: this.cargaHoraria(),
-      indices: this.indices(),
-      turmas: this.turmas()
-    };
-    localStorage.setItem(this.CACHE_KEY, JSON.stringify(cacheData));
-  }
-
-  private loadCache(): void {
-    const cached = localStorage.getItem(this.CACHE_KEY);
-    if (!cached) return;
-
-    try {
-      const parsed = JSON.parse(cached);
-      if (parsed.nome) this.nome.set(parsed.nome);
-      if (parsed.avaliacoes) this.avaliacoes.set(parsed.avaliacoes);
-      if (parsed.cargaHoraria) this.cargaHoraria.set(parsed.cargaHoraria);
-      if (parsed.indices) this.indices.set(parsed.indices);
-      if (parsed.turmas) {
-        this.turmas.set(parsed.turmas);
-        // Se já temos turmas em cache, liberamos a interface principal
-        if (parsed.turmas.length > 0) this.fullyLoaded.set(true);
-      }
-    } catch (e) {
-      console.warn('Falha ao restaurar cache local:', e);
-      localStorage.removeItem(this.CACHE_KEY);
-    }
+    if (this.jsessionid().length && this.viewState().length) this.fetchMainData();
   }
 
   // ─── Credential helpers ────────────────────────────────────────────────────
 
   private saveCredentials(username: string, password: string): void {
+    // Codifica em base64 para não ficar em texto puro no sessionStorage.
+    // sessionStorage é apagado ao fechar a aba, sem persistência entre sessões.
     const encoded = btoa(JSON.stringify({ username, password }));
     sessionStorage.setItem(this.CRED_KEY, encoded);
   }
@@ -138,11 +97,8 @@ export class SigaaService {
     this.currentTurma.set(null);
     this.currentTurmaIdx.set(null);
     this.jsessionid.set('');
-    this.fullyLoaded.set(false);
-    this.isFetchingData.set(false);
-    
     this.clearCredentials();
-    localStorage.clear(); // Isso apagará jsessionid, viewState e o CACHE_KEY
+    localStorage.clear();
     this.router.navigate(['/login']);
     localStorage.setItem('privacyAccepted', hasAcceptedPrivacy ?? 'false');
   }
@@ -168,7 +124,12 @@ export class SigaaService {
     return data.jsessionid;
   }
 
+  /**
+   * Tenta reautenticar silenciosamente usando as credenciais armazenadas.
+   * Retorna `true` se bem-sucedido, `false` caso contrário.
+   */
   private async tryReauthenticate(): Promise<boolean> {
+
     const storedUsername = localStorage.getItem("username");
     const storedPassword = localStorage.getItem("password");
 
@@ -185,6 +146,7 @@ export class SigaaService {
     try {
       this.isReauthenticating.set(true);
       await this.login(credentials.username, credentials.password);
+      // Atualiza viewState via main-data para que as próximas chamadas funcionem
       await this.fetchMainData();
       return true;
     } catch {
@@ -196,6 +158,13 @@ export class SigaaService {
 
   // ─── Fetch centralizado com retry ─────────────────────────────────────────
 
+  /**
+   * Wrapper em torno de `fetch` que:
+   *  1. Injeta o header de autorização automaticamente.
+   *  2. Detecta erros de sessão expirada.
+   *  3. Tenta reautenticar uma vez e repete a requisição.
+   *  4. Redireciona para /login apenas se a reautenticação falhar.
+   */
   private async fetchWithAuth(
     url: string,
     options: RequestInit = {},
@@ -209,13 +178,16 @@ export class SigaaService {
 
     const res = await fetch(url, { ...options, headers });
 
+    // Tenta detectar sessão expirada tanto pelo status HTTP quanto pelo body
     if (!res.ok && !retried) {
       let errorMessage = '';
+      let bodyText = '';
       try {
+        // Clona para poder ler o body mais de uma vez caso necessário
         const cloned = res.clone();
         const data = await cloned.json();
         errorMessage = data?.error ?? '';
-      } catch { }
+      } catch { /* body não era JSON */ }
 
       const isSessionError =
         res.status === 401 ||
@@ -227,6 +199,7 @@ export class SigaaService {
       if (isSessionError) {
         const reauthed = await this.tryReauthenticate();
         if (reauthed) {
+          // Repete a requisição original com o novo token (retried = true evita loop)
           return this.fetchWithAuth(url, options, true);
         } else {
           this.logout();
@@ -244,9 +217,9 @@ export class SigaaService {
     try {
       if (!this.jsessionid().length) throw new Error('jsessionid inválido');
 
-      this.isFetchingData.set(true); // Exibe indicador de atualização
-
+      // 🔥 CORREÇÃO: Usando o wrapper que intercepta o 401 e tenta reautenticar
       const res = await this.fetchWithAuth(`${this.domain}/main-data`);
+      
       const data = await res.json();
       console.log('fetch main data:', data);
 
@@ -261,36 +234,17 @@ export class SigaaService {
       this.jsessionid.set(mainDataRes.jsessionid);
       localStorage.setItem('jsessionid', mainDataRes.jsessionid);
       this.nome.set(mainDataRes.nome);
-      
-      const currentTurmas = this.turmas();
-      
-      const mergedTurmas = mainDataRes.turmas.map(newTurma => {
-        const cachedTurma = currentTurmas.find(t => t.nome === newTurma.nome);
-        
-        if (cachedTurma && cachedTurma.isLoaded) {
-          return {
-            ...cachedTurma, // Preserva dados detalhados em cache (como 'notas', participantes, etc)
-            ...newTurma,    // Atualiza os dados básicos recém-baixados
-            isLoaded: true  // Força a manutenção da flag de carregamento
-          };
-        }
-        
-        // Se for uma turma nova ou que ainda não foi detalhada, seta como false
-        return { ...newTurma, isLoaded: false };
-      });
-
-      this.turmas.set(mergedTurmas);
-      
+      mainDataRes.turmas.forEach(t => (t.isLoaded = false));
+      this.turmas.set(mainDataRes.turmas);
       this.viewState.set(mainDataRes.viewState);
       localStorage.setItem('viewState', mainDataRes.viewState);
       
-      this.saveCache(); // Atualiza o cache com os dados principais frescos
-      
-      await this.fetchTurmas(); 
+      this.fetchTurmas(); 
       
     } catch (e) {
       const error = e as Error;
-      this.isFetchingData.set(false); // Oculta o indicador se der erro na main
+      
+      // Centraliza a limpeza utilizando o método que você já criou
       this.logout(); 
       
       if (!this.router.url.includes('login')) {
@@ -312,6 +266,7 @@ export class SigaaService {
     if (!res.ok) throw new Error(data.error || 'erro ao buscar notas');
 
     const notasData = data as NotasResponse;
+    console.log(data);
 
     this.turmas.update(prev => {
       notasData.notas.forEach(n => {
@@ -333,6 +288,20 @@ export class SigaaService {
     localStorage.setItem('jsessionid', notasData.jsessionid);
     this.viewState.set(notasData.viewState);
     localStorage.setItem('viewState', notasData.viewState);
+  }
+
+  getCalendarioUrl(): string {
+    return `${this.domain}/calendario`;
+  }
+
+  async getOgCalendarioUrl(): Promise<string> {
+    if (!this.jsessionid().length || !this.viewState().length)
+      throw new Error('jsessionid ou viewstate inválidos');
+
+    const res = await this.fetchWithAuth(`${this.domain}/calendario/url`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'erro ao buscar url do calendário');
+    return data.url as string;
   }
 
   async getTurmaDetail(turma: Turma) {
@@ -363,32 +332,12 @@ export class SigaaService {
   }
 
   async fetchTurmas() {
-    try {
-      await this.fetchNotas();
-      for (const turma of this.turmas()) {
-        await this.getTurmaDetail(turma);
-        this.saveCache(); // Atualiza o cache a cada turma detalhada recebida (Progressive UX)
-      }
-      this.fullyLoaded.set(true);
-      console.log('fetch turmas resolvido:', this.turmas());
-    } finally {
-      // Sempre encerra o indicador de update quando finalizar (seja sucesso ou erro nas turmas)
-      this.isFetchingData.set(false); 
+    await this.fetchNotas();
+    for (const turma of this.turmas()) {
+      await this.getTurmaDetail(turma);
     }
-  }
-
-  getCalendarioUrl(): string {
-    return `${this.domain}/calendario`;
-  }
-
-  async getOgCalendarioUrl(): Promise<string> {
-    if (!this.jsessionid().length || !this.viewState().length)
-      throw new Error('jsessionid ou viewstate inválidos');
-
-    const res = await this.fetchWithAuth(`${this.domain}/calendario/url`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'erro ao buscar url do calendário');
-    return data.url as string;
+    this.fullyLoaded.set(true);
+    console.log('fetch turmas:', this.turmas());
   }
 
   async getAtestadoDados(): Promise<AtestadoMatricula> {
