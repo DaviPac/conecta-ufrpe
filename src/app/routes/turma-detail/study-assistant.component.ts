@@ -113,17 +113,20 @@ export class StudyAssistantComponent implements OnInit {
     },
   ];
 
-  ngOnInit(): void {
-    this.materials.set(this.repo.getMaterials(this.turmaNome));
-    this.apiKey = this.repo.getApiKey();
+  async ngOnInit(): Promise<void> {
+    // Busca os materiais e a chave de forma assíncrona
+    const loadedMaterials = await this.repo.getMaterials(this.turmaNome);
+    this.materials.set(loadedMaterials);
+
+    this.apiKey = await this.repo.getApiKey();
   }
 
   toggleExpand(): void {
     this.isExpanded.update((v) => !v);
   }
 
-  saveApiKey(): void {
-    this.repo.saveApiKey(this.apiKey);
+  async saveApiKey(): Promise<void> {
+    await this.repo.saveApiKey(this.apiKey);
     this.isConfigOpen.set(false);
   }
 
@@ -143,23 +146,40 @@ export class StudyAssistantComponent implements OnInit {
     return fullText;
   }
 
-  addMaterial(): void {
+  async addMaterial(): Promise<void> {
     if (!this.newMaterialName.trim() || !this.newMaterialContent.trim()) return;
-    const added = this.repo.addMaterial(this.turmaNome, {
-      name: this.newMaterialName.trim(),
-      content: this.newMaterialContent.trim(),
-      type: this.newMaterialType,
-    });
-    this.materials.update((list) => [...list, added]);
-    this.newMaterialName = '';
-    this.newMaterialContent = '';
-    this.newMaterialType = 'note';
-    this.isAddingMaterial.set(false);
+
+    try {
+      const added = await this.repo.addMaterial(this.turmaNome, {
+        name: this.newMaterialName.trim(),
+        content: this.newMaterialContent.trim(),
+        type: this.newMaterialType,
+      });
+      
+      // Atualiza a lista na tela apenas após o sucesso no banco
+      this.materials.update((list) => [...list, added]);
+      
+      // Limpa o formulário
+      this.newMaterialName = '';
+      this.newMaterialContent = '';
+      this.newMaterialType = 'note';
+      this.isAddingMaterial.set(false);
+    } catch (error) {
+      console.error('Erro ao salvar material no banco:', error);
+      this.errorMessage.set('Não foi possível salvar o material.');
+    }
   }
 
-  removeMaterial(id: string): void {
-    this.repo.removeMaterial(this.turmaNome, id);
-    this.materials.update((list) => list.filter((m) => m.id !== id));
+  async removeMaterial(id: string): Promise<void> {
+    try {
+      // Repare que o turmaNome foi removido da chamada abaixo
+      await this.repo.removeMaterial(id); 
+      
+      // Remove da interface
+      this.materials.update((list) => list.filter((m) => m.id !== id));
+    } catch (error) {
+      console.error('Erro ao deletar material:', error);
+    }
   }
 
   async handleFileUpload(event: Event): Promise<void> {

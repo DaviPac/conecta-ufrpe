@@ -292,7 +292,14 @@ export class SigaaService {
       // Salva snapshot parcial (dados principais já disponíveis)
       this.saveToCache();
 
-      await this.fetchTurmas();
+      this.fetchTurmas().catch(err => {
+        console.error('Erro ao buscar turmas após main data:', err);
+        this.isFetchingData.set(false);
+        this.logout();
+        if (!this.router.url.includes('login')) {
+          alert('Erro ao carregar dados das turmas. Por favor, faça login novamente.');
+        }
+      });
 
     } catch (e) {
       const error = e as Error;
