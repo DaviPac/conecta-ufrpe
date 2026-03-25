@@ -15,7 +15,7 @@ import { StudyAiService, StudyMode } from './study-ai.service';
 import * as pdfjsLib from 'pdfjs-dist';
 import { MarkdownModule } from 'ngx-markdown';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 interface ModeOption {
   id: StudyMode;
