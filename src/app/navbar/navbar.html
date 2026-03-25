@@ -94,7 +94,7 @@
         [routerLink]="['/calendario']"
         routerLinkActive
         #rlaCalendario="routerLinkActive"
-        class="relative flex flex-col items-center justify-center w-full h-full transition-all duration-300 group"
+        (isActiveChange)="null" class="relative flex flex-col items-center justify-center w-full h-full transition-all duration-300 group"
         [class.text-blue-600]="rlaCalendario.isActive"
         [class.text-slate-400]="!rlaCalendario.isActive"
       >
