@@ -102,7 +102,7 @@
             <!-- Upload de arquivo -->
             <label class="cursor-pointer text-xs text-slate-500 flex items-center gap-1 border border-slate-200 px-2.5 py-1 rounded-lg hover:bg-slate-50 transition-colors">
               <i class="pi pi-upload text-xs"></i> Upload
-              <input type="file" accept=".txt,.md,.csv" class="hidden" (change)="handleFileUpload($event)" />
+              <input type="file" accept=".txt,.md,.csv,.pdf" class="hidden" (change)="handleFileUpload($event)" />
             </label>
             <button
               (click)="isAddingMaterial.set(true)"

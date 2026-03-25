@@ -15,7 +15,7 @@ import { StudyAiService, StudyMode } from './study-ai.service';
 import * as pdfjsLib from 'pdfjs-dist';
 import { MarkdownModule } from 'ngx-markdown';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
 
 interface ModeOption {
   id: StudyMode;
@@ -161,12 +161,17 @@ export class StudyAssistantComponent implements OnInit {
 
     try {
       let text = '';
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
       
       // Verifica se é PDF para usar o extrator, senão usa o método padrão
-      if (file.type === 'application/pdf') {
+      if (isPdf) {
         text = await this.extractTextFromPdf(file);
       } else {
         text = await file.text();
+      }
+
+      if (!text || text.trim() === '') {
+        throw new Error('O arquivo está vazio ou não pôde ser lido corretamente.');
       }
 
       this.newMaterialName = file.name;
@@ -174,9 +179,10 @@ export class StudyAssistantComponent implements OnInit {
       this.newMaterialType = 'document';
       this.isAddingMaterial.set(true);
       input.value = '';
-    } catch (error) {
+    } catch (e) {
+      const error = e instanceof Error ? e : new Error(String(e));
       console.error('Erro ao ler o arquivo:', error);
-      this.errorMessage.set('Não foi possível extrair o texto deste arquivo.');
+      this.errorMessage.set(`Não foi possível extrair o texto: ${error.message || 'Erro desconhecido'}`);
     }
   }
 
