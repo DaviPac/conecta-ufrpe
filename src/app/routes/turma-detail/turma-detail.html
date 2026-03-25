@@ -131,8 +131,8 @@
             @for (item of turma()!.cronograma; track $index) {
               <div class="relative pl-6">
                 <div class="absolute w-3 h-3 bg-white border-2 border-blue-900 rounded-full -left-[7.5px] top-1"></div>
-                <h4 class="text-sm font-semibold text-slate-800 mb-1">{{ item.titulo }}</h4>
-                <p class="text-sm text-slate-600 leading-relaxed">{{ item.conteudo }}</p>
+                <h4 class="text-sm font-semibold text-slate-800 mb-1 break-words">{{ item.titulo }}</h4>
+                <p class="text-sm text-slate-600 leading-relaxed break-words">{{ item.conteudo }}</p>
               </div>
             }
           </div>
