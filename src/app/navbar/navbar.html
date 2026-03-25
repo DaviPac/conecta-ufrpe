@@ -81,7 +81,7 @@
         [routerLinkActiveOptions]="{ exact: true }"
         routerLinkActive
         #rlaHome="routerLinkActive"
-        class="relative flex flex-col items-center justify-center w-full h-full transition-all duration-300 group"
+        (isActiveChange)="null" class="relative flex flex-col items-center justify-center w-full h-full transition-all duration-300 group"
         [class.text-blue-600]="rlaHome.isActive"
         [class.text-slate-400]="!rlaHome.isActive"
       >
@@ -107,7 +107,7 @@
         [routerLink]="['/profile']"
         routerLinkActive
         #rlaProfile="routerLinkActive"
-        class="relative flex flex-col items-center justify-center w-full h-full transition-all duration-300 group"
+        (isActiveChange)="null" class="relative flex flex-col items-center justify-center w-full h-full transition-all duration-300 group"
         [class.text-blue-600]="rlaProfile.isActive"
         [class.text-slate-400]="!rlaProfile.isActive"
       >
@@ -120,7 +120,7 @@
         [routerLink]="['/settings']"
         routerLinkActive
         #rlaSettings="routerLinkActive"
-        class="relative flex flex-col items-center justify-center w-full h-full transition-all duration-300 group"
+        (isActiveChange)="null" class="relative flex flex-col items-center justify-center w-full h-full transition-all duration-300 group"
         [class.text-blue-600]="rlaSettings.isActive"
         [class.text-slate-400]="!rlaSettings.isActive"
       >
@@ -130,8 +130,7 @@
           <i class="pi pi-cog text-xl mb-1 transition-transform duration-300 group-hover:scale-110" [class.drop-shadow-md]="rlaSettings.isActive"></i>
           @if (hasUpdate()) {
             <span class="absolute -top-1 -right-1.5 flex h-2.5 w-2.5">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border-2 border-white dark:border-slate-900"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600 border-2 border-white dark:border-slate-900"></span>
             </span>
           }
         </div>
