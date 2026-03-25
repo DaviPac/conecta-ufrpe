@@ -1,7 +1,5 @@
-<!-- study-assistant.component.html -->
 <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
 
-  <!-- Header / Toggle -->
   <button
     (click)="toggleExpand()"
     class="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-slate-50 transition-colors group"
@@ -31,11 +29,9 @@
     </div>
   </button>
 
-  <!-- Expanded Content -->
   @if (isExpanded()) {
     <div class="px-6 pb-6 pt-4 space-y-5">
 
-      <!-- API Key Config Banner -->
       @if (!apiKey) {
         <div class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
           <i class="pi pi-key text-amber-600 text-sm shrink-0"></i>
@@ -51,7 +47,6 @@
         </div>
       }
 
-      <!-- Config Panel (API Key) -->
       @if (isConfigOpen()) {
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
           <h3 class="text-xs font-semibold text-slate-600 uppercase tracking-wide flex items-center gap-1.5">
@@ -61,7 +56,7 @@
             type="password"
             [(ngModel)]="apiKey"
             placeholder="AIza..."
-            class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="w-full text-sm text-slate-900 placeholder:text-slate-500 border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <p class="text-xs text-slate-400">
             A chave fica salva apenas no seu navegador (localStorage).
@@ -92,14 +87,12 @@
         </div>
       }
 
-      <!-- Materiais -->
       <div>
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-xs font-semibold tracking-wide text-slate-500 uppercase flex items-center gap-1.5">
             <i class="pi pi-folder text-slate-400"></i> Meus Materiais
           </h3>
           <div class="flex items-center gap-2">
-            <!-- Upload de arquivo -->
             <label class="cursor-pointer text-xs text-slate-500 flex items-center gap-1 border border-slate-200 px-2.5 py-1 rounded-lg hover:bg-slate-50 transition-colors">
               <i class="pi pi-upload text-xs"></i> Upload
               <input type="file" accept=".txt,.md,.csv,.pdf" class="hidden" (change)="handleFileUpload($event)" />
@@ -113,7 +106,6 @@
           </div>
         </div>
 
-        <!-- Form: Adicionar Material -->
         @if (isAddingMaterial()) {
           <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-3 space-y-3">
             <div class="grid grid-cols-2 gap-2">
@@ -121,11 +113,11 @@
                 type="text"
                 [(ngModel)]="newMaterialName"
                 placeholder="Nome do material"
-                class="col-span-2 text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="col-span-2 text-sm text-slate-900 placeholder:text-slate-500 border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <select
                 [(ngModel)]="newMaterialType"
-                class="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="text-sm text-slate-900 border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="note">Anotação</option>
                 <option value="document">Documento</option>
@@ -136,7 +128,7 @@
               [(ngModel)]="newMaterialContent"
               placeholder="Cole aqui o conteúdo: anotações, trechos de prova, resumos..."
               rows="5"
-              class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              class="w-full text-sm text-slate-900 placeholder:text-slate-500 border border-slate-200 rounded-lg px-3 py-2 bg-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             ></textarea>
             <div class="flex gap-2">
               <button
@@ -156,7 +148,6 @@
           </div>
         }
 
-        <!-- Lista de materiais -->
         @if (materials().length > 0) {
           <div class="space-y-2">
             @for (m of materials(); track m.id) {
@@ -186,10 +177,8 @@
         }
       </div>
 
-      <!-- Separador -->
       <hr class="border-slate-100" />
 
-      <!-- Modo de Geração -->
       <div>
         <h3 class="text-xs font-semibold tracking-wide text-slate-500 uppercase mb-3 flex items-center gap-1.5">
           <i class="pi pi-sparkles text-slate-400"></i> O que deseja gerar?
@@ -210,7 +199,6 @@
         </div>
       </div>
 
-      <!-- Contexto Extra (opcional) -->
       <div>
         <label class="text-xs font-semibold tracking-wide text-slate-500 uppercase mb-2 flex items-center gap-1.5">
           <i class="pi pi-comment text-slate-400"></i> Contexto adicional
@@ -221,11 +209,10 @@
           (ngModelChange)="extraContext.set($event)"
           placeholder="Ex: Tenho prova na próxima semana e tenho dificuldade em cálculo diferencial..."
           rows="2"
-          class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent transition-colors"
+          class="w-full text-sm text-slate-900 placeholder:text-slate-500 border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent transition-colors"
         ></textarea>
       </div>
 
-      <!-- Botão Gerar -->
       <button
         (click)="generate()"
         [disabled]="isGenerating()"
@@ -248,7 +235,6 @@
         }
       </button>
 
-      <!-- Mensagem de Erro -->
       @if (errorMessage()) {
         <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-2">
           <i class="pi pi-exclamation-circle text-red-500 text-sm mt-0.5 shrink-0"></i>
@@ -256,7 +242,6 @@
         </div>
       }
 
-      <!-- Resultado Gerado -->
       @if (parsedResult()) {
         <div class="rounded-xl border border-slate-200 overflow-hidden bg-white mt-6">
           
@@ -329,7 +314,7 @@
                         }
                         
                         } @else {
-                        <textarea rows="3" class="ml-10 w-[calc(100%-2.5rem)] text-sm border border-slate-200 rounded-lg p-3 mb-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Sua resposta..."></textarea>
+                        <textarea rows="3" class="ml-10 w-[calc(100%-2.5rem)] text-sm text-slate-900 placeholder:text-slate-500 border border-slate-200 rounded-lg p-3 mb-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Sua resposta..."></textarea>
                         
                         @if (showAnswers()) {
                             <div class="mt-2 ml-10 p-3 bg-amber-50 border border-amber-100 rounded-lg animate-fade-in">

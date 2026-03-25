@@ -116,15 +116,30 @@ export class PwaService {
     this.updateStatus.set('updating');
     
     try {
-      // Informa ao Service Worker ativo para ativar imediatamente a nova versão
-      await this.swUpdate.activateUpdate();
+      // 1. O método retorna um booleano indicando se a atualização ocorreu
+      const updateApplied = await this.swUpdate.activateUpdate();
       
-      // Recarrega a página para carregar os novos arquivos do cache atualizado
-      window.location.reload();
+      if (updateApplied) {
+        // 2. Pequeno delay para garantir que o SW terminou de assumir o controle
+        // antes do navegador destruir o contexto atual com o reload.
+        setTimeout(() => {
+          window.location.reload();
+        }, 300);
+      } else {
+        // Nenhuma atualização estava pendente para ser ativada
+        this.updateStatus.set('up-to-date');
+        setTimeout(() => this.updateStatus.set('idle'), 3500);
+      }
     } catch (error) {
       console.error('Erro ao aplicar atualização PWA:', error);
       this.updateStatus.set('error');
-      setTimeout(() => this.updateStatus.set('idle'), 3500);
+      
+      // 3. Se deu "Failed to fetch", o SW pode ter travado num estado inconsistente.
+      // Forçar um reload após alguns segundos costuma limpar esse estado fantasma.
+      setTimeout(() => {
+        this.updateStatus.set('idle');
+        window.location.reload(); // Fallback agressivo de segurança
+      }, 2000);
     }
   }
 
