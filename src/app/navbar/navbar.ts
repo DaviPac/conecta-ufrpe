@@ -19,7 +19,13 @@ export class Navbar implements OnInit, OnDestroy {
   isMobileMenuOpen = signal<boolean>(false);
   hasUpdate = computed(() => this.pwaService.updateStatus() === 'available');
 
-  private onlineHandler = () => this.isOffline.set(false);
+  // Ao invés de setar false automático, não fazemos nada. 
+  // O usuário terá que clicar no botão de reconectar!
+  private onlineHandler = () => {
+    // console.log("Internet voltou, mas exigindo clique para sincronizar dados.");
+  };
+  
+  // Se cair a internet, mostra o aviso.
   private offlineHandler = () => this.isOffline.set(true);
 
   ngOnInit(): void {
@@ -63,9 +69,14 @@ export class Navbar implements OnInit, OnDestroy {
     this.isReconnecting.set(true);
     
     try {
-      // Chama o fetch novamente. Como você já ajustou o SigaaService,
-      // ele vai tentar buscar os dados novos!
+      // Busca os novos dados
       await this.sigaaService.fetchMainData();
+      
+      // APENAS AQUI O AVISO SOME (após o sucesso da atualização)
+      this.isOffline.set(false);
+    } catch(error) {
+      console.error('Falha ao reconectar:', error);
+      alert('Não foi possível obter os dados. Tente novamente.');
     } finally {
       this.isReconnecting.set(false);
     }
