@@ -2,6 +2,7 @@
   <nav class="fixed top-0 inset-x-0 w-full z-50 hidden md:block bg-white/80 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.03)] border-b border-slate-200/50 transition-all duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
+        
         <div class="flex items-center">
           <div class="flex-shrink-0">
             <a [routerLink]="['/']" class="text-xl font-bold tracking-tighter cursor-pointer flex items-center gap-2 group">
@@ -51,7 +52,21 @@
           </div>
         </div>
 
-        <div class="hidden md:block">
+        <div class="hidden md:flex items-center gap-4">
+          
+          @if (isOffline()) {
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-full shadow-sm">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span class="text-xs font-semibold text-amber-700">Modo Offline</span>
+              <button (click)="reconnect()" [disabled]="isReconnecting()" class="ml-1 text-amber-600 hover:text-amber-800 transition-colors disabled:opacity-50" title="Tentar reconectar">
+                <i class="pi pi-sync text-sm" [class.pi-spin]="isReconnecting()"></i>
+              </button>
+            </div>
+          }
+
           <button (click)="logout()" class="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-red-600 transition-all duration-300 px-4 py-2 rounded-xl hover:bg-red-50/80 hover:shadow-sm group" title="Sair">
             <span>Sair</span>
             <i class="pi pi-sign-out group-hover:translate-x-1 transition-transform duration-300"></i>
@@ -63,10 +78,24 @@
 
   <nav class="fixed top-0 inset-x-0 w-full z-50 md:hidden bg-white/80 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.03)] border-b border-slate-200/50">
     <div class="max-w-7xl mx-auto px-4">
-      <div class="flex items-center justify-center h-16">
+      <div class="flex items-center justify-between h-16">
+        
         <a [routerLink]="['/']" class="text-lg font-bold tracking-tighter cursor-pointer flex items-center gap-2">
           <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-blue-500">SIGAA</span>
         </a>
+
+        @if (isOffline()) {
+          <div class="flex items-center gap-2 px-3 py-1 bg-amber-50 border border-amber-200 rounded-full shadow-sm">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            </span>
+            <span class="text-[10px] uppercase font-bold text-amber-700 tracking-wider">Offline</span>
+            <button (click)="reconnect()" [disabled]="isReconnecting()" class="text-amber-600 hover:text-amber-800 transition-colors disabled:opacity-50 pl-1.5 border-l border-amber-200 ml-1">
+              <i class="pi pi-sync text-sm" [class.pi-spin]="isReconnecting()"></i>
+            </button>
+          </div>
+        }
       </div>
     </div>
   </nav>

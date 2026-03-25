@@ -73,8 +73,12 @@ export class SigaaService {
 
     // Dispara busca de dados frescos em background
     if (this.jsessionid().length && this.viewState().length) {
-      this.isFetchingData.set(true);
-      this.fetchMainData();
+      if (navigator.onLine) {
+        this.isFetchingData.set(true);
+        this.fetchMainData();
+      } else {
+        this.fullyLoaded.set(true);
+      }
     }
   }
 
@@ -266,11 +270,18 @@ export class SigaaService {
       this.isFetchingData.set(true);
 
       const res = await this.fetchWithAuth(`${this.domain}/main-data`);
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        // Mudamos a mensagem para facilitar a identificação de erro de rede
+        throw new Error(errorData.error || 'Erro de conexão ou servidor indisponível.');
+      }
+
       const data = await res.json();
       console.log('fetch main data:', data);
 
-      if (!res.ok || !data.jsessionid) {
-        throw new Error(data.error || 'Erro desconhecido na API');
+      if (!data.jsessionid) {
+        throw new Error('Erro desconhecido na API: jsessionid ausente');
       }
 
       const mainDataRes = data as MainDataResponse;
@@ -280,33 +291,53 @@ export class SigaaService {
       this.jsessionid.set(mainDataRes.jsessionid);
       localStorage.setItem('jsessionid', mainDataRes.jsessionid);
       this.nome.set(mainDataRes.nome);
+      
       const cached = this.turmas();
       const merged = mainDataRes.turmas.map(fresh => {
         const old = cached.find(c => c.nome === fresh.nome);
         return old ? { ...old, isLoaded: true } : { ...fresh, isLoaded: false };
       });
       this.turmas.set(merged);
+      
       this.viewState.set(mainDataRes.viewState);
       localStorage.setItem('viewState', mainDataRes.viewState);
 
-      // Salva snapshot parcial (dados principais já disponíveis)
       this.saveToCache();
 
       this.fetchTurmas().catch(err => {
         console.error('Erro ao buscar turmas após main data:', err);
         this.isFetchingData.set(false);
-        this.logout();
-        if (!this.router.url.includes('login')) {
-          alert('Erro ao carregar dados das turmas. Por favor, faça login novamente.');
+        
+        // ✅ VERIFICA SE É ERRO DE REDE/OFFLINE
+        const isOffline = !navigator.onLine || err.message.includes('fetch') || err.message.includes('conexão');
+        
+        if (isOffline) {
+          console.warn('Conexão perdida ao buscar turmas. Mantendo cache disponível.');
+          this.fullyLoaded.set(true); // Libera a UI com o cache parcial/antigo
+        } else {
+          this.logout();
+          if (!this.router.url.includes('login')) {
+            alert('Erro ao carregar dados das turmas. Por favor, faça login novamente.');
+          }
         }
       });
 
     } catch (e) {
       const error = e as Error;
       this.isFetchingData.set(false);
-      this.logout();
-      if (!this.router.url.includes('login')) {
-        alert(error.message);
+      
+      // ✅ VERIFICA SE É ERRO DE REDE/OFFLINE
+      const isOffline = !navigator.onLine || error.message.includes('fetch') || error.message.includes('conexão');
+
+      if (isOffline) {
+        console.warn('Falha de conexão no fetchMainData. O app continuará usando os dados em cache.');
+        this.fullyLoaded.set(true); // Libera a UI para mostrar os dados salvos
+      } else {
+        // Se não for problema de internet, aí sim desloga
+        this.logout();
+        if (!this.router.url.includes('login')) {
+          alert(error.message);
+        }
       }
     }
   }
@@ -320,8 +351,12 @@ export class SigaaService {
       body: JSON.stringify({ viewState: this.viewState() }),
     });
 
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Erro de conexão ao buscar notas');
+    }
+
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'erro ao buscar notas');
 
     const notasData = data as NotasResponse;
     console.log(data);
@@ -371,8 +406,12 @@ export class SigaaService {
       body: JSON.stringify({ turma, viewState: this.viewState() }),
     });
 
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Erro de conexão ao buscar turma');
+    }
+
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'erro ao buscar turma');
 
     const turmaData = data as TurmaDetailResponse;
     this.turmas.update(prev =>
