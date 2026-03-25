@@ -30,8 +30,8 @@ export class Settings implements OnInit {
     this.pwaService.installApp();
   }
 
-  onApplyUpdate(): void {
-    this.pwaService.applyUpdate();
+  async onApplyUpdate(): Promise<void> {
+    await this.pwaService.applyUpdate();
   }
 
   requestClear(type: 'cache' | 'all'): void {
