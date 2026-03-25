@@ -15,6 +15,14 @@ import { StudyAiService, StudyMode } from './study-ai.service';
 import * as pdfjsLib from 'pdfjs-dist';
 import { MarkdownModule } from 'ngx-markdown';
 
+if (!(Uint8Array.prototype as any).toHex) {
+  (Uint8Array.prototype as any).toHex = function () {
+    return Array.from(this as Uint8Array)
+      .map((b: number) => b.toString(16).padStart(2, '0'))
+      .join('');
+  };
+}
+
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 interface ModeOption {
