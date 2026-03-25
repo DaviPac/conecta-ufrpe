@@ -36,7 +36,7 @@
     "marked": "^17.0.5",
     "ng2-pdf-viewer": "^10.4.0",
     "ngx-markdown": "^21.1.0",
-    "pdfjs-dist": "^5.5.207",
+    "pdfjs-dist": "^3.11.174",
     "primeicons": "^7.0.0",
     "primeng": "^21.0.2",
     "rxjs": "~7.8.0",
