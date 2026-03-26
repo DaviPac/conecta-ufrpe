@@ -500,12 +500,12 @@ export class SigaaService {
     return res.blob();
   }
 
-  async baixarArquivoTurma(turma: Turma, arquivo: Arquivo): Promise<void> {
+  // Adicione a novaAba como parâmetro opcional
+  async baixarArquivoTurma(turma: Turma, arquivo: Arquivo, novaAba?: Window | null): Promise<void> {
     if (this.isFetchingData()) {
       const isFetching$ = toObservable(this.isFetchingData, { injector: this.injector });
       await firstValueFrom(isFetching$.pipe(filter(isFetching => isFetching === false)));
     }
-    
     if (!this.jsessionid() || !this.viewState()) {
       throw new Error('Sessão inválida ou expirada');
     }
@@ -516,7 +516,6 @@ export class SigaaService {
       id: arquivo.id,
       turma: turma
     };
-    
     const res = await this.fetchWithAuth(`${this.domain}/download`, {
       method: 'POST',
       body: JSON.stringify(payload)
@@ -527,6 +526,7 @@ export class SigaaService {
       throw new Error(errorData.error || 'Erro ao baixar arquivo da turma');
     }
     
+    // ... [código de atualização do jsessionid e viewState mantido igual] ...
     const novoJsessionid = res.headers.get('X-New-Jsessionid');
     const novoViewState = res.headers.get('X-New-Viewstate');
 
@@ -539,7 +539,7 @@ export class SigaaService {
       localStorage.setItem('viewState', novoViewState);
       this.saveToCache();
     }
-    
+
     let filename = 'arquivo_sigaa';
     const contentDisposition = res.headers.get('Content-Disposition');
     if (contentDisposition && contentDisposition.includes('filename=')) {
@@ -547,38 +547,31 @@ export class SigaaService {
     }
     
     const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
 
-    // 1. Tenta usar a API nativa de compartilhamento/salvamento do celular (Melhor para PWAs)
-    const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
-    
-    // Verifica se o navegador suporta e permite compartilhar este tipo de arquivo
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({
-          files: [file],
-          title: filename,
-        });
-        return; // Sucesso pelo menu nativo! Interrompe a função aqui.
-      } catch (error: any) {
-        // Se o usuário apenas cancelar a janela de compartilhamento, não precisamos fazer nada
-        if (error.name === 'AbortError') return; 
-        console.warn('Falha ao usar navigator.share, caindo para o método tradicional', error);
-      }
+    // Detecta se é celular (expressão regular simples)
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if (isMobile && novaAba) {
+      // PWA MOBILE: Injeta o arquivo na aba que o usuário acabou de "clicar" para abrir.
+      // O celular vai abrir o visualizador nativo (PDF, Video, etc), de onde o usuário pode Salvar/Compartilhar.
+      novaAba.location.href = url;
+    } else {
+      // PC: Fecha a aba em branco (se existir) e usa o método invisível que baixa direto
+      if (novaAba) novaAba.close();
+      
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     }
 
-    // 2. Fallback: Método tradicional (com a correção do setTimeout)
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.style.display = 'none'; // Importante esconder a tag
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    
-    // CORREÇÃO CRÍTICA: Dá 10 segundos para o SO mobile iniciar o download antes de limpar a RAM
+    // Mantemos os 10 segundos de folga para o celular processar o arquivo antes de limpar a RAM
     setTimeout(() => {
       window.URL.revokeObjectURL(url);
-    }, 10000); 
-}
+    }, 10000);
+  }
 }
