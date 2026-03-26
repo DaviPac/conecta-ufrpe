@@ -50,7 +50,7 @@
                   class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar smooth-scroll">
                   
                 @for (item of noticiasComClones(); track $index) {
-                  <div class="min-w-full w-full snap-center flex-shrink-0 p-8 md:p-12 min-h-64 flex flex-col justify-center">
+                  <div class="min-w-full w-full snap-center snap-always flex-shrink-0 p-8 md:p-12 min-h-64 flex flex-col justify-center">
                     <div class="space-y-6 animate-fade-in">
                       <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-700 text-[10px] font-bold tracking-widest uppercase">
                         <i class="pi pi-bolt text-[10px]"></i> {{ item.nomeTurma }}

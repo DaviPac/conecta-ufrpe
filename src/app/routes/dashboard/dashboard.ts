@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, signal, ElementRef, ViewChild, effect } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal, ElementRef, ViewChild, effect, AfterViewInit } from '@angular/core';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { formatarHorarios } from '../../utils/formatters';
 import { Router } from '@angular/router';
@@ -26,7 +26,7 @@ interface NoticiaView {
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
-export class Dashboard {
+export class Dashboard implements AfterViewInit {
   private sigaaService: SigaaService = inject(SigaaService);
   private router: Router = inject(Router);
   private uid = 0;
@@ -67,17 +67,38 @@ export class Dashboard {
     this.destroyRef.onDestroy(() => clearInterval(timer));
     effect(() => {
       const temClones = this.noticiasComClones().length > 1;
-      const el = this.scrollContainer?.nativeElement;
       
-      if (temClones && el) {
-        // Um pequeno timeout para garantir que o Angular já renderizou o DOM
-        setTimeout(() => {
-          if (el.scrollLeft === 0) {
-            this.teleportScroll(1); // Teletransporta para o Item 1 Real
-          }
-        }, 50);
+      if (temClones) {
+        setTimeout(() => this.ajustarScrollInicial(), 50);
       }
     });
+  }
+
+  ngAfterViewInit() {
+    this.ajustarScrollInicial();
+  }
+
+
+  private ajustarScrollInicial() {
+    const el = this.scrollContainer?.nativeElement;
+    
+    // Se a div não existir no HTML ainda, aborta
+    if (!el) return;
+
+    const adjust = () => {
+      // Se a largura for 0, o layout ainda não foi calculado pelo navegador. Tenta no próximo frame.
+      if (el.clientWidth === 0) {
+        requestAnimationFrame(adjust);
+        return;
+      }
+
+      // Se estiver travado no clone inicial (0), teletransporta para a primeira notícia real (1)
+      if (el.scrollLeft === 0) {
+        this.teleportScroll(1);
+      }
+    };
+
+    requestAnimationFrame(adjust);
   }
 
 
@@ -184,7 +205,7 @@ export class Dashboard {
       } else if (targetDomIndex === realCount + 1) {
         this.teleportScroll(1);
       }
-    }, 600); // 600ms é tempo suficiente para a animação do botão ser concluída
+    }, 500); // 600ms é tempo suficiente para a animação do botão ser concluída
   }
 
   // Seus métodos de clique agora apenas chamam o scroll programático:
