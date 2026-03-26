@@ -19,12 +19,12 @@ export class Navbar implements OnInit, OnDestroy {
   isMobileMenuOpen = signal<boolean>(false);
   hasUpdate = computed(() => this.pwaService.updateStatus() === 'available');
 
-  // Ao invés de setar false automático, não fazemos nada. 
+  // Ao invés de setar false automático, não fazemos nada.
   // O usuário terá que clicar no botão de reconectar!
   private onlineHandler = () => {
     // console.log("Internet voltou, mas exigindo clique para sincronizar dados.");
   };
-  
+
   // Se cair a internet, mostra o aviso.
   private offlineHandler = () => this.isOffline.set(true);
 
@@ -65,16 +65,16 @@ export class Navbar implements OnInit, OnDestroy {
       alert('Ainda sem conexão. Verifique sua internet.');
       return;
     }
-    
+
     this.isReconnecting.set(true);
-    
+
     try {
       // Busca os novos dados
       await this.sigaaService.fetchMainData();
-      
+
       // APENAS AQUI O AVISO SOME (após o sucesso da atualização)
       this.isOffline.set(false);
-    } catch(error) {
+    } catch (error) {
       console.error('Falha ao reconectar:', error);
       alert('Não foi possível obter os dados. Tente novamente.');
     } finally {

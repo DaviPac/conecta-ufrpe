@@ -12,11 +12,11 @@ import { PwaService } from '../../services/pwa/pwa.service';
 })
 export class Settings implements OnInit {
   protected readonly sigaaService = inject(SigaaService);
-  protected readonly pwaService   = inject(PwaService);
-  private  readonly router        = inject(Router);
+  protected readonly pwaService = inject(PwaService);
+  private readonly router = inject(Router);
 
   confirmingClear = signal<'cache' | 'all' | null>(null);
-  clearingCache   = signal(false);
+  clearingCache = signal(false);
 
   ngOnInit(): void {
     this.pwaService.loadStorageEstimate();

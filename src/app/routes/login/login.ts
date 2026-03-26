@@ -28,7 +28,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     PasswordModule,
     IftaLabelModule,
     ReactiveFormsModule,
-    DialogModule
+    DialogModule,
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
@@ -45,7 +45,11 @@ export class Login implements OnInit {
   loginRetries = 0;
   showPrivacyNotice = false;
 
-  constructor(private messageService: MessageService, private router: Router, private sigaaService: SigaaService) {}
+  constructor(
+    private messageService: MessageService,
+    private router: Router,
+    private sigaaService: SigaaService,
+  ) {}
 
   ngOnInit(): void {
     const hasAcceptedPrivacy = localStorage.getItem('privacyAccepted');
@@ -65,13 +69,13 @@ export class Login implements OnInit {
     this.isPasswordInvalid = false;
     this.isUsernameInvalid = false;
 
-    if(!this.username) {
+    if (!this.username) {
       this.isUsernameInvalid = true;
     }
     if (!this.password) {
       this.isPasswordInvalid = true;
     }
-    if(this.isUsernameInvalid || this.isPasswordInvalid) {
+    if (this.isUsernameInvalid || this.isPasswordInvalid) {
       this.errorMessage = 'Campos inválidos';
       this.showToast('Falha ao efetuar login', 'Preencha todos os campos.');
     } else {
@@ -96,7 +100,7 @@ export class Login implements OnInit {
         this.showToast('Falha ao efetuar login', this.errorMessage);
       }
     }
-      this.loading = false;
+    this.loading = false;
   }
 
   showToast(title: string, message: string) {

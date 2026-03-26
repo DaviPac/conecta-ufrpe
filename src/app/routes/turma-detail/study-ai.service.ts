@@ -15,7 +15,12 @@ export interface StudyAiRequest {
 // Função auxiliar para injetar o conteúdo real dos materiais no prompt
 const formatMaterials = (materials: StudyAiRequest['materials']): string => {
   if (!materials || materials.length === 0) return 'Nenhum material anexado.';
-  return materials.map(m => `\n--- Início do material: ${m.name} ---\n${m.content}\n--- Fim do material: ${m.name} ---`).join('\n');
+  return materials
+    .map(
+      (m) =>
+        `\n--- Início do material: ${m.name} ---\n${m.content}\n--- Fim do material: ${m.name} ---`,
+    )
+    .join('\n');
 };
 
 const MODE_PROMPTS: Record<StudyMode, (ctx: StudyAiRequest) => string> = {
@@ -101,7 +106,7 @@ Contexto Adicional: ${ctx.extraContext || 'Nenhum'}
 
 Materiais para Resumir:
 ${formatMaterials(ctx.materials)}
-`
+`,
 };
 
 @Injectable({ providedIn: 'root' })
@@ -119,10 +124,10 @@ export class StudyAiService {
           generationConfig: {
             temperature: 0.7,
             maxOutputTokens: 8192,
-            responseMimeType: "application/json",
+            responseMimeType: 'application/json',
           },
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -134,7 +139,7 @@ export class StudyAiService {
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
-      throw new Error("A IA não retornou um conteúdo válido.");
+      throw new Error('A IA não retornou um conteúdo válido.');
     }
 
     return text;

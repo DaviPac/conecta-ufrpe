@@ -32,7 +32,7 @@ export interface Turma {
   cronograma?: CronogramaItem[];
   horarios: string[];
   info: TurmaInfo;
-  isLoaded: boolean
+  isLoaded: boolean;
 }
 
 export interface Avaliacao {
@@ -92,7 +92,7 @@ export interface TurmaMatricula {
   professor: string;
   local: string;
   tipo: string;
-  status: "MATRICULADO" | "INDEFERIDO" | string;
+  status: 'MATRICULADO' | 'INDEFERIDO' | string;
   horario: string;
 }
 

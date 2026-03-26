@@ -6,16 +6,28 @@
   </main>
 
   @if (sigaaService.isReauthenticating()) {
-    <div class="fixed top-12 inset-x-0 md:top-auto md:bottom-6 z-50 flex justify-center pointer-events-none">
-      <div class="flex items-center gap-2.5 bg-slate-800 text-slate-100 text-sm px-4 py-2.5 rounded-xl shadow-xl animate-slide-up">
-        <span class="size-3.5 rounded-full border-2 border-slate-500 border-t-blue-400 animate-spin"></span>
+    <div
+      class="fixed top-12 inset-x-0 md:top-auto md:bottom-6 z-50 flex justify-center pointer-events-none"
+    >
+      <div
+        class="flex items-center gap-2.5 bg-slate-800 text-slate-100 text-sm px-4 py-2.5 rounded-xl shadow-xl animate-slide-up"
+      >
+        <span
+          class="size-3.5 rounded-full border-2 border-slate-500 border-t-blue-400 animate-spin"
+        ></span>
         <span>Renovando sessão…</span>
       </div>
     </div>
   } @else if (sigaaService.isFetchingData()) {
-    <div class="fixed top-12 inset-x-0 md:top-auto md:bottom-6 z-50 flex justify-center pointer-events-none">
-      <div class="flex items-center gap-2.5 bg-indigo-600 text-white text-sm px-4 py-2.5 rounded-xl shadow-xl animate-slide-up">
-        <span class="size-3.5 rounded-full border-2 border-indigo-400 border-t-white animate-spin"></span>
+    <div
+      class="fixed top-12 inset-x-0 md:top-auto md:bottom-6 z-50 flex justify-center pointer-events-none"
+    >
+      <div
+        class="flex items-center gap-2.5 bg-indigo-600 text-white text-sm px-4 py-2.5 rounded-xl shadow-xl animate-slide-up"
+      >
+        <span
+          class="size-3.5 rounded-full border-2 border-indigo-400 border-t-white animate-spin"
+        ></span>
         <span>Buscando dados recentes…</span>
       </div>
     </div>

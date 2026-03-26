@@ -7,7 +7,7 @@ import {
   NotasResponse,
   Turma,
   TurmaDetailResponse,
-  AtestadoMatricula
+  AtestadoMatricula,
 } from '../../models/sigaa.models';
 import { Router } from '@angular/router';
 
@@ -107,12 +107,12 @@ export class SigaaService {
       const raw = localStorage.getItem(CACHE_KEY);
       if (!raw) return;
       const cache: DataCache = JSON.parse(raw);
-      if (cache.turmas?.length)    this.turmas.set(cache.turmas);
-      if (cache.nome)              this.nome.set(cache.nome);
+      if (cache.turmas?.length) this.turmas.set(cache.turmas);
+      if (cache.nome) this.nome.set(cache.nome);
       if (cache.avaliacoes?.length) this.avaliacoes.set(cache.avaliacoes);
-      if (cache.cargaHoraria)      this.cargaHoraria.set(cache.cargaHoraria);
-      if (cache.indices)           this.indices.set(cache.indices);
-      if (cache.fullyLoaded)       this.fullyLoaded.set(cache.fullyLoaded);
+      if (cache.cargaHoraria) this.cargaHoraria.set(cache.cargaHoraria);
+      if (cache.indices) this.indices.set(cache.indices);
+      if (cache.fullyLoaded) this.fullyLoaded.set(cache.fullyLoaded);
     } catch {
       localStorage.removeItem(CACHE_KEY);
     }
@@ -198,9 +198,9 @@ export class SigaaService {
     const storedPassword = localStorage.getItem('password');
 
     const credentials =
-      (this.username && this.password)
+      this.username && this.password
         ? { username: this.username, password: this.password }
-        : (storedUsername && storedPassword)
+        : storedUsername && storedPassword
           ? { username: storedUsername, password: storedPassword }
           : null;
 
@@ -223,12 +223,12 @@ export class SigaaService {
   private async fetchWithAuth(
     url: string,
     options: RequestInit = {},
-    retried = false
+    retried = false,
   ): Promise<Response> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Authorization: 'Bearer ' + this.jsessionid(),
-      ...(options.headers as Record<string, string> ?? {}),
+      ...((options.headers as Record<string, string>) ?? {}),
     };
 
     const res = await fetch(url, { ...options, headers });
@@ -239,7 +239,9 @@ export class SigaaService {
         const cloned = res.clone();
         const data = await cloned.json();
         errorMessage = data?.error ?? '';
-      } catch { /* body não era JSON */ }
+      } catch {
+        /* body não era JSON */
+      }
 
       const isSessionError =
         res.status === 401 ||
@@ -271,7 +273,7 @@ export class SigaaService {
       this.isFetchingData.set(true);
 
       const res = await this.fetchWithAuth(`${this.domain}/main-data`);
-      
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         // Mudamos a mensagem para facilitar a identificação de erro de rede
@@ -292,48 +294,53 @@ export class SigaaService {
       this.jsessionid.set(mainDataRes.jsessionid);
       localStorage.setItem('jsessionid', mainDataRes.jsessionid);
       this.nome.set(mainDataRes.nome);
-      
+
       const cached = this.turmas();
-      const merged = mainDataRes.turmas.map(fresh => {
-        const old = cached.find(c => c.nome === fresh.nome);
+      const merged = mainDataRes.turmas.map((fresh) => {
+        const old = cached.find((c) => c.nome === fresh.nome);
         return old ? { ...old, isLoaded: true } : { ...fresh, isLoaded: false };
       });
       this.turmas.set(merged);
-      
+
       this.viewState.set(mainDataRes.viewState);
       localStorage.setItem('viewState', mainDataRes.viewState);
 
       this.saveToCache();
 
-      this.fetchTurmas().catch(err => {
-        console.error('Erro ao buscar turmas após main data:', err);
-        this.isFetchingData.set(false);
-        
-        // ✅ VERIFICA SE É ERRO DE REDE/OFFLINE
-        const isOffline = !navigator.onLine || err.message.includes('fetch') || err.message.includes('conexão');
-        
-        if (isOffline) {
-          console.warn('Conexão perdida ao buscar turmas. Mantendo cache disponível.');
-          this.fullyLoaded.set(true); // Libera a UI com o cache parcial/antigo
-        } else {
-          this.logout();
-          if (!this.router.url.includes('login')) {
-            alert('Erro ao carregar dados das turmas. Por favor, faça login novamente.');
-          }
-        }
-      }).then(() => {
-        this.hasOnlineData.set(true);
-      });
+      this.fetchTurmas()
+        .catch((err) => {
+          console.error('Erro ao buscar turmas após main data:', err);
+          this.isFetchingData.set(false);
 
+          // ✅ VERIFICA SE É ERRO DE REDE/OFFLINE
+          const isOffline =
+            !navigator.onLine || err.message.includes('fetch') || err.message.includes('conexão');
+
+          if (isOffline) {
+            console.warn('Conexão perdida ao buscar turmas. Mantendo cache disponível.');
+            this.fullyLoaded.set(true); // Libera a UI com o cache parcial/antigo
+          } else {
+            this.logout();
+            if (!this.router.url.includes('login')) {
+              alert('Erro ao carregar dados das turmas. Por favor, faça login novamente.');
+            }
+          }
+        })
+        .then(() => {
+          this.hasOnlineData.set(true);
+        });
     } catch (e) {
       const error = e as Error;
       this.isFetchingData.set(false);
-      
+
       // ✅ VERIFICA SE É ERRO DE REDE/OFFLINE
-      const isOffline = !navigator.onLine || error.message.includes('fetch') || error.message.includes('conexão');
+      const isOffline =
+        !navigator.onLine || error.message.includes('fetch') || error.message.includes('conexão');
 
       if (isOffline) {
-        console.warn('Falha de conexão no fetchMainData. O app continuará usando os dados em cache.');
+        console.warn(
+          'Falha de conexão no fetchMainData. O app continuará usando os dados em cache.',
+        );
         this.fullyLoaded.set(true); // Libera a UI para mostrar os dados salvos
       } else {
         // Se não for problema de internet, aí sim desloga
@@ -364,17 +371,17 @@ export class SigaaService {
     const notasData = data as NotasResponse;
     console.log(data);
 
-    this.turmas.update(prev => {
-      notasData.notas.forEach(n => {
+    this.turmas.update((prev) => {
+      notasData.notas.forEach((n) => {
         if (!n) return;
-        const turma = prev.find(t => t.nome === n?.nome);
+        const turma = prev.find((t) => t.nome === n?.nome);
         if (turma) turma.notas = n;
         if (turma && turma.nome === this.currentTurma()?.nome)
-          this.turmas.update(prev =>
-            prev.map(t => {
-              const n = notasData.notas.find(x => x?.nome === t.nome);
+          this.turmas.update((prev) =>
+            prev.map((t) => {
+              const n = notasData.notas.find((x) => x?.nome === t.nome);
               return n ? { ...t, notas: n } : t;
-            })
+            }),
           );
       });
       return prev;
@@ -417,12 +424,10 @@ export class SigaaService {
     const data = await res.json();
 
     const turmaData = data as TurmaDetailResponse;
-    this.turmas.update(prev =>
-      prev.map(t =>
-        t.nome === turma.nome
-          ? { ...turmaData.turma, notas: t.notas, isLoaded: true }
-          : t
-      )
+    this.turmas.update((prev) =>
+      prev.map((t) =>
+        t.nome === turma.nome ? { ...turmaData.turma, notas: t.notas, isLoaded: true } : t,
+      ),
     );
 
     this.jsessionid.set(turmaData.jsessionid);
@@ -460,8 +465,7 @@ export class SigaaService {
   }
 
   async getVinculoPdf(): Promise<Blob> {
-    if (!this.jsessionid() || !this.viewState())
-      throw new Error('Sessão inválida ou expirada');
+    if (!this.jsessionid() || !this.viewState()) throw new Error('Sessão inválida ou expirada');
 
     const res = await this.fetchWithAuth(`${this.domain}/vinculo`, {
       method: 'POST',
@@ -477,8 +481,7 @@ export class SigaaService {
   }
 
   async getHistoricoPdf(): Promise<Blob> {
-    if (!this.jsessionid() || !this.viewState())
-      throw new Error('Sessão inválida ou expirada');
+    if (!this.jsessionid() || !this.viewState()) throw new Error('Sessão inválida ou expirada');
 
     const res = await this.fetchWithAuth(`${this.domain}/historico`, {
       method: 'POST',

@@ -1,11 +1,4 @@
-import {
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-  WritableSignal,
-} from '@angular/core';
+import { Component, computed, inject, OnInit, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { Turma } from '../../models/sigaa.models';
@@ -16,15 +9,13 @@ import { PdfViewerModule } from 'ng2-pdf-viewer';
 export type AbaCalendario = 'semana' | 'mensal' | 'academico';
 
 /** Cor semântica atribuída a cada turma */
-const CORES_TURMA: string[] = [
-  'blue', 'teal', 'amber', 'purple', 'coral', 'green', 'pink',
-];
+const CORES_TURMA: string[] = ['blue', 'teal', 'amber', 'purple', 'coral', 'green', 'pink'];
 
 export interface AulaSlot {
   turma: Turma;
   horarioFormatado: string;
   inicio: string; // "HH:MM"
-  fim: string;    // "HH:MM"
+  fim: string; // "HH:MM"
   cor: string;
 }
 
@@ -65,10 +56,33 @@ export const DIAS_SEMANA = [
 ];
 
 const MESES_PT = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
 ];
-const MESES_CURTO = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const MESES_CURTO = [
+  'jan',
+  'fev',
+  'mar',
+  'abr',
+  'mai',
+  'jun',
+  'jul',
+  'ago',
+  'set',
+  'out',
+  'nov',
+  'dez',
+];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -87,7 +101,12 @@ const MESES_CURTO = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out'
 function parsearHorarios(horarios: string[]): { jsDay: number; turno: string; periodo: string }[] {
   // Dia SIGAA → jsDay (0=Dom, 1=Seg …)
   const diaParaJs: Record<string, number> = {
-    '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6,
+    '2': 1,
+    '3': 2,
+    '4': 3,
+    '5': 4,
+    '6': 5,
+    '7': 6,
   };
 
   const results: { jsDay: number; turno: string; periodo: string }[] = [];
@@ -114,11 +133,15 @@ function parsearHorarios(horarios: string[]): { jsDay: number; turno: string; pe
 
 /** Encontra o índice em SLOTS_HORARIO pelo turno+período */
 function slotIdxPorTurnoPeriodo(turno: string, periodo: string): number {
-  return SLOTS_HORARIO.findIndex(s => s.turno === turno && s.periodo === periodo);
+  return SLOTS_HORARIO.findIndex((s) => s.turno === turno && s.periodo === periodo);
 }
 
 /** Retorna o início e fim formatados de um slot */
-function slotParaHorario(slotIdx: number): { inicio: string; fim: string; horarioFormatado: string } {
+function slotParaHorario(slotIdx: number): {
+  inicio: string;
+  fim: string;
+  horarioFormatado: string;
+} {
   const s = SLOTS_HORARIO[slotIdx];
   if (!s) return { inicio: '', fim: '', horarioFormatado: '' };
   return { inicio: s.inicio, fim: s.fim, horarioFormatado: `${s.inicio} – ${s.fim}` };
@@ -167,7 +190,7 @@ export class Calendario implements OnInit {
   gradeSemanal = computed<GradeSemanal>(() => {
     const turmas = this.sigaaService.turmas();
     const grade = new Map<number, AulaSlot[]>();
-    DIAS_SEMANA.forEach(d => grade.set(d.jsDay, []));
+    DIAS_SEMANA.forEach((d) => grade.set(d.jsDay, []));
 
     turmas.forEach((turma, idx) => {
       const cor = CORES_TURMA[idx % CORES_TURMA.length];
@@ -181,7 +204,7 @@ export class Calendario implements OnInit {
         const { inicio, fim, horarioFormatado } = slotParaHorario(slotIdx);
         const aulas = grade.get(jsDay) ?? [];
         // Evita duplicata no mesmo slot
-        if (!aulas.some(a => a.turma.nome === turma.nome && a.inicio === inicio)) {
+        if (!aulas.some((a) => a.turma.nome === turma.nome && a.inicio === inicio)) {
           aulas.push({ turma, horarioFormatado, inicio, fim, cor });
           grade.set(jsDay, aulas);
         }
@@ -248,7 +271,7 @@ export class Calendario implements OnInit {
     const aulas = this.gradeSemanal().get(jsDay) ?? [];
     const slot = SLOTS_HORARIO[slotIdx];
     if (!slot) return null;
-    return aulas.find(a => a.inicio === slot.inicio) ?? null;
+    return aulas.find((a) => a.inicio === slot.inicio) ?? null;
   }
 
   // ── Aba Acadêmico: PDF ────────────────────────────────────────────────
@@ -275,7 +298,9 @@ export class Calendario implements OnInit {
     }
   }
 
-  recarregar() { this.carregarPdf(); }
+  recarregar() {
+    this.carregarPdf();
+  }
 
   abrirNoNavegador() {
     if (this.rawUrlSignal()) window.open(this.rawUrlSignal(), '_blank');
@@ -303,8 +328,14 @@ export class Calendario implements OnInit {
   mudarMes(delta: number) {
     let m = this.calMes() + delta;
     let a = this.calAno();
-    if (m < 0) { m = 11; a--; }
-    if (m > 11) { m = 0; a++; }
+    if (m < 0) {
+      m = 11;
+      a--;
+    }
+    if (m > 11) {
+      m = 0;
+      a++;
+    }
     this.calMes.set(m);
     this.calAno.set(a);
   }
@@ -314,10 +345,12 @@ export class Calendario implements OnInit {
   }
 
   eHoje(dia: number, mesAtual: boolean): boolean {
-    return mesAtual &&
+    return (
+      mesAtual &&
       dia === this.hojeDia &&
       this.calMes() === this.hojeMes &&
-      this.calAno() === this.hojeAno;
+      this.calAno() === this.hojeAno
+    );
   }
 
   eSelecionado(dia: number, mesAtual: boolean): boolean {

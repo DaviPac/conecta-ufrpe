@@ -24,22 +24,22 @@ export class Profile {
   isDownloadingHistorico = signal(false);
   isDownloadingVinculo = signal(false);
   showIndicesDetails = signal(false);
-  
-  toastMessage = signal<{ text: string, type: 'success' | 'error' } | null>(null);
+
+  toastMessage = signal<{ text: string; type: 'success' | 'error' } | null>(null);
   // -------------------------------
 
-  tabelaHorarios = computed(() =>
-    buildTabelaHorarios(this.atestadoDados()?.turmas ?? [])
-  );
+  tabelaHorarios = computed(() => buildTabelaHorarios(this.atestadoDados()?.turmas ?? []));
 
   dataEmissao = computed(() =>
     new Date().toLocaleDateString('pt-BR', {
-      day: '2-digit', month: '2-digit', year: 'numeric'
-    })
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }),
   );
 
   toggleIndicesDetails() {
-    this.showIndicesDetails.update(value => !value);
+    this.showIndicesDetails.update((value) => !value);
   }
 
   closeIndicesDetails() {
@@ -54,9 +54,9 @@ export class Profile {
 
   async exportarPDF() {
     if (this.isDownloadingAtestado()) return; // Previne múltiplos cliques
-    
+
     this.isDownloadingAtestado.set(true);
-    
+
     try {
       const dados = await this.sigaaService.getAtestadoDados();
       this.atestadoDados.set(dados);
@@ -71,13 +71,13 @@ export class Profile {
             const canvas = await html2canvas(data, {
               scale: 3,
               useCORS: true,
-              logging: false
+              logging: false,
             });
 
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight(); 
+            const pdfHeight = pdf.internal.pageSize.getHeight();
 
             let finalWidth = pdfWidth;
             let finalHeight = (canvas.height * pdfWidth) / canvas.width;
@@ -88,7 +88,7 @@ export class Profile {
             }
 
             const xOffset = (pdfWidth - finalWidth) / 2;
-            pdf.addImage(imgData, 'PNG', xOffset, 5, finalWidth, finalHeight); 
+            pdf.addImage(imgData, 'PNG', xOffset, 5, finalWidth, finalHeight);
             pdf.save(`Atestado_Matricula_${dados.matricula}.pdf`);
 
             this.atestadoDados.set(null);
@@ -117,16 +117,16 @@ export class Profile {
       const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
-      
+
       const matricula = this.atestadoDados()?.matricula || 'Aluno';
-      link.download = `Historico_Academico_${matricula}.pdf`; 
+      link.download = `Historico_Academico_${matricula}.pdf`;
 
       document.body.appendChild(link);
       link.click();
 
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       this.showToast('Histórico baixado com sucesso!', 'success');
     } catch (error) {
       console.error('Erro ao baixar o histórico:', error);
@@ -145,16 +145,16 @@ export class Profile {
       const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
-      
+
       const matricula = this.atestadoDados()?.matricula || 'Aluno';
-      link.download = `Declaração_Vínculo_${matricula}.pdf`; 
+      link.download = `Declaração_Vínculo_${matricula}.pdf`;
 
       document.body.appendChild(link);
       link.click();
 
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       this.showToast('Declaração baixada com sucesso!', 'success');
     } catch (error) {
       console.error('Erro ao baixar a declaração de vínculo:', error);
@@ -165,7 +165,7 @@ export class Profile {
   }
 
   onLogout() {
-    this.sigaaService.logout()
+    this.sigaaService.logout();
   }
 
   get total(): number {

@@ -21,23 +21,42 @@ interface LinhaHorario {
 
 // Faixas horárias exibidas (na ordem da tabela)
 const FAIXAS_MANHA = [
-  '07:00 -\n08:00', '08:00 -\n09:00', '09:00 -\n10:00',
-  '10:00 -\n11:00', '11:00 -\n12:00', '12:00 -\n13:00',
+  '07:00 -\n08:00',
+  '08:00 -\n09:00',
+  '09:00 -\n10:00',
+  '10:00 -\n11:00',
+  '11:00 -\n12:00',
+  '12:00 -\n13:00',
 ];
 const FAIXAS_TARDE = [
-  '13:00 -\n14:00', '14:00 -\n15:00', '15:00 -\n16:00',
-  '16:00 -\n17:00', '17:00 -\n18:00', '18:00 -\n19:00',
+  '13:00 -\n14:00',
+  '14:00 -\n15:00',
+  '15:00 -\n16:00',
+  '16:00 -\n17:00',
+  '17:00 -\n18:00',
+  '18:00 -\n19:00',
 ];
-const FAIXAS_NOITE = [
-  '18:30 -\n19:20', '19:20 -\n20:10', '20:10 -\n21:00', '21:00 -\n21:50',
-];
+const FAIXAS_NOITE = ['18:30 -\n19:20', '19:20 -\n20:10', '20:10 -\n21:00', '21:00 -\n21:50'];
 export const TODAS_FAIXAS = [...FAIXAS_MANHA, ...FAIXAS_TARDE, ...FAIXAS_NOITE];
 
 // Índice de faixa por turno+aula (0-based dentro de TODAS_FAIXAS)
 const FAIXA_INDEX: Record<string, number> = {
-  M1: 0, M2: 1, M3: 2, M4: 3, M5: 4, M6: 5,
-  T1: 6, T2: 7, T3: 8, T4: 9, T5: 10, T6: 11,
-  N1: 12, N2: 13, N3: 14, N4: 15,
+  M1: 0,
+  M2: 1,
+  M3: 2,
+  M4: 3,
+  M5: 4,
+  M6: 5,
+  T1: 6,
+  T2: 7,
+  T3: 8,
+  T4: 9,
+  T5: 10,
+  T6: 11,
+  N1: 12,
+  N2: 13,
+  N3: 14,
+  N4: 15,
 };
 
 // Índice de coluna por dia (0=Dom … 6=Sab)
@@ -62,7 +81,10 @@ export function buildTabelaHorarios(turmas: { codigo: string; horario: string }[
 
   for (const turma of turmas) {
     // "3T45 6T23" → ['3T45', '6T23']
-    const tokens = turma.horario.replace(/\s*\(.*?\)/g, '').trim().split(/\s+/);
+    const tokens = turma.horario
+      .replace(/\s*\(.*?\)/g, '')
+      .trim()
+      .split(/\s+/);
 
     for (const token of tokens) {
       // token ex: "3T45"  dia=3, turno=T, aulas=[4,5]

@@ -23,7 +23,8 @@ if (!(Uint8Array.prototype as any).toHex) {
   };
 }
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 
 interface ModeOption {
   id: StudyMode;
@@ -68,10 +69,9 @@ export class StudyAssistantComponent implements OnInit {
   // Config
   apiKey = '';
 
-
   showAnswers = signal(false);
 
-    // Crie este método na classe para lidar com a troca de modo
+  // Crie este método na classe para lidar com a troca de modo
   changeMode(modeId: StudyMode): void {
     this.selectedMode.set(modeId);
     this.parsedResult.set(null); // Limpa o resultado para esconder o container
@@ -79,7 +79,7 @@ export class StudyAssistantComponent implements OnInit {
   }
 
   get selectedModeLabel(): string | undefined {
-    return this.modes.find(m => m.id === this.selectedMode())?.label;
+    return this.modes.find((m) => m.id === this.selectedMode())?.label;
   }
 
   readonly modes: ModeOption[] = [
@@ -155,10 +155,10 @@ export class StudyAssistantComponent implements OnInit {
         content: this.newMaterialContent.trim(),
         type: this.newMaterialType,
       });
-      
+
       // Atualiza a lista na tela apenas após o sucesso no banco
       this.materials.update((list) => [...list, added]);
-      
+
       // Limpa o formulário
       this.newMaterialName = '';
       this.newMaterialContent = '';
@@ -173,8 +173,8 @@ export class StudyAssistantComponent implements OnInit {
   async removeMaterial(id: string): Promise<void> {
     try {
       // Repare que o turmaNome foi removido da chamada abaixo
-      await this.repo.removeMaterial(id); 
-      
+      await this.repo.removeMaterial(id);
+
       // Remove da interface
       this.materials.update((list) => list.filter((m) => m.id !== id));
     } catch (error) {
@@ -190,7 +190,7 @@ export class StudyAssistantComponent implements OnInit {
     try {
       let text = '';
       const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-      
+
       // Verifica se é PDF para usar o extrator, senão usa o método padrão
       if (isPdf) {
         text = await this.extractTextFromPdf(file);
@@ -210,15 +210,17 @@ export class StudyAssistantComponent implements OnInit {
     } catch (e) {
       const error = e instanceof Error ? e : new Error(String(e));
       console.error('Erro ao ler o arquivo:', error);
-      this.errorMessage.set(`Não foi possível extrair o texto: ${error.message || 'Erro desconhecido'}`);
+      this.errorMessage.set(
+        `Não foi possível extrair o texto: ${error.message || 'Erro desconhecido'}`,
+      );
     }
   }
 
   async generate(): Promise<void> {
     if (!this.apiKey) {
-        this.isConfigOpen.set(true);
-        this.errorMessage.set('Configure sua API Key do Gemini para continuar.');
-        return;
+      this.isConfigOpen.set(true);
+      this.errorMessage.set('Configure sua API Key do Gemini para continuar.');
+      return;
     }
 
     this.isGenerating.set(true);
@@ -228,30 +230,29 @@ export class StudyAssistantComponent implements OnInit {
     this.showAnswers.set(false);
 
     try {
-        const responseText = await this.aiService.generateText({
+      const responseText = await this.aiService.generateText({
         turmaNome: this.turmaNome,
         cronograma: this.cronograma,
         materials: this.materials(),
         mode: this.selectedMode(),
         extraContext: this.extraContext(),
         apiKey: this.apiKey,
-        });
-        this.generatedContent.set(responseText);
-        let cleanText = responseText.replace(/[\u00A0\u200B-\u200D\uFEFF]/g, ' ').trim();
+      });
+      this.generatedContent.set(responseText);
+      let cleanText = responseText.replace(/[\u00A0\u200B-\u200D\uFEFF]/g, ' ').trim();
 
-        // Como usamos responseMimeType="application/json", o parse será direto
-        const jsonObj = JSON.parse(cleanText);
-        this.parsedResult.set(jsonObj);
-        console.log(this.parsedResult());
-
+      // Como usamos responseMimeType="application/json", o parse será direto
+      const jsonObj = JSON.parse(cleanText);
+      this.parsedResult.set(jsonObj);
+      console.log(this.parsedResult());
     } catch (err: any) {
-        console.error('Erro de IA:', err);
-        this.errorMessage.set(err?.message ?? 'Erro ao gerar conteúdo. Tente novamente.');
+      console.error('Erro de IA:', err);
+      this.errorMessage.set(err?.message ?? 'Erro ao gerar conteúdo. Tente novamente.');
     } finally {
-        this.isGenerating.set(false);
-        this.cdr.detectChanges();
+      this.isGenerating.set(false);
+      this.cdr.detectChanges();
     }
-}
+  }
 
   copyContent(): void {
     navigator.clipboard.writeText(this.generatedContent());
@@ -277,19 +278,23 @@ export class StudyAssistantComponent implements OnInit {
     const map: Record<string, { active: string; inactive: string }> = {
       blue: {
         active: 'bg-blue-900 text-white border-blue-900',
-        inactive: 'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-900',
+        inactive:
+          'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-900',
       },
       violet: {
         active: 'bg-violet-700 text-white border-violet-700',
-        inactive: 'bg-white text-slate-600 border-slate-200 hover:border-violet-300 hover:text-violet-700',
+        inactive:
+          'bg-white text-slate-600 border-slate-200 hover:border-violet-300 hover:text-violet-700',
       },
       amber: {
         active: 'bg-amber-600 text-white border-amber-600',
-        inactive: 'bg-white text-slate-600 border-slate-200 hover:border-amber-300 hover:text-amber-600',
+        inactive:
+          'bg-white text-slate-600 border-slate-200 hover:border-amber-300 hover:text-amber-600',
       },
       emerald: {
         active: 'bg-emerald-700 text-white border-emerald-700',
-        inactive: 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-700',
+        inactive:
+          'bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-700',
       },
     };
     return selected ? map[mode.color].active : map[mode.color].inactive;

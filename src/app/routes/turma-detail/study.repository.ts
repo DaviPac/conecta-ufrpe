@@ -26,7 +26,7 @@ export class StudyRepository {
       // onupgradeneeded roda quando o banco é criado pela primeira vez ou muda de versão
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        
+
         // Tabela de materiais (Chave primária: id)
         if (!db.objectStoreNames.contains(STORE_MATERIALS)) {
           const materialStore = db.createObjectStore(STORE_MATERIALS, { keyPath: 'id' });
@@ -45,7 +45,10 @@ export class StudyRepository {
     });
   }
 
-  async addMaterial(turmaNome: string, material: Omit<StudyMaterial, 'id' | 'addedAt' | 'turmaNome'>): Promise<StudyMaterial> {
+  async addMaterial(
+    turmaNome: string,
+    material: Omit<StudyMaterial, 'id' | 'addedAt' | 'turmaNome'>,
+  ): Promise<StudyMaterial> {
     const db = await this.dbPromise;
     const newMaterial: StudyMaterial = {
       ...material,
@@ -85,7 +88,7 @@ export class StudyRepository {
       const tx = db.transaction(STORE_MATERIALS, 'readonly');
       const store = tx.objectStore(STORE_MATERIALS);
       const index = store.index('turmaNome');
-      
+
       // Busca todos os registros que batem com o nome da turma
       const request = index.getAll(turmaNome);
 

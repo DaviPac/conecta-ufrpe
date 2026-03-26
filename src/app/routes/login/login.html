@@ -1,6 +1,9 @@
-<div class="flex-grow w-full flex items-center justify-center bg-slate-50 p-4 font-sans selection:bg-blue-900 selection:text-white">
-  <div class="bg-white p-10 md:p-12 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 w-full max-w-md">
-    
+<div
+  class="flex-grow w-full flex items-center justify-center bg-slate-50 p-4 font-sans selection:bg-blue-900 selection:text-white"
+>
+  <div
+    class="bg-white p-10 md:p-12 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 w-full max-w-md"
+  >
     <div class="text-center mb-10">
       <h1 class="text-3xl font-semibold tracking-tight text-slate-900 mb-1">SIGAA</h1>
       <p class="text-sm text-slate-500 font-medium tracking-wide uppercase">Portal Acadêmico</p>
@@ -9,24 +12,23 @@
 
     <form (submit)="onSubmit(); $event.preventDefault()" class="space-y-6">
       <div class="space-y-5">
-
         <p-inputgroup class="custom-inputgroup">
           <p-inputgroup-addon>
-            <i class="pi pi-user"></i> 
+            <i class="pi pi-user"></i>
           </p-inputgroup-addon>
-          
+
           <p-ifta-label class="custom-ifta">
-            <input 
-              id="username" 
-              name="username" 
-              type="text" 
-              pInputText 
-              fluid 
-              [(ngModel)]="username" 
-              [disabled]="loading" 
-              [invalid]="isUsernameInvalid" 
+            <input
+              id="username"
+              name="username"
+              type="text"
+              pInputText
+              fluid
+              [(ngModel)]="username"
+              [disabled]="loading"
+              [invalid]="isUsernameInvalid"
               class="custom-input"
-            >
+            />
             <label for="username">Usuário</label>
           </p-ifta-label>
         </p-inputgroup>
@@ -35,35 +37,37 @@
           <p-inputgroup-addon>
             <i class="pi pi-lock"></i>
           </p-inputgroup-addon>
-          
+
           <p-ifta-label class="custom-ifta">
-            <p-password 
-              [(ngModel)]="password" 
-              inputId="password" 
-              name="password" 
-              [feedback]="false" 
-              [toggleMask]="true" 
-              [disabled]="loading" 
-              [invalid]="isPasswordInvalid" 
+            <p-password
+              [(ngModel)]="password"
+              inputId="password"
+              name="password"
+              [feedback]="false"
+              [toggleMask]="true"
+              [disabled]="loading"
+              [invalid]="isPasswordInvalid"
               class="custom-password"
             />
             <label for="password" class="pointer-events-none">Senha</label>
           </p-ifta-label>
         </p-inputgroup>
-
       </div>
 
       <div class="flex items-center justify-between pt-2">
         <div class="flex items-center">
-          <p-checkbox 
-            [(ngModel)]="rememberMe" 
-            [binary]="true" 
-            name="rememberMe" 
-            value="rememberMe" 
+          <p-checkbox
+            [(ngModel)]="rememberMe"
+            [binary]="true"
+            name="rememberMe"
+            value="rememberMe"
             inputId="rememberMe"
             class="custom-checkbox"
           />
-          <label for="rememberMe" class="ml-2 block text-sm text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
+          <label
+            for="rememberMe"
+            class="ml-2 block text-sm text-slate-600 cursor-pointer hover:text-slate-900 transition-colors"
+          >
             Mantenha-me conectado
           </label>
         </div>
@@ -76,61 +80,71 @@
       >
         {{ loading ? 'Autenticando...' : 'Acessar Sistema' }}
       </button>
-      
+
       <p-toast>
         <ng-template let-message pTemplate="message">
           <div class="flex flex-col items-start w-full overflow-hidden break-words">
-            <span class="font-bold text-red-900 leading-tight">{{message.summary}}</span>
+            <span class="font-bold text-red-900 leading-tight">{{ message.summary }}</span>
             <div class="text-red-950 text-xs md:text-sm mt-1">
-              {{message.detail}}
+              {{ message.detail }}
             </div>
           </div>
         </ng-template>
       </p-toast>
     </form>
-  
   </div>
 </div>
-<p-dialog 
-    header="Sua Privacidade é Prioridade" 
-    [(visible)]="showPrivacyNotice" 
-    [modal]="true" 
-    [closable]="false" 
-    [style]="{ width: '90vw', 'max-width': '450px' }"
-    [draggable]="false"
-    [resizable]="false">
-    
-    <div class="flex flex-col gap-4 text-slate-600 leading-relaxed">
-        <p class="text-sm">
-            Esta é uma interface alternativa para o <strong>SIGAA</strong>. Não possuímos vínculo oficial com a UFRPE, mas buscamos oferecer uma experiência moderna e fluida.
-        </p>
-        
-        <ul class="list-none p-0 m-0 space-y-4 text-sm">
-            <li class="flex items-start">
-                <i class="pi pi-shield text-green-600 mr-3 mt-1 text-lg"></i>
-                <span><strong>Segurança:</strong> Seus dados trafegam exclusivamente via HTTPS, garantindo que a comunicação entre você e o portal seja criptografada.</span>
-            </li>
-            <li class="flex items-start">
-                <i class="pi pi-eye-slash text-green-600 mr-3 mt-1 text-lg"></i>
-                <span><strong>Privacidade:</strong> Não armazenamos suas credenciais ou dados acadêmicos. Atuamos apenas como uma ponte (proxy) em tempo real.</span>
-            </li>
-            <li class="flex items-start">
-                <i class="pi pi-github text-green-600 mr-3 mt-1 text-lg"></i>
-                <span><strong>Código Aberto:</strong> Por transparência, você pode auditar como tratamos seus dados em nosso repositório público.</span>
-            </li>
-        </ul>
+<p-dialog
+  header="Sua Privacidade é Prioridade"
+  [(visible)]="showPrivacyNotice"
+  [modal]="true"
+  [closable]="false"
+  [style]="{ width: '90vw', 'max-width': '450px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col gap-4 text-slate-600 leading-relaxed">
+    <p class="text-sm">
+      Esta é uma interface alternativa para o <strong>SIGAA</strong>. Não possuímos vínculo oficial
+      com a UFRPE, mas buscamos oferecer uma experiência moderna e fluida.
+    </p>
 
-        <div class="bg-amber-50 p-3 rounded-lg border border-amber-100 text-xs text-amber-800 italic">
-            Ao continuar, você autoriza o processamento temporário de suas credenciais para realizar a autenticação junto ao sistema oficial.
-        </div>
+    <ul class="list-none p-0 m-0 space-y-4 text-sm">
+      <li class="flex items-start">
+        <i class="pi pi-shield text-green-600 mr-3 mt-1 text-lg"></i>
+        <span
+          ><strong>Segurança:</strong> Seus dados trafegam exclusivamente via HTTPS, garantindo que
+          a comunicação entre você e o portal seja criptografada.</span
+        >
+      </li>
+      <li class="flex items-start">
+        <i class="pi pi-eye-slash text-green-600 mr-3 mt-1 text-lg"></i>
+        <span
+          ><strong>Privacidade:</strong> Não armazenamos suas credenciais ou dados acadêmicos.
+          Atuamos apenas como uma ponte (proxy) em tempo real.</span
+        >
+      </li>
+      <li class="flex items-start">
+        <i class="pi pi-github text-green-600 mr-3 mt-1 text-lg"></i>
+        <span
+          ><strong>Código Aberto:</strong> Por transparência, você pode auditar como tratamos seus
+          dados em nosso repositório público.</span
+        >
+      </li>
+    </ul>
+
+    <div class="bg-amber-50 p-3 rounded-lg border border-amber-100 text-xs text-amber-800 italic">
+      Ao continuar, você autoriza o processamento temporário de suas credenciais para realizar a
+      autenticação junto ao sistema oficial.
     </div>
+  </div>
 
-    <ng-template pTemplate="footer">
-        <button 
-            pButton 
-            label="Concordar e Acessar" 
-            (click)="acceptPrivacy()" 
-            class="p-button-primary w-full rounded-xl py-3 font-semibold">
-        </button>
-    </ng-template>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Concordar e Acessar"
+      (click)="acceptPrivacy()"
+      class="p-button-primary w-full rounded-xl py-3 font-semibold"
+    ></button>
+  </ng-template>
 </p-dialog>

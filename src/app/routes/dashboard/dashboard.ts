@@ -1,4 +1,14 @@
-import { Component, computed, DestroyRef, inject, signal, ElementRef, ViewChild, effect, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  signal,
+  ElementRef,
+  ViewChild,
+  effect,
+  AfterViewInit,
+} from '@angular/core';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { formatarHorarios } from '../../utils/formatters';
 import { Router } from '@angular/router';
@@ -41,14 +51,15 @@ export class Dashboard implements AfterViewInit {
   id = () => this.uid++;
   turmas = this.sigaaService.turmas;
   nome = this.sigaaService.nome;
-  avaliacoes = this.sigaaService.avaliacoes
+  avaliacoes = this.sigaaService.avaliacoes;
   noticias = computed<NoticiaView[]>(() => {
-    return this.sigaaService.turmas()
-      .filter(t => t.noticia?.titulo)
-      .map(t => ({
+    return this.sigaaService
+      .turmas()
+      .filter((t) => t.noticia?.titulo)
+      .map((t) => ({
         noticia: t.noticia as Noticia,
         nomeTurma: t.nome,
-        links: this.extrairLinks(t.noticia as Noticia)
+        links: this.extrairLinks(t.noticia as Noticia),
       }));
   });
 
@@ -58,16 +69,15 @@ export class Dashboard implements AfterViewInit {
     return [arr[arr.length - 1], ...arr, arr[0]];
   });
 
-  currentNoticiaIdx = signal(0)
+  currentNoticiaIdx = signal(0);
   now = signal(new Date());
-
 
   constructor() {
     const timer = setInterval(() => this.now.set(new Date()), 60000);
     this.destroyRef.onDestroy(() => clearInterval(timer));
     effect(() => {
       const temClones = this.noticiasComClones().length > 1;
-      
+
       if (temClones) {
         setTimeout(() => this.ajustarScrollInicial(), 50);
       }
@@ -78,10 +88,9 @@ export class Dashboard implements AfterViewInit {
     this.ajustarScrollInicial();
   }
 
-
   private ajustarScrollInicial() {
     const el = this.scrollContainer?.nativeElement;
-    
+
     // Se a div não existir no HTML ainda, aborta
     if (!el) return;
 
@@ -101,12 +110,11 @@ export class Dashboard implements AfterViewInit {
     requestAnimationFrame(adjust);
   }
 
-
   private extrairLinks(noticia: Noticia): ActionLink[] {
     const conteudoCompleto = noticia.conteudo.join(' ');
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const matches = conteudoCompleto.match(urlRegex) || [];
-    
+
     const links: ActionLink[] = [];
     const seenUrls = new Set<string>();
 
@@ -116,15 +124,45 @@ export class Dashboard implements AfterViewInit {
       seenUrls.add(url);
 
       if (url.includes('classroom.google.com')) {
-        links.push({ url, platform: 'Classroom', icon: 'pi-book', label: 'Entrar no Classroom', colorClass: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' });
+        links.push({
+          url,
+          platform: 'Classroom',
+          icon: 'pi-book',
+          label: 'Entrar no Classroom',
+          colorClass: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100',
+        });
       } else if (url.includes('t.me') || url.includes('telegram.org')) {
-        links.push({ url, platform: 'Telegram', icon: 'pi-telegram', label: 'Entrar no Telegram', colorClass: 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100' });
+        links.push({
+          url,
+          platform: 'Telegram',
+          icon: 'pi-telegram',
+          label: 'Entrar no Telegram',
+          colorClass: 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100',
+        });
       } else if (url.includes('discord.gg') || url.includes('discord.com')) {
-        links.push({ url, platform: 'Discord', icon: 'pi-discord', label: 'Entrar no Discord', colorClass: 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100' });
+        links.push({
+          url,
+          platform: 'Discord',
+          icon: 'pi-discord',
+          label: 'Entrar no Discord',
+          colorClass: 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100',
+        });
       } else if (url.includes('chat.whatsapp.com')) {
-        links.push({ url, platform: 'WhatsApp', icon: 'pi-whatsapp', label: 'Entrar no Grupo', colorClass: 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100' });
+        links.push({
+          url,
+          platform: 'WhatsApp',
+          icon: 'pi-whatsapp',
+          label: 'Entrar no Grupo',
+          colorClass: 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100',
+        });
       } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        links.push({ url, platform: 'YouTube', icon: 'pi-youtube', label: 'Assistir Vídeo', colorClass: 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' });
+        links.push({
+          url,
+          platform: 'YouTube',
+          icon: 'pi-youtube',
+          label: 'Assistir Vídeo',
+          colorClass: 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100',
+        });
       }
     }
     return links;
@@ -132,10 +170,10 @@ export class Dashboard implements AfterViewInit {
 
   onScroll(event: Event) {
     if (this.isProgrammaticScroll) return;
-    
+
     const target = event.target as HTMLElement;
     const realCount = this.noticias().length;
-    
+
     if (realCount <= 1) return;
 
     const indexDom = Math.round(target.scrollLeft / target.clientWidth);
@@ -164,15 +202,15 @@ export class Dashboard implements AfterViewInit {
     // Força o navegador a ignorar qualquer animação CSS no momento do pulo
     el.style.setProperty('scroll-behavior', 'auto', 'important');
     el.style.setProperty('scroll-snap-type', 'none', 'important');
-    
+
     // Executa o salto matemático
     el.scrollLeft = el.clientWidth * targetDomIndex;
-    
+
     // Atualiza o estado
     this.currentNoticiaIdx.set(targetDomIndex - 1);
 
     // O "Pulo do Gato": Usamos 2 requestAnimationFrames seguidos.
-    // Isso garante que o navegador primeiro "pinte" a tela na nova posição crua, 
+    // Isso garante que o navegador primeiro "pinte" a tela na nova posição crua,
     // e SÓ DEPOIS devolva a capacidade de scroll suave e snap.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -187,12 +225,12 @@ export class Dashboard implements AfterViewInit {
     const realCount = this.noticias().length;
 
     this.isProgrammaticScroll = true;
-    
+
     // Atualiza a bolinha imediatamente ao clicar na seta
     if (targetDomIndex > 0 && targetDomIndex <= realCount) {
       this.currentNoticiaIdx.set(targetDomIndex - 1);
     }
-    
+
     el.scrollTo({ left: el.clientWidth * targetDomIndex, behavior: 'smooth' });
 
     clearTimeout(this.scrollTimeout);
@@ -216,40 +254,40 @@ export class Dashboard implements AfterViewInit {
 
   showNextNoticia() {
     if (this.noticias().length <= 1) return;
-    this.performSmoothScroll((this.currentNoticiaIdx() + 1) + 1);
+    this.performSmoothScroll(this.currentNoticiaIdx() + 1 + 1);
   }
 
   showPassedNoticia() {
     if (this.noticias().length <= 1) return;
-    this.performSmoothScroll((this.currentNoticiaIdx() + 1) - 1);
+    this.performSmoothScroll(this.currentNoticiaIdx() + 1 - 1);
   }
-  
+
   noticiasPageStr = computed(() => {
-    const currentNoticiaIdx = this.currentNoticiaIdx()
-    const noticias = this.noticias()
-    const len = noticias.length
+    const currentNoticiaIdx = this.currentNoticiaIdx();
+    const noticias = this.noticias();
+    const len = noticias.length;
 
-    if (!len) return "Nenhuma notícia"
+    if (!len) return 'Nenhuma notícia';
 
-    return `${currentNoticiaIdx + 1}/${len}`
-  })
+    return `${currentNoticiaIdx + 1}/${len}`;
+  });
   formatarHorarios = formatarHorarios;
   openTurma = (turma: Turma) => {
     this.sigaaService.currentTurma.set(turma);
-    this.sigaaService.currentTurmaIdx.set(this.turmas().findIndex(t => t.nome === turma.nome))
+    this.sigaaService.currentTurmaIdx.set(this.turmas().findIndex((t) => t.nome === turma.nome));
     this.router.navigate(['/turma']);
   };
 
-  dataDeHojeStr = new Intl.DateTimeFormat('pt-BR', { 
-    weekday: 'long', 
-    day: '2-digit', 
-    month: '2-digit' 
+  dataDeHojeStr = new Intl.DateTimeFormat('pt-BR', {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
   }).format(new Date());
 
   aulasDeHoje = computed(() => {
     // Usamos this.now() em vez de new Date() para que o Angular saiba que
     // essa função deve ser recalculada a cada minuto!
-    const agora = this.now(); 
+    const agora = this.now();
     const hojeSigaa = (agora.getDay() + 1).toString();
     const horaAtualEmMinutos = agora.getHours() * 60 + agora.getMinutes();
 
@@ -261,18 +299,18 @@ export class Dashboard implements AfterViewInit {
 
     const aulasHoje: any[] = [];
 
-    this.turmas().forEach(turma => {
+    this.turmas().forEach((turma) => {
       if (!turma.horarios) return;
 
-      turma.horarios.forEach(horarioStr => {
+      turma.horarios.forEach((horarioStr) => {
         const match = horarioStr.match(/^([2-7]+)([MTN])([1-9]+)$/);
         if (match && match[1].includes(hojeSigaa)) {
           const turno = match[2];
           const periodos = match[3];
-          
-          const inicioPeriodo = periodos[0]; 
-          const fimPeriodo = periodos[periodos.length - 1]; 
-          
+
+          const inicioPeriodo = periodos[0];
+          const fimPeriodo = periodos[periodos.length - 1];
+
           const startEmMinutos = startTimes[turno]?.[inicioPeriodo] || 0;
           const startDoUltimo = startTimes[turno]?.[fimPeriodo] || startEmMinutos;
           const duracaoBloco = turno === 'N' ? 50 : 60;
@@ -309,8 +347,8 @@ export class Dashboard implements AfterViewInit {
             isPast: isPast,
             isNow: isNow,
             progresso: progresso,
-            minutosRestantes: minutosRestantes, 
-            tempoRestanteFormatado: tempoRestanteFormatado // <-- ENVIANDO PARA O HTML
+            minutosRestantes: minutosRestantes,
+            tempoRestanteFormatado: tempoRestanteFormatado, // <-- ENVIANDO PARA O HTML
           });
         }
       });
@@ -318,13 +356,13 @@ export class Dashboard implements AfterViewInit {
 
     aulasHoje.sort((a, b) => a.startMinutos - b.startMinutos);
 
-    const nextClass = aulasHoje.find(aula => !aula.isPast && !aula.isNow);
+    const nextClass = aulasHoje.find((aula) => !aula.isPast && !aula.isNow);
     if (nextClass) {
       nextClass.isNext = true;
-      
+
       const minutosAteProxima = nextClass.startMinutos - horaAtualEmMinutos;
       nextClass.minutosAteProxima = minutosAteProxima;
-      
+
       if (minutosAteProxima >= 60) {
         const horas = Math.floor(minutosAteProxima / 60);
         const mins = minutosAteProxima % 60;

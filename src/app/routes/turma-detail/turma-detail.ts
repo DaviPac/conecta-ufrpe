@@ -15,7 +15,7 @@ import { StudyAssistantComponent } from './study-assistant.component'; // <-- no
 export class TurmaDetail implements OnInit {
   private sigaaService: SigaaService = inject(SigaaService);
   private router: Router = inject(Router);
-  
+
   formatarHorarios = formatarHorarios;
   parseFaltas = parseFaltas;
   Number = Number;
@@ -45,14 +45,55 @@ export class TurmaDetail implements OnInit {
     return !!notas && Object.keys(notas).length > 0;
   }
 
+  get cargaHorariaTotal(): number {
+    const horarios = this.turma()?.horarios || [];
+    let aulasSemanais = 0;
+
+    for (const h of horarios) {
+      // Pega todos os padrões tipo "2T45", "46M123" na string atual
+      const matches = h.matchAll(/([2-7]+)[MTN]([1-6]+)/g);
+      for (const match of matches) {
+        const dias = match[1].length;
+        const slots = match[2].length;
+        aulasSemanais += dias * slots;
+      }
+    }
+
+    // 1 aula semanal = 15h no semestre (ex: 4 aulas/sem = 60h)
+    return aulasSemanais * 15;
+  }
+
+  get maxFaltas(): number {
+    // Pode-se faltar no máximo 25% da carga horária
+    return this.cargaHorariaTotal * 0.25;
+  }
+
+  get faltasPercent(): number {
+    const faltas = this.turma()?.faltas;
+    if (faltas === undefined || faltas === -1) return 0;
+
+    const max = this.maxFaltas;
+    if (max === 0) return 0; // Evita divisão por zero
+
+    const pct = (faltas / max) * 100;
+    return pct > 100 ? 100 : pct;
+  }
+
+  get faltasRestantes(): number | null {
+    const faltas = this.turma()?.faltas;
+    if (faltas === undefined || faltas < 0) return null;
+
+    const restantes = this.maxFaltas - faltas;
+    return restantes < 0 ? 0 : Math.round(restantes);
+  }
+
   get faltasDisplay(): string | number {
     const faltas = this.turma()?.faltas;
-    return faltas !== undefined ? this.parseFaltas(faltas) : 'não lançada';
+    return faltas !== undefined ? this.parseFaltas(faltas) : 'Não lançada';
   }
 
   get hasMuitasFaltas(): boolean {
-    const faltas = this.turma()?.faltas;
-    return typeof faltas === 'number' && faltas > 10;
+    return this.faltasPercent > 70;
   }
 
   get hasCronograma(): boolean {

@@ -30,7 +30,7 @@ export class PwaService {
   storageEstimate: WritableSignal<StorageEstimate | null> = signal(null);
   isLoadingStorage: WritableSignal<boolean> = signal(false);
   canInstall = signal<boolean>(false);
-  
+
   private deferredPrompt: any = null;
   // 1. Injetamos o SwUpdate do Angular
   private swUpdate = inject(SwUpdate);
@@ -60,10 +60,10 @@ export class PwaService {
 
   async installApp(): Promise<void> {
     if (!this.deferredPrompt) return;
-    
+
     this.deferredPrompt.prompt();
     const { outcome } = await this.deferredPrompt.userChoice;
-    
+
     if (outcome === 'accepted') {
       this.canInstall.set(false);
     }
@@ -75,7 +75,7 @@ export class PwaService {
   private listenForUpdates(): void {
     if (!this.swUpdate.isEnabled) return;
 
-    // Escuta ativamente caso o Service Worker encontre uma atualização sozinho 
+    // Escuta ativamente caso o Service Worker encontre uma atualização sozinho
     // (com base na estratégia de registro registrationStrategy)
     this.swUpdate.versionUpdates
       .pipe(filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY'))
@@ -96,7 +96,7 @@ export class PwaService {
     try {
       // checkForUpdate() força o ngsw-worker a baixar o ngsw.json e comparar hashes
       const hasUpdate = await this.swUpdate.checkForUpdate();
-      
+
       if (hasUpdate) {
         this.updateStatus.set('available');
       } else {
@@ -112,13 +112,13 @@ export class PwaService {
 
   async applyUpdate(): Promise<void> {
     if (!this.swUpdate.isEnabled) return;
-    
+
     this.updateStatus.set('updating');
-    
+
     try {
       // 1. O método retorna um booleano indicando se a atualização ocorreu
       const updateApplied = await this.swUpdate.activateUpdate();
-      
+
       if (updateApplied) {
         // 2. Pequeno delay para garantir que o SW terminou de assumir o controle
         // antes do navegador destruir o contexto atual com o reload.
@@ -133,7 +133,7 @@ export class PwaService {
     } catch (error) {
       console.error('Erro ao aplicar atualização PWA:', error);
       this.updateStatus.set('error');
-      
+
       // 3. Se deu "Failed to fetch", o SW pode ter travado num estado inconsistente.
       // Forçar um reload após alguns segundos costuma limpar esse estado fantasma.
       setTimeout(() => {
@@ -154,9 +154,7 @@ export class PwaService {
       this.storageEstimate.set({
         usage: estimate?.usage ?? 0,
         quota: estimate?.quota ?? 0,
-        percent: estimate?.quota
-          ? Math.round(((estimate.usage ?? 0) / estimate.quota) * 100)
-          : 0,
+        percent: estimate?.quota ? Math.round(((estimate.usage ?? 0) / estimate.quota) * 100) : 0,
         caches: cacheEntries,
       });
     } catch {
@@ -179,7 +177,10 @@ export class PwaService {
       for (const req of keys) {
         const res = await cache.match(req);
         if (res) {
-          const blob = await res.clone().blob().catch(() => null);
+          const blob = await res
+            .clone()
+            .blob()
+            .catch(() => null);
           if (blob) size += blob.size;
         }
       }
@@ -194,7 +195,7 @@ export class PwaService {
       await caches.delete(cacheName);
     } else {
       const names = await caches.keys();
-      await Promise.all(names.map(n => caches.delete(n)));
+      await Promise.all(names.map((n) => caches.delete(n)));
     }
     await this.loadStorageEstimate();
   }

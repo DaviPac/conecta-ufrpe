@@ -61,7 +61,9 @@
 .btn {
   @apply inline-flex items-center gap-1.5 text-sm font-medium rounded-xl px-3.5 py-2 transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none;
 
-  svg { @apply size-4 shrink-0; }
+  svg {
+    @apply size-4 shrink-0;
+  }
 }
 
 .btn-primary {
@@ -82,7 +84,9 @@
 
 .btn-icon-danger {
   @apply p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors;
-  svg { @apply size-4; }
+  svg {
+    @apply size-4;
+  }
 }
 
 // ─── Status pills ──────────────────────────────────────────────────────────
@@ -90,12 +94,24 @@
 .status-pill {
   @apply inline-flex items-center gap-1 text-xs font-medium rounded-full px-2 py-0.5;
 
-  &.neutral  { @apply bg-slate-100 text-slate-500; }
-  &.checking { @apply bg-amber-50 text-amber-600; }
-  &.available{ @apply bg-blue-50 text-blue-600; }
-  &.updating { @apply bg-indigo-50 text-indigo-600; }
-  &.ok       { @apply bg-emerald-50 text-emerald-600; }
-  &.error    { @apply bg-red-50 text-red-500; }
+  &.neutral {
+    @apply bg-slate-100 text-slate-500;
+  }
+  &.checking {
+    @apply bg-amber-50 text-amber-600;
+  }
+  &.available {
+    @apply bg-blue-50 text-blue-600;
+  }
+  &.updating {
+    @apply bg-indigo-50 text-indigo-600;
+  }
+  &.ok {
+    @apply bg-emerald-50 text-emerald-600;
+  }
+  &.error {
+    @apply bg-red-50 text-red-500;
+  }
 }
 
 // ─── Storage ───────────────────────────────────────────────────────────────
@@ -112,16 +128,24 @@
   @apply h-full bg-blue-500 rounded-full transition-all duration-500;
   min-width: 2px;
 
-  &.storage-bar-warn   { @apply bg-amber-400; }
-  &.storage-bar-danger { @apply bg-red-500; }
+  &.storage-bar-warn {
+    @apply bg-amber-400;
+  }
+  &.storage-bar-danger {
+    @apply bg-red-500;
+  }
 }
 
 .storage-meta {
   @apply flex justify-between text-xs;
 }
 
-.storage-used  { @apply font-semibold text-slate-700; }
-.storage-quota { @apply text-slate-400; }
+.storage-used {
+  @apply font-semibold text-slate-700;
+}
+.storage-quota {
+  @apply text-slate-400;
+}
 
 // ─── Cache list ────────────────────────────────────────────────────────────
 
@@ -196,11 +220,21 @@
 // ─── Animations ────────────────────────────────────────────────────────────
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
