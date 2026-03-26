@@ -1,4 +1,4 @@
-import { Injectable, WritableSignal, inject, signal } from '@angular/core';
+import { Injectable, Injector, WritableSignal, inject, signal } from '@angular/core';
 import {
   Avaliacao,
   CargaHoraria,
@@ -8,8 +8,11 @@ import {
   Turma,
   TurmaDetailResponse,
   AtestadoMatricula,
+  Arquivo,
 } from '../../models/sigaa.models';
 import { Router } from '@angular/router';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { filter, firstValueFrom } from 'rxjs';
 
 // Chave do cache geral de dados da sessão
 const CACHE_KEY = 'sigaa_data_cache';
@@ -41,6 +44,7 @@ export class SigaaService {
    */
   isFetchingData: WritableSignal<boolean> = signal(false);
 
+  private injector = inject(Injector);
   private router: Router = inject(Router);
 
   turmas: WritableSignal<Turma[]> = signal([]);
@@ -494,5 +498,57 @@ export class SigaaService {
     }
 
     return res.blob();
+  }
+
+  async baixarArquivoTurma(turma: Turma, arquivo: Arquivo): Promise<void> {
+    if (this.isFetchingData()) {
+      const isFetching$ = toObservable(this.isFetchingData, { injector: this.injector });
+      await firstValueFrom(isFetching$.pipe(filter(isFetching => isFetching === false)));
+    }
+    if (!this.jsessionid() || !this.viewState()) {
+      throw new Error('Sessão inválida ou expirada');
+    }
+
+    const payload = {
+      viewState: this.viewState(),
+      chave: arquivo.chave,
+      id: arquivo.id,
+      turma: turma
+    };
+    const res = await this.fetchWithAuth(`${this.domain}/download`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Erro ao baixar arquivo da turma');
+    }
+    const novoJsessionid = res.headers.get('X-New-Jsessionid');
+    const novoViewState = res.headers.get('X-New-Viewstate');
+
+    if (novoJsessionid) {
+      this.jsessionid.set(novoJsessionid);
+      localStorage.setItem('jsessionid', novoJsessionid);
+    }
+    if (novoViewState) {
+      this.viewState.set(novoViewState);
+      localStorage.setItem('viewState', novoViewState);
+      this.saveToCache();
+    }
+    let filename = 'arquivo_sigaa';
+    const contentDisposition = res.headers.get('Content-Disposition');
+    if (contentDisposition && contentDisposition.includes('filename=')) {
+      filename = contentDisposition.split('filename=')[1].split(';')[0].replace(/["']/g, '').trim();
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
   }
 }

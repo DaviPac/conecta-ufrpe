@@ -47,6 +47,9 @@ export class Dashboard implements AfterViewInit {
   // Referência ao container que fará o scroll horizontal
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
 
+  @ViewChild('aulasContainer') aulasContainer!: ElementRef<HTMLDivElement>;
+  private hasScrolledToAula = false;
+
   fullyLoaded = this.sigaaService.fullyLoaded;
   id = () => this.uid++;
   turmas = this.sigaaService.turmas;
@@ -82,6 +85,46 @@ export class Dashboard implements AfterViewInit {
         setTimeout(() => this.ajustarScrollInicial(), 50);
       }
     });
+    effect(() => {
+      const aulas = this.aulasDeHoje();
+      // O scroll só é disparado se existirem aulas carregadas e ainda não tivermos focado
+      if (aulas.length > 0 && !this.hasScrolledToAula) {
+        // Usamos setTimeout para dar tempo de o @for renderizar as divs na tela
+        setTimeout(() => this.focarAulaAtual(aulas), 100);
+      }
+    });
+  }
+
+  private focarAulaAtual(aulas: any[]) {
+    const container = this.aulasContainer?.nativeElement;
+    if (!container) return;
+
+    // Em telas Desktop (md:), a listagem vira um grid estático sem overflow.
+    // Ignoramos a rolagem nesse caso para evitar quebra de layout.
+    if (window.innerWidth >= 768) {
+      this.hasScrolledToAula = true;
+      return;
+    }
+
+    // Acha o índice da aula "Em Andamento" ou da "Próxima"
+    const targetIndex = aulas.findIndex(a => a.isNow || a.isNext);
+
+    if (targetIndex !== -1) {
+      // Pega exatamente a div HTML da aula correspondente
+      const card = container.children[targetIndex] as HTMLElement;
+      
+      if (card) {
+        // Cálculo para deixar o card no meio da tela no Mobile
+        const centralizerOffset = (container.clientWidth - card.clientWidth) / 2;
+        const scrollPos = card.offsetLeft - container.offsetLeft - centralizerOffset;
+        
+        container.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' });
+      }
+    }
+
+    // Trava a flag (mesmo que não encontre aula) para não tentar rolar 
+    // novamente a cada minuto quando o relógio (this.now) se atualizar.
+    this.hasScrolledToAula = true;
   }
 
   ngAfterViewInit() {

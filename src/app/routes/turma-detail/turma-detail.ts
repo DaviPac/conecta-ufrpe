@@ -1,10 +1,11 @@
-import { Component, computed, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { formatarHorarios, parseFaltas } from '../../utils/formatters';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { LinkifyPipe } from '../../utils/linkify.pipe';
 import { StudyAssistantComponent } from './study-assistant.component'; // <-- novo
+import { Arquivo } from '../../models/sigaa.models';
 
 @Component({
   selector: 'app-turma-detalhes',
@@ -19,6 +20,8 @@ export class TurmaDetail implements OnInit {
   formatarHorarios = formatarHorarios;
   parseFaltas = parseFaltas;
   Number = Number;
+  downloadingFiles = signal<Set<string>>(new Set<string>());
+  toastMessage = signal<{ text: string, type: 'success' | 'error' } | null>(null);
 
   turma = computed(() => {
     const turmas = this.sigaaService.turmas();
@@ -103,5 +106,38 @@ export class TurmaDetail implements OnInit {
 
   get isLoading(): boolean {
     return this.turma() ? !this.turma()!.isLoaded : true;
+  }
+
+  async baixarArquivo(arquivo: Arquivo): Promise<void> {  
+    this.downloadingFiles.update(set => {
+      const newSet = new Set(set);
+      newSet.add(arquivo.id);
+      return newSet;
+    });
+    try {
+      // 2. Aguarda o download
+      await this.sigaaService.baixarArquivoTurma(this.turma(), arquivo);
+      
+      // Opcional: Mostra sucesso ao usuário
+      this.showToast(`Download de "${arquivo.nome}" concluído!`, 'success');
+    } catch (err: any) {
+      console.error(err);
+      // 3. Substitui o alert cru pelo Toast de erro
+      this.showToast('Falha ao baixar: ' + err.message, 'error');
+    } finally {
+      // 4. Remove o arquivo do estado de "baixando" idependente de sucesso ou falha
+      this.downloadingFiles.update(set => {
+        const newSet = new Set(set);
+        newSet.delete(arquivo.id);
+        return newSet;
+      });
+    }
+  }
+
+  private showToast(text: string, type: 'success' | 'error') {
+    this.toastMessage.set({ text, type });
+    setTimeout(() => {
+      this.toastMessage.set(null);
+    }, 3000);
   }
 }

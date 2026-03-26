@@ -12,9 +12,16 @@ export interface Noticia {
   conteudo: string[];
 }
 
+export interface Arquivo {
+  nome: string;
+  chave: string;
+  id: string;
+}
+
 export interface CronogramaItem {
   titulo: string;
   conteudo: string;
+  arquivos?: Arquivo[];
 }
 
 export interface TurmaInfo {
