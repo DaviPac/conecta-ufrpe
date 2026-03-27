@@ -1,7 +1,10 @@
 {
-  "name": "Conecta-UFRPE",
-  "short_name": "Conecta",
+  "name": "SIGAA-Lite-UFRPE",
+  "short_name": "SIGAA Lite",
+  "description": "Versão leve do SIGAA para a UFRPE.",
   "display": "standalone",
+  "theme_color": "#FFFFFF",
+  "background_color": "#FFFFFF",
   "orientation": "portrait",
   "scope": "./",
   "start_url": "./",
