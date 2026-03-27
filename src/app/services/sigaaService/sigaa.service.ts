@@ -549,15 +549,47 @@ export class SigaaService {
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
 
-    // Detecta se é celular (expressão regular simples)
+    // Detecta se é celular
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     if (isMobile && novaAba) {
-      // PWA MOBILE: Injeta o arquivo na aba que o usuário acabou de "clicar" para abrir.
-      // O celular vai abrir o visualizador nativo (PDF, Video, etc), de onde o usuário pode Salvar/Compartilhar.
-      novaAba.location.href = url;
+      // Em vez de redirecionar para o blob (que falha) ou fechar a aba, 
+      // nós desenhamos uma tela de download amigável nela.
+      novaAba.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Download: ${filename}</title>
+            <style>
+              body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8f9fa; color: #333; text-align: center; padding: 20px; }
+              .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+              h2 { margin-top: 0; color: #2c3e50; }
+              .btn { display: inline-block; background: #007bff; color: white; padding: 14px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 20px; width: 80%; box-sizing: border-box; }
+              .btn:active { background: #0056b3; }
+              .close-text { margin-top: 20px; font-size: 14px; color: #6c757d; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <h2>Arquivo Pronto!</h2>
+              <p><strong>${filename}</strong></p>
+              <a class="btn" href="${url}" download="${filename}">Salvar Arquivo</a>
+              <p class="close-text">Após o download, você pode fechar esta tela.</p>
+            </div>
+          </body>
+        </html>
+      `);
+      novaAba.document.close();
+
+      // IMPORTANTE: Não podemos dar revokeObjectURL em 10 segundos aqui, 
+      // pois o usuário pode demorar a clicar no botão.
+      // A memória será limpa quando a aba for fechada.
+      
     } else {
-      // PC: Fecha a aba em branco (se existir) e usa o método invisível que baixa direto
+      // PC: Mantém o fluxo oculto, mas com um pequeno atraso na remoção do elemento
+      // para garantir que navegadores baseados em Chromium registrem o clique.
       if (novaAba) novaAba.close();
       
       const a = document.createElement('a');
@@ -566,12 +598,12 @@ export class SigaaService {
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      a.remove();
+      
+      // Dá tempo para o navegador processar o clique antes de destruir o link
+      setTimeout(() => {
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      }, 1000);
     }
-
-    // Mantemos os 10 segundos de folga para o celular processar o arquivo antes de limpar a RAM
-    setTimeout(() => {
-      window.URL.revokeObjectURL(url);
-    }, 10000);
   }
 }
