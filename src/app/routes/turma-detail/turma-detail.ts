@@ -109,10 +109,7 @@ export class TurmaDetail implements OnInit {
   }
 
   async baixarArquivo(arquivo: Arquivo): Promise<void> {  
-    // 1. ABRE A JANELA IMEDIATAMENTE (Bypass do bloqueador de pop-ups/segurança do PWA)
-    // No celular, isso vai preparar uma tela para receber o arquivo nativamente.
-    const novaAba = window.open('', '_blank');
-
+    // Ativa o spinner/loading na interface
     this.downloadingFiles.update(set => {
       const newSet = new Set(set);
       newSet.add(arquivo.id);
@@ -120,16 +117,17 @@ export class TurmaDetail implements OnInit {
     });
 
     try {
-      // 2. Passamos a referência da aba para o service
-      await this.sigaaService.baixarArquivoTurma(this.turma(), arquivo, novaAba);
+      await this.sigaaService.baixarArquivoTurma(this.turma(), arquivo);
       
-      this.showToast(`Download de "${arquivo.nome}" concluído!`, 'success');
+      // 2. O service vai terminar com um window.location.href
+      // O PWA/Navegador vai assumir a partir daqui silenciosamente.
+      this.showToast('Download iniciado!', 'success');
+      
     } catch (err: any) {
       console.error(err);
-      // Se deu erro na requisição, fechamos a aba inútil
-      if (novaAba) novaAba.close(); 
       this.showToast('Falha ao baixar: ' + err.message, 'error');
     } finally {
+      // Remove o spinner/loading da interface
       this.downloadingFiles.update(set => {
         const newSet = new Set(set);
         newSet.delete(arquivo.id);

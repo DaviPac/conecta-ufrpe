@@ -501,7 +501,7 @@ export class SigaaService {
   }
 
   // Adicione a novaAba como parâmetro opcional
-  async baixarArquivoTurma(turma: Turma, arquivo: Arquivo, novaAba?: Window | null): Promise<void> {
+  async baixarArquivoTurma(turma: Turma, arquivo: Arquivo): Promise<void> {
     if (this.isFetchingData()) {
       const isFetching$ = toObservable(this.isFetchingData, { injector: this.injector });
       await firstValueFrom(isFetching$.pipe(filter(isFetching => isFetching === false)));
@@ -516,94 +516,27 @@ export class SigaaService {
       id: arquivo.id,
       turma: turma
     };
-    const res = await this.fetchWithAuth(`${this.domain}/download`, {
+    const res = await this.fetchWithAuth(`${this.domain}/turma/arquivo/preparar`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Erro ao baixar arquivo da turma');
+      throw new Error('Erro ao preparar arquivo da turma');
     }
-    
-    // ... [código de atualização do jsessionid e viewState mantido igual] ...
-    const novoJsessionid = res.headers.get('X-New-Jsessionid');
-    const novoViewState = res.headers.get('X-New-Viewstate');
 
-    if (novoJsessionid) {
-      this.jsessionid.set(novoJsessionid);
-      localStorage.setItem('jsessionid', novoJsessionid);
+    const data = await res.json();
+    if (data.newJsessionid) {
+      this.jsessionid.set(data.newJsessionid);
+      localStorage.setItem('jsessionid', data.newJsessionid);
     }
-    if (novoViewState) {
-      this.viewState.set(novoViewState);
-      localStorage.setItem('viewState', novoViewState);
+    if (data.newViewState) {
+      this.viewState.set(data.newViewState);
+      localStorage.setItem('viewState', data.newViewState);
       this.saveToCache();
     }
-
-    let filename = 'arquivo_sigaa';
-    const contentDisposition = res.headers.get('Content-Disposition');
-    if (contentDisposition && contentDisposition.includes('filename=')) {
-      filename = contentDisposition.split('filename=')[1].split(';')[0].replace(/["']/g, '').trim();
-    }
-    
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-
-    // Detecta se é celular
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    if (isMobile && novaAba) {
-      // Em vez de redirecionar para o blob (que falha) ou fechar a aba, 
-      // nós desenhamos uma tela de download amigável nela.
-      novaAba.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>Download: ${filename}</title>
-            <style>
-              body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8f9fa; color: #333; text-align: center; padding: 20px; }
-              .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-              h2 { margin-top: 0; color: #2c3e50; }
-              .btn { display: inline-block; background: #007bff; color: white; padding: 14px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 20px; width: 80%; box-sizing: border-box; }
-              .btn:active { background: #0056b3; }
-              .close-text { margin-top: 20px; font-size: 14px; color: #6c757d; }
-            </style>
-          </head>
-          <body>
-            <div class="card">
-              <h2>Arquivo Pronto!</h2>
-              <p><strong>${filename}</strong></p>
-              <a class="btn" href="${url}" download="${filename}">Salvar Arquivo</a>
-              <p class="close-text">Após o download, você pode fechar esta tela.</p>
-            </div>
-          </body>
-        </html>
-      `);
-      novaAba.document.close();
-
-      // IMPORTANTE: Não podemos dar revokeObjectURL em 10 segundos aqui, 
-      // pois o usuário pode demorar a clicar no botão.
-      // A memória será limpa quando a aba for fechada.
-      
-    } else {
-      // PC: Mantém o fluxo oculto, mas com um pequeno atraso na remoção do elemento
-      // para garantir que navegadores baseados em Chromium registrem o clique.
-      if (novaAba) novaAba.close();
-      
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      
-      // Dá tempo para o navegador processar o clique antes de destruir o link
-      setTimeout(() => {
-        a.remove();
-        window.URL.revokeObjectURL(url);
-      }, 1000);
-    }
+    const downloadUrl = `${this.domain}/turma/arquivo/download?ticket=${data.ticket}`;
+    window.location.href = downloadUrl;
   }
 }
