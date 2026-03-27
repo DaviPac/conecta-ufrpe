@@ -549,29 +549,55 @@ export class SigaaService {
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
 
-    // Detecta se é celular (expressão regular simples)
+    // Detecta se é celular
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    if (isMobile && novaAba) {
-      // PWA MOBILE: Injeta o arquivo na aba que o usuário acabou de "clicar" para abrir.
-      // O celular vai abrir o visualizador nativo (PDF, Video, etc), de onde o usuário pode Salvar/Compartilhar.
-      novaAba.location.href = url;
-    } else {
-      // PC: Fecha a aba em branco (se existir) e usa o método invisível que baixa direto
+    if (isMobile) {
+      // PWA MOBILE: Fecha a aba em branco, pois usaremos APIs nativas
       if (novaAba) novaAba.close();
-      
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+
+      // Transforma o Blob em um File para a Web Share API
+      const file = new File([blob], filename, { type: blob.type });
+
+      // Tenta usar a Web Share API (Nativo do Celular: "Salvar", "Compartilhar")
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: filename
+          });
+          // Sucesso! Limpa a URL e encerra.
+          window.URL.revokeObjectURL(url);
+          return; 
+        } catch (err: any) {
+          // Usuário cancelou o compartilhamento ou deu erro leve.
+          console.log('Compartilhamento ignorado ou cancelado:', err);
+        }
+      }
+
+      // FALLBACK MOBILE: Se não suportar Web Share API ou falhar, faz o mesmo que o PC
+      this.triggerHiddenDownload(url, filename);
+
+    } else {
+      // PC: Fecha a aba em branco e força o download via âncora escondida
+      if (novaAba) novaAba.close();
+      this.triggerHiddenDownload(url, filename);
     }
 
-    // Mantemos os 10 segundos de folga para o celular processar o arquivo antes de limpar a RAM
+    // Limpeza da RAM
     setTimeout(() => {
       window.URL.revokeObjectURL(url);
     }, 10000);
+  }
+
+  // Criei esse método auxiliar privado para não repetir código
+  private triggerHiddenDownload(url: string, filename: string): void {
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 }
