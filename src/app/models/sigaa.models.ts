@@ -33,6 +33,7 @@ export interface TurmaInfo {
 
 export interface Turma {
   nome: string;
+  local: string;
   faltas: number;
   notas?: Notas;
   noticia: Noticia;

@@ -16,18 +16,70 @@
           </h1>
         </div>
 
-        @if (turma()!.horarios) {
-          <div
-            class="bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm text-slate-600 font-medium flex items-center gap-2 shadow-sm"
-          >
-            <i class="pi pi-clock text-amber-700"></i>
-            {{ formatarHorarios(turma()!.horarios) }}
-          </div>
-        }
+        <div class="flex flex-col items-end gap-3">
+          @if (turma()!.horarios) {
+            <div
+              class="bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm text-slate-600 font-medium flex items-center gap-2 shadow-sm"
+            >
+              <i class="pi pi-clock text-amber-700"></i>
+              {{ formatarHorarios(turma()!.horarios) }}
+            </div>
+          }
+
+          @if (turma()!.local || customLocal()) {
+            <div
+              class="bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm text-slate-600 font-medium flex items-center gap-2 shadow-sm transition-all"
+            >
+              <i class="pi pi-map-marker text-blue-700"></i>
+
+              @if (isEditingLocal()) {
+                <input
+                  type="text"
+                  class="bg-slate-50 border border-slate-300 rounded-md px-3 py-1 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-white w-48 sm:w-64 transition-all"
+                  [value]="customLocal() || turma()!.local"
+                  #localInput
+                  (keydown.enter)="salvarLocal(localInput.value)"
+                  (keydown.escape)="cancelarEdicaoLocal()"
+                  placeholder="Ex: Sala 102 - Bloco A"
+                  autoFocus
+                />
+                <button (click)="salvarLocal(localInput.value)" class="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 p-1.5 rounded transition-colors flex items-center justify-center" title="Salvar">
+                  <i class="pi pi-check"></i>
+                </button>
+                <button (click)="cancelarEdicaoLocal()" class="text-red-500 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors flex items-center justify-center" title="Cancelar">
+                  <i class="pi pi-times"></i>
+                </button>
+              } @else {
+                <span [class.text-blue-800]="customLocal()" [class.font-semibold]="customLocal()">
+                  {{ customLocal() || turma()!.local || 'Local não informado' }}
+                </span>
+                
+                <div class="flex items-center ml-1 border-l border-slate-200 pl-2 gap-2">
+                  <button
+                    (click)="iniciarEdicaoLocal()"
+                    class="text-slate-400 hover:text-blue-600 transition-colors flex items-center"
+                    [title]="customLocal() ? 'Editar local personalizado' : 'Corrigir local incorreto'"
+                  >
+                    <i class="pi pi-pencil text-xs"></i>
+                  </button>
+                  
+                  @if (customLocal()) {
+                    <button
+                      (click)="removerLocalCustomizado()"
+                      class="text-slate-400 hover:text-red-500 transition-colors flex items-center"
+                      title="Restaurar local original do SIGAA"
+                    >
+                      <i class="pi pi-refresh text-xs"></i>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
       </header>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Boletim Parcial -->
         <div class="md:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
           <h2
             class="text-xs font-semibold tracking-wide text-slate-500 uppercase mb-6 flex items-center border-b border-slate-100 pb-3"
@@ -77,7 +129,6 @@
           </div>
         </div>
 
-        <!-- Assiduidade — anel com gradiente -->
         <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col">
           <h2
             class="text-xs font-semibold tracking-wide text-slate-500 uppercase mb-4 border-b border-slate-100 pb-3"
@@ -104,7 +155,6 @@
             </div>
           } @else {
             <div class="flex-1 flex flex-col items-center justify-center gap-4">
-              <!-- Anel SVG -->
               <div class="relative w-[120px] h-[120px]">
                 <svg
                   width="120"
@@ -128,10 +178,8 @@
                     </linearGradient>
                   </defs>
 
-                  <!-- trilha -->
                   <circle cx="60" cy="60" r="50" fill="none" stroke="#E2E8F0" stroke-width="12" />
 
-                  <!-- progresso -->
                   <circle
                     cx="60"
                     cy="60"
@@ -152,7 +200,6 @@
                   />
                 </svg>
 
-                <!-- número centralizado -->
                 <div class="absolute inset-0 flex flex-col items-center justify-center">
                   <span
                     class="text-3xl font-medium leading-none"
@@ -172,7 +219,6 @@
                 </div>
               </div>
 
-              <!-- legenda -->
               @if (faltasDisplay !== 'não lançada') {
                 <div class="text-center">
                   <p
@@ -227,7 +273,6 @@
         </div>
       }
 
-      <!-- ✨ Assistente de Estudos IA -->
       @if (!isLoading) {
         <div class="mt-10">
           <app-study-assistant [turmaNome]="turma()!.nome" [cronograma]="turma()!.cronograma" />

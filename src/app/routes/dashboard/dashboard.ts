@@ -14,6 +14,7 @@ import { formatarHorarios } from '../../utils/formatters';
 import { Router } from '@angular/router';
 import { Noticia, Turma } from '../../models/sigaa.models';
 import { LinkifyPipe } from '../../utils/linkify.pipe';
+import { TurmaLocalService } from '../turma-detail/turma-local.service';
 
 interface ActionLink {
   url: string;
@@ -39,10 +40,13 @@ interface NoticiaView {
 export class Dashboard implements AfterViewInit {
   private sigaaService: SigaaService = inject(SigaaService);
   private router: Router = inject(Router);
+  private turmaLocalService = inject(TurmaLocalService);
   private uid = 0;
   private destroyRef = inject(DestroyRef);
   private isProgrammaticScroll = false;
   private scrollTimeout: any;
+
+  locaisCustomizados = signal<Record<string, string>>({});
 
   // Referência ao container que fará o scroll horizontal
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
@@ -93,6 +97,41 @@ export class Dashboard implements AfterViewInit {
         setTimeout(() => this.focarAulaAtual(aulas), 100);
       }
     });
+    effect(() => {
+      const listaTurmas = this.turmas();
+      if (listaTurmas && listaTurmas.length > 0) {
+        this.carregarTodosOsLocais(listaTurmas);
+      }
+    });
+  }
+
+  async carregarTodosOsLocais(listaTurmas: Turma[]) {
+    const novosLocais: Record<string, string> = {};
+    
+    for (const turma of listaTurmas) {
+      if (turma.nome) { // Certifique-se de usar a mesma chave (id) que salva no DB
+        const salvo = await this.turmaLocalService.getLocalTurma(turma.nome);
+        if (salvo) {
+          novosLocais[turma.nome] = salvo;
+        }
+      }
+    }
+    
+    // Atualiza o estado de uma vez só
+    this.locaisCustomizados.set(novosLocais);
+  }
+
+  getTurmaLocal(turma: Turma): string {
+    if (!turma) return 'Local a definir';
+    
+    // Se existir um local salvo no IndexedDB para o ID dessa turma, usa ele
+    const custom = this.locaisCustomizados()[turma.nome]; 
+    if (custom) {
+      return custom;
+    }
+    
+    // Senão, cai no original do SIGAA, e por fim o padrão
+    return turma.local || 'Local a definir';
   }
 
   private focarAulaAtual(aulas: any[]) {

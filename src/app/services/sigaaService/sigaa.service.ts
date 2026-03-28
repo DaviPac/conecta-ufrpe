@@ -48,6 +48,7 @@ export class SigaaService {
   private router: Router = inject(Router);
 
   turmas: WritableSignal<Turma[]> = signal([]);
+  freshTurmas: WritableSignal<Turma[]> = signal([]);
   nome: WritableSignal<string> = signal('');
   avaliacoes: WritableSignal<Avaliacao[]> = signal([]);
   cargaHoraria: WritableSignal<CargaHoraria | null> = signal(null);
@@ -257,6 +258,19 @@ export class SigaaService {
       if (isSessionError) {
         const reauthed = await this.tryReauthenticate();
         if (reauthed) {
+          if (options.body && typeof options.body === 'string' && options.body.includes('viewState')) {
+            try {
+              const bodyParsed = JSON.parse(options.body);
+              if (bodyParsed.viewState) {
+                // Injeta o novo viewState recém-obtido no reauth
+                bodyParsed.viewState = this.viewState();
+                options.body = JSON.stringify(bodyParsed);
+              }
+            } catch (e) {
+              // Ignora caso o body não seja um JSON válido
+              console.warn('Não foi possível fazer o parse do body no retry', e);
+            }
+          }
           return this.fetchWithAuth(url, options, true);
         } else {
           this.logout();
@@ -300,9 +314,10 @@ export class SigaaService {
       this.nome.set(mainDataRes.nome);
 
       const cached = this.turmas();
+      this.freshTurmas.set(mainDataRes.turmas);
       const merged = mainDataRes.turmas.map((fresh) => {
         const old = cached.find((c) => c.nome === fresh.nome);
-        return old ? { ...old, isLoaded: true } : { ...fresh, isLoaded: false };
+        return old ? { ...old, local: fresh.local, isLoaded: true } : { ...fresh, isLoaded: false };
       });
       this.turmas.set(merged);
 
@@ -430,7 +445,7 @@ export class SigaaService {
     const turmaData = data as TurmaDetailResponse;
     this.turmas.update((prev) =>
       prev.map((t) =>
-        t.nome === turma.nome ? { ...turmaData.turma, notas: t.notas, isLoaded: true } : t,
+        t.nome === turma.nome ? { ...turmaData.turma, local: t.local, notas: t.notas, isLoaded: true } : t,
       ),
     );
 
@@ -442,7 +457,7 @@ export class SigaaService {
 
   async fetchTurmas() {
     await this.fetchNotas();
-    for (const turma of this.turmas()) {
+    for (const turma of this.freshTurmas()) {
       await this.getTurmaDetail(turma);
       // Salva cache incrementalmente a cada turma carregada
       this.saveToCache();

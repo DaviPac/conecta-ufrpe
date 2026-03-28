@@ -6,6 +6,7 @@ import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { LinkifyPipe } from '../../utils/linkify.pipe';
 import { StudyAssistantComponent } from './study-assistant.component'; // <-- novo
 import { Arquivo } from '../../models/sigaa.models';
+import { TurmaLocalService } from './turma-local.service';
 
 @Component({
   selector: 'app-turma-detalhes',
@@ -16,12 +17,61 @@ import { Arquivo } from '../../models/sigaa.models';
 export class TurmaDetail implements OnInit {
   private sigaaService: SigaaService = inject(SigaaService);
   private router: Router = inject(Router);
+  private indexedDbService = inject(TurmaLocalService);
 
   formatarHorarios = formatarHorarios;
   parseFaltas = parseFaltas;
   Number = Number;
   downloadingFiles = signal<Set<string>>(new Set<string>());
   toastMessage = signal<{ text: string, type: 'success' | 'error' } | null>(null);
+  isEditingLocal = signal(false);
+  customLocal = signal<string | null>(null);
+
+  async carregarLocalCustomizado() {
+    const turmaId = this.turma()?.nome;
+    if (turmaId) {
+      // Substitua pela sua chamada real ao IndexedDB
+      const salvo = await this.indexedDbService.getLocalTurma(turmaId);
+      this.customLocal.set(salvo || null);
+    }
+  }
+
+  iniciarEdicaoLocal() {
+    this.isEditingLocal.set(true);
+  }
+
+  cancelarEdicaoLocal() {
+    this.isEditingLocal.set(false);
+  }
+
+  async salvarLocal(novoLocal: string) {
+    const valor = novoLocal.trim();
+    const turmaId = this.turma()?.nome;
+    
+    if (!turmaId) return;
+
+    if (valor === '') {
+      await this.removerLocalCustomizado();
+      return;
+    }
+
+    // Salva no IndexedDB
+    await this.indexedDbService.salvarLocalTurma(turmaId, valor);
+    this.customLocal.set(valor);
+    this.isEditingLocal.set(false);
+    
+    // Opcional: exibir toast
+    // this.exibirToast('Local atualizado com sucesso!', 'success');
+  }
+
+  async removerLocalCustomizado() {
+    const turmaId = this.turma()?.nome;
+    if (turmaId) {
+      await this.indexedDbService.removerLocalTurma(turmaId);
+      this.customLocal.set(null);
+      this.isEditingLocal.set(false);
+    }
+  }
 
   turma = computed(() => {
     const turmas = this.sigaaService.turmas();
@@ -38,6 +88,7 @@ export class TurmaDetail implements OnInit {
   });
 
   ngOnInit(): void {
+    this.carregarLocalCustomizado();
     if (this.sigaaService.currentTurmaIdx() === null) {
       this.router.navigate(['/']);
     }
