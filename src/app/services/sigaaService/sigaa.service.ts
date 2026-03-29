@@ -326,28 +326,7 @@ export class SigaaService {
 
       this.saveToCache();
 
-      this.fetchTurmas()
-        .catch((err) => {
-          console.error('Erro ao buscar turmas após main data:', err);
-          this.isFetchingData.set(false);
-
-          // ✅ VERIFICA SE É ERRO DE REDE/OFFLINE
-          const isOffline =
-            !navigator.onLine || err.message.includes('fetch') || err.message.includes('conexão');
-
-          if (isOffline) {
-            console.warn('Conexão perdida ao buscar turmas. Mantendo cache disponível.');
-            this.fullyLoaded.set(true); // Libera a UI com o cache parcial/antigo
-          } else {
-            this.logout();
-            if (!this.router.url.includes('login')) {
-              alert('Erro ao carregar dados das turmas. Por favor, faça login novamente.');
-            }
-          }
-        })
-        .then(() => {
-          this.hasOnlineData.set(true);
-        });
+      this.fetchTurmasStream();
     } catch (e) {
       const error = e as Error;
       this.isFetchingData.set(false);
@@ -553,5 +532,124 @@ export class SigaaService {
     }
     const downloadUrl = `${this.domain}/turma/arquivo/download?ticket=${data.ticket}`;
     window.location.href = downloadUrl;
+  }
+
+  async fetchTurmasStream() {
+    try {
+      // Se você ainda precisa das notas globais antes das turmas, mantenha esta chamada
+      await this.fetchNotas();
+
+      // Usamos fetch ao invés de new EventSource() para podermos injetar o BearerAuth
+      const res = await this.fetchWithAuth(`${this.domain}/turmas-stream`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/event-stream',
+        },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Erro de conexão ao iniciar stream de turmas');
+      }
+
+      if (!res.body) {
+        throw new Error('ReadableStream não é suportado pelo seu navegador.');
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+
+      // Lê o stream continuamente até o backend encerrar a conexão
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+
+        // Decodifica o chunk recebido e adiciona ao buffer
+        buffer += decoder.decode(value, { stream: true });
+        
+        // SSE usa '\n\n' para separar as mensagens
+        const parts = buffer.split('\n\n');
+        
+        // Mantém a última parte incompleta no buffer (caso o chunk tenha sido cortado na rede)
+        buffer = parts.pop() || '';
+
+        for (const part of parts) {
+          if (!part.trim()) continue;
+
+          // Faz o parse do evento SSE
+          const lines = part.split('\n');
+          let eventType = 'message';
+          let dataStr = '';
+
+          for (const line of lines) {
+            if (line.startsWith('event:')) eventType = line.substring(6).trim();
+            else if (line.startsWith('data:')) dataStr = line.substring(5).trim();
+          }
+
+          if (!dataStr) continue;
+
+          const parsedData = JSON.parse(dataStr);
+
+          // Roteia a ação de acordo com o evento enviado pelo Gin
+          switch (eventType) {
+            case 'start':
+              console.log(`Iniciando stream: ${parsedData.total} turmas na fila.`);
+              break;
+
+            case 'turma':
+              // Atualiza o Signal da turma específica mantendo dados de cache importantes
+              this.turmas.update((prev) =>
+                prev.map((t) =>
+                  t.nome === parsedData.nome
+                    ? { ...parsedData, local: t.local, notas: t.notas, isLoaded: true }
+                    : t
+                )
+              );
+              this.saveToCache(); // Cache incremental a cada turma raspada
+              break;
+
+            case 'error':
+              console.error('Falha em uma turma específica:', parsedData.error);
+              // Como o backend vai dar return, o loop vai encerrar no próximo ciclo
+              break;
+
+            case 'done':
+              // Finaliza a atualização dos tokens baseados no último estado válido
+              this.jsessionid.set(parsedData.jsessionid);
+              this.viewState.set(parsedData.viewState);
+              localStorage.setItem('jsessionid', parsedData.jsessionid);
+              localStorage.setItem('viewState', parsedData.viewState);
+
+              this.fullyLoaded.set(true);
+              this.isFetchingData.set(false);
+              this.saveToCache();
+              console.log('Stream de turmas concluído:', this.turmas());
+              break;
+          }
+        }
+      }
+    } catch (err) {
+      const error = err as Error;
+      console.error('Erro ao consumir stream de turmas:', error);
+      this.isFetchingData.set(false);
+
+      // ✅ VERIFICA SE É ERRO DE REDE/OFFLINE DURANTE O STREAM
+      const isOffline =
+        !navigator.onLine || error.message.includes('fetch') || error.message.includes('conexão');
+
+      if (isOffline) {
+        console.warn('Conexão perdida ao buscar turmas. Mantendo cache disponível.');
+        this.fullyLoaded.set(true); // Libera a UI com o que conseguiu carregar
+      } else {
+        this.logout();
+        if (!this.router.url.includes('login')) {
+          alert('Erro ao carregar dados das turmas. Por favor, faça login novamente.');
+        }
+      }
+    } finally {
+      this.hasOnlineData.set(true);
+    }
   }
 }
