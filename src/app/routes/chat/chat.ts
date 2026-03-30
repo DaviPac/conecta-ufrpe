@@ -100,7 +100,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       - Passo 1: Use 'consultar_turmas' para obter o cronograma e descobrir os NOMES dos arquivos relevantes.
       - Passo 2: Imediatamente após receber o resultado, chame a ferramenta 'buscar_arquivos' passando essa lista.
       - Passo 3 (A Resposta Final): Após usar a ferramenta 'buscar_arquivos', **NÃO repita os nomes dos arquivos no texto da sua resposta**. Diga apenas algo curto e direto como "Aqui estão os materiais que encontrei para você baixar logo abaixo:".
-      - EXCEÇÃO: Você pode e deve retornar links, caso disponíveis
+      - EXCEÇÃO: Você pode e deve retornar links, caso disponíveis, NÃO informe ao usuário para baixar os links, eles não são baixáveis. Apenas retorne a URL e uma breve descrição do que é o arquivo, se possível.
       10. Para materiais de provas, filtre no cronograma os arquivos disponíveis com datas anteriores à data da prova, depois execute o Passo 2 descrito acima com esses arquivos.
       11. Ao retornar uma URL, SEMPRE descreva o que sabe sobre o conteúdo do link.`,
       tools: [{
