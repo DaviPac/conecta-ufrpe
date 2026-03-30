@@ -81,7 +81,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     // Configuração do modelo e das ferramentas (Function Calling)
     const model = this.chatState.genAI.getGenerativeModel({
       model: "gemini-2.5-flash", // Use a versão mais recente/rápida para chats
-      systemInstruction: `Você é o assistente virtual de alunos do SIGAA Lite. 
+      systemInstruction: `Você é o assistente virtual de alunos do SIGAA Lite. Lembre-se de termos como VA = Avaliação, existe 1VA, 2VA, 3VA e final. A 3VA substitui a menor nota entre 1VA e 2VA. A média é 7 para passar direto. Em caso de final, faz-se a média entre a final e a média das 2 maiores VA's. Essa média deve ser maior ou igual a 5.
       Siga estas regras estritamente:
       1. Seja direto, conciso e amigável.
       2. Quando consultar o calendário, responda APENAS o que o usuário perguntou.
