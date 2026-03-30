@@ -63,10 +63,6 @@ export class ChatStateService {
     });
   }
 
-  sendMessageStream(messages: any[]) {
-    this.chatSession?.sendMessageStream(messages);
-  }
-
   limparHistorico() {
     this.messages.set([{ 
       role: 'system', 

@@ -193,6 +193,14 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   }
 
   async sendMessage() {
+    if (!this.chatState.chatSession) {
+      await this.checkApiKey();
+      const apiKey = await this.studyRepo.getApiKey();
+      if (!apiKey) {
+        return;
+      }
+      this.initGenerativeAI(apiKey);
+    }
     const text = this.userInput().trim();
     if (!text || this.chatState.isGenerating()) return;
 
