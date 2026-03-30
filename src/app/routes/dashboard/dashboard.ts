@@ -41,6 +41,7 @@ export class Dashboard implements AfterViewInit {
   private sigaaService: SigaaService = inject(SigaaService);
   private router: Router = inject(Router);
   private turmaLocalService = inject(TurmaLocalService);
+
   private uid = 0;
   private destroyRef = inject(DestroyRef);
   private isProgrammaticScroll = false;

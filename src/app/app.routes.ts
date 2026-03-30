@@ -7,6 +7,7 @@ import { Calendario } from './routes/calendario/calendario';
 import { TurmaDetail } from './routes/turma-detail/turma-detail';
 import { loginGuard } from './guards/login-guard';
 import { Settings } from './routes/settings/settings';
+import { ChatComponent } from './routes/chat/chat';
 
 export const routes: Routes = [
   { path: 'login', component: Login, canActivate: [loginGuard] },
@@ -15,4 +16,5 @@ export const routes: Routes = [
   { path: 'calendario', component: Calendario, canActivate: [authGuard] },
   { path: 'turma', component: TurmaDetail, canActivate: [authGuard] },
   { path: 'settings', component: Settings, canActivate: [authGuard] },
+  { path: 'chat', component: ChatComponent, canActivate: [authGuard] },
 ];

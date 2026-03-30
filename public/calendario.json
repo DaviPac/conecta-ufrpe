@@ -1,0 +1,190 @@
+{
+  "calendario_ufrpe_2026_2027": {
+    "resolucao": "CEPE/UFRPE 960 de 20/11/2025",
+    "semestres": {
+      "2026.1": {
+        "inicio_aulas": "09/03/2026",
+        "termino_aulas": "11/07/2026",
+        "dias_letivos_por_campus": {"Sede": 103, "UAST": 102, "UACSA": 101, "UABJ": 102}
+      },
+      "2026.2": {
+        "inicio_aulas": "10/08/2026",
+        "termino_aulas": "12/12/2026",
+        "dias_letivos_por_campus": {"Sede": 102, "UAST": 102, "UACSA": 102, "UABJ": 101}
+      }
+    },
+    "colacao_grau_antecipada_2026": ["13/01", "13/02", "03/03", "07/04", "19/06", "14/07", "04/08", "20/10", "17/11", "15/12"],
+    "eventos": {
+      "2026-01": [
+        ["01", "Feriado: Confraternização Universal"],
+        ["02", "Previsão edital Processo Seletivo Extra (vagas ociosas) 2026.1 / Limite REMT 2026.1"],
+        ["05 a 30", "Férias docentes 1º período (26 dias)"],
+        ["18", "Limite cadastro seguro estágio Fev"],
+        ["20", "Feriado municipal Belo Jardim"],
+        ["23", "Limite envio frequência de Monitoria à PREG"],
+        ["02 a 20", "Abertura turmas SIGAA 2026.1 (Sede)"],
+        ["02 a 25", "Homologação turmas 2026.1 (Deptos) / Criação turmas (Unidades)"],
+        ["06", "Limite criação de componentes, equivalências e requisitos 2026.1"],
+        ["09 a 13", "Inscrição alunos especiais ordinários 2026.1 (DRCA)"],
+        ["11", "Limite mudança de turno 2026.1"]
+      ],
+      "2026-02": [
+        ["13", "Limite análise aproveitamento de estudos formandos 2025.2 / Limite defesa ESO/TCC 2025.2"],
+        ["16 e 17", "Feriado: Carnaval"],
+        ["18", "Cinzas"],
+        ["19", "Limite cadastro seguro estágio Mar / Limite registro conceitos TCC/ESO 2025.2"],
+        ["20", "Limite análise Atividades Autônomas 2025.2 / Limite consolidação final turmas 2025.2 / Limite frequência Monitoria"],
+        ["26", "Início vigência SIGAA período 2026.1"]
+      ],
+      "2026-03": [
+        ["02/03 a 29/05", "Matrícula TCC/ESO 2026.1"],
+        ["02 e 03", "Matrícula alunos regulares, RODA e ingressantes Extra 2026.1 / Ajustes de vagas"],
+        ["02 a 04", "Análise de matrículas RODA"],
+        ["05", "Processamento de matrículas 2026.1"],
+        ["06", "Feriado Estadual: Data Magna PE"],
+        ["09", "INÍCIO AULAS 2026.1 / Aula Inaugural Sede / Início Rematrícula alunos e RODA"],
+        ["09 e 10", "Rematrícula ingressantes Extra 2026.1"],
+        ["09 a 11", "Análise rematrícula RODA / Ajuste vagas rematrícula"],
+        ["09 a 28", "Trancamento de matrícula em turmas 2026.1"],
+        ["10", "Aula Inaugural UACSA / Lançamento Editais PAI, PAG e PPE"],
+        ["11", "Aula Inaugural UABJ / Lançamento Editais PRUG e Auxílio Moradia"],
+        ["12", "Aula Inaugural UAST"],
+        ["12 e 13", "Processamento rematrículas 2026.1"],
+        ["16", "Matrícula extraordinária 2026.1"],
+        ["18", "Limite cadastro seguro estágio Abr / Limite Equivalência Excepcional 2026.1"],
+        ["20", "Limite Equiparação ESO 2026.1 / Limite frequência Monitoria"]
+      ],
+      "2026-04": [
+        ["03", "Feriado Nacional: Paixão de Cristo"],
+        ["08", "Colação Unificada UABJ (ref. 2025.2)"],
+        ["09", "Colação Unificada UAST (ref. 2025.2)"],
+        ["13 a 17", "JEPEX (Jornada de Ensino, Pesquisa e Extensão)"],
+        ["18", "Limite cadastro seguro estágio Mai"],
+        ["21", "Feriado Nacional: Tiradentes"],
+        ["24", "Limite frequência Monitoria"]
+      ],
+      "2026-05": [
+        ["01", "Feriado: Dia do Trabalho / Feriado municipal Serra Talhada"],
+        ["06", "Colação Unificada Sede, UACSA e UAEADTec (ref. 2025.2)"],
+        ["18", "Limite cadastro seguro estágio Jun"],
+        ["22", "Limite frequência Monitoria"],
+        ["29", "Limite solicitação aproveitamento/incorporação de estudos 2026.1"]
+      ],
+      "2026-06": [
+        ["01", "Previsão edital Vagas Ociosas 2026.2 / Limite REMT 2026.2"],
+        ["03", "Limite lista desligamento discentes 2026.1"],
+        ["04", "Ponto Facultativo: Corpus Christi / Limite reintegração colação de grau 2026.1"],
+        ["05", "Limite solicitação Atividades Autônomas 2026.1"],
+        ["13", "Feriado municipal Cabo de Santo Agostinho"],
+        ["18", "Limite cadastro seguro estágio Jul"],
+        ["22", "Limite frequência Monitoria"],
+        ["22/06 a 24/07", "Criação turmas 2026.2 (Unidades)"],
+        ["22/06 a 10/07", "Abertura turmas 2026.2 (Sede)"],
+        ["22/06 a 17/07", "Homologação turmas 2026.2 (Deptos)"],
+        ["24", "Feriado Regional: São João"],
+        ["26", "Consolidação parcial 2026.1 / Limite análise aproveitamento estudos formandos 2026.1"],
+        ["30", "Limite envio processos Equiparação ESO/Equivalência Excepcional 2026.1 ao DRCA"]
+      ],
+      "2026-07": [
+        ["08", "Feriado municipal Belo Jardim"],
+        ["09", "Feriado municipal Cabo de Santo Agostinho"],
+        ["10", "Limite criação/alteração componentes e requisitos 2026.2"],
+        ["11", "TÉRMINO AULAS 2026.1 / Limite mudança de turno 2026.2"],
+        ["13 a 17", "PROVAS FINAIS 2026.1 / Inscrição alunos especiais 2026.2"],
+        ["16", "Feriado municipal Recife / Limite defesa ESO/TCC 2026.1"],
+        ["17", "Limite registro conceitos TCC/ESO 2026.1 / Limite análise Atividades Autônomas 2026.1"],
+        ["18", "Limite cadastro seguro estágio Ago"],
+        ["20/07 a 07/08", "Férias docentes 2º período (19 dias)"],
+        ["20", "Limite consolidação final turmas 2026.1"],
+        ["24", "Limite frequência Monitoria"],
+        ["30", "Início vigência SIGAA período 2026.2"]
+      ],
+      "2026-08": [
+        ["03/08 a 30/10", "Matrícula TCC/ESO 2026.2"],
+        ["03 e 04", "Matrícula alunos regulares, RODA e Extra 2026.2"],
+        ["03 a 05", "Análise matrículas RODA / Ajuste vagas 2026.2"],
+        ["06 e 07", "Processamento matrículas 2026.2"],
+        ["10", "INÍCIO AULAS 2026.2 / Aula Inaugural Sede"],
+        ["10 e 11", "Rematrícula alunos regulares, RODA e Extra 2026.2"],
+        ["10 a 12", "Análise rematrículas RODA / Ajuste vagas"],
+        ["10 a 28", "Trancamento de matrícula em turmas 2026.2"],
+        ["11", "Aula Inaugural UACSA"],
+        ["12", "Lançamento Editais PAI e PAD"],
+        ["13", "Aula Inaugural UABJ / Aula Inaugural UAST"],
+        ["13 e 14", "Processamento rematrículas 2026.2"],
+        ["17", "Aniversário UABJ / Matrícula extraordinária 2026.2"],
+        ["18", "Limite cadastro seguro estágio Set"],
+        ["21", "Aniversário UAST"],
+        ["28", "Limite frequência Monitoria"]
+      ],
+      "2026-09": [
+        ["07", "Feriado Nacional: Independência"],
+        ["08", "Feriado municipal Serra Talhada"],
+        ["10", "Colação Unificada Sede, UACSA e UAEADTec (ref. 2026.1)"],
+        ["11", "Feriado municipal Belo Jardim"],
+        ["15", "Aniversário UACSA"],
+        ["17", "Colação Unificada UAST (ref. 2026.1)"],
+        ["18", "Colação Unificada UABJ (ref. 2026.1) / Limite seguro estágio Out / Limite Equiparação ESO e Equivalência 2026.2"],
+        ["22", "Limite frequência Monitoria"]
+      ],
+      "2026-10": [
+        ["07 e 08", "Feira de Profissões UFRPE"],
+        ["12", "Feriado Nacional: N. Sra Aparecida"],
+        ["15", "Dia do Professor (Aulas mantidas)"],
+        ["18", "Limite cadastro seguro estágio Nov"],
+        ["21", "Limite frequência Monitoria"],
+        ["28", "Dia do Servidor Público (Lei 8.112/90)"],
+        ["30", "Limite lista desligamento discentes 2026.2"],
+        ["31", "Feriado municipal Cabo de Santo Agostinho"]
+      ],
+      "2026-11": [
+        ["02", "Feriado Nacional: Finados"],
+        ["03", "Aniversário UFRPE"],
+        ["13", "Limite frequência Monitoria"],
+        ["15", "Feriado Nacional: Proclamação da República"],
+        ["16/11 a 04/12", "Abertura turmas 2027.1 (Sede)"],
+        ["16/11 a 19/12", "Homologação turmas 2027.1"],
+        ["18", "Limite cadastro seguro estágio Dez"],
+        ["19", "VII Fórum de Internacionalização"],
+        ["20", "Feriado Nacional: Consciência Negra"],
+        ["27", "Limite análise aproveitamento estudos formandos 2026.2"]
+      ],
+      "2026-12": [
+        ["03", "Cantata Natalina"],
+        ["04", "Limite frequência Monitoria"],
+        ["07/12 a 19/02/27", "Criação turmas 2027.1 (Unidades)"],
+        ["08", "Feriado municipal Belo Jardim / Feriado municipal Recife / Consolidação parcial 2026.2"],
+        ["11", "Limite solicitação Atividades Autônomas 2026.2"],
+        ["12", "TÉRMINO AULAS 2026.2 / Limite reintegração colação grau 2026.2"],
+        ["14 a 18", "PROVAS FINAIS 2026.2 / Envio processos Equiparação/Equivalência ao DRCA"],
+        ["18", "Limite defesa ESO/TCC 2026.2 / Limite seguro estágio Jan"],
+        ["24", "Véspera Natal (Facultativo após 13h)"],
+        ["25", "Feriado: Natal"],
+        ["30", "Consolidação final turmas / Registro conceitos TCC/ESO / Aproveitamento formandos / Análise Ativ. Autônomas 2026.2"],
+        ["31", "Véspera Ano Novo (Facultativo após 13h)"]
+      ],
+      "2027-01": [
+        ["01", "Feriado: Confraternização Universal"],
+        ["04", "Previsão edital Vagas Ociosas 2027.1 / Limite REMT 2027.1"],
+        ["04 a 30", "Férias docentes 1º período (26 dias)"],
+        ["18", "Limite cadastro seguro estágio Fev"],
+        ["20", "Feriado municipal Belo Jardim"],
+        ["22", "Limite frequência Monitoria"]
+      ],
+      "2027-02": [
+        ["05", "Limite criação/alteração componentes 2027.1"],
+        ["08 e 09", "Feriado: Carnaval"],
+        ["10", "Cinzas"],
+        ["15 a 19", "Inscrição alunos especiais 2027.1"],
+        ["18", "Limite cadastro seguro estágio Mar"],
+        ["19", "Limite mudança turno 2027.1 / Limite frequência Monitoria"]
+      ],
+      "2027-03": [
+        ["06", "Feriado Estadual: Data Magna PE"],
+        ["08", "PREVISÃO INÍCIO AULAS 2027.1 / Limite seguro estágio Abr"],
+        ["19", "Limite frequência Monitoria"],
+        ["26", "Feriado Nacional: Paixão de Cristo"]
+      ]
+    }
+  }
+}

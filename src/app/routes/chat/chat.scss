@@ -1,0 +1,93 @@
+/* chat.component.scss */
+
+// Usamos :host ::ng-deep para "atravessar" o isolamento do Angular 
+// e alcançar as tags HTML que o ngx-markdown vai gerar dinamicamente.
+:host ::ng-deep .markdown-container {
+  
+  /* Parágrafos */
+  p { 
+    margin-bottom: 0.75rem; 
+    line-height: 1.5;
+  }
+  p:last-child { 
+    margin-bottom: 0; 
+  }
+  
+  /* Negrito e Itálico */
+  strong { 
+    font-weight: 600; 
+    color: #334155; /* text-slate-700 (um pouco mais escuro para destacar) */
+  }
+  em { 
+    font-style: italic; 
+  }
+  
+  /* Listas (Bolinhas e Números) */
+  ul { 
+    list-style-type: disc; 
+    padding-left: 1.5rem; 
+    margin-bottom: 0.75rem; 
+  }
+  ol { 
+    list-style-type: decimal; 
+    padding-left: 1.5rem; 
+    margin-bottom: 0.75rem; 
+  }
+  li { 
+    margin-bottom: 0.25rem; 
+  }
+
+  /* Blocos de Código (Ex: quando a IA manda um JSON ou script) */
+  pre {
+    background-color: #e2e8f0; /* bg-slate-200 */
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 0.75rem;
+    border: 1px solid #cbd5e1; /* border-slate-300 */
+  }
+
+  /* Código em linha (Ex: `texto`) */
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.85em;
+    background-color: #e2e8f0; /* bg-slate-200 */
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    color: #0f172a; /* text-slate-900 */
+  }
+
+  /* Previne que blocos de código quebrem o layout do balão */
+  pre code {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+  }
+
+  /* Links (Caso a IA recomende um site) */
+  a { 
+    color: #2563eb; /* text-blue-600 */
+    text-decoration: underline; 
+    text-underline-offset: 2px; 
+    
+    &:hover {
+      color: #1d4ed8; /* text-blue-700 */
+    }
+  }
+
+  /* Citações (Blockquotes) */
+  blockquote {
+    border-left: 4px solid #cbd5e1; /* border-slate-300 */
+    padding-left: 1rem;
+    color: #64748b; /* text-slate-500 */
+    font-style: italic;
+    margin-bottom: 0.75rem;
+  }
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
+}
