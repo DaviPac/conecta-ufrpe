@@ -12,12 +12,7 @@ import { formatarHorarios } from '../../utils/formatters';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { buildTabelaHorarios } from '../../utils/horarios.helper';
-
-interface ChatMessage {
-  role: 'user' | 'model' | 'system';
-  text: string;
-  arquivosAnexos?: { arquivo: Arquivo; turmaNome: string }[];
-}
+import { ChatStateService, ChatMessage } from '../../services/chatService/chat.service';
 
 @Component({
   selector: 'app-chat',
@@ -30,16 +25,13 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   private studyRepo = new StudyRepository();
   private sigaaService = inject(SigaaService);
   private http = inject(HttpClient);
+  public chatState = inject(ChatStateService)
 
   @ViewChild('chatContainer') private chatContainer!: ElementRef;
 
-  // Estados
-  hasApiKey = signal<boolean>(false);
   apiKeyInput = signal<string>('');
   
-  messages = signal<ChatMessage[]>([{ role: 'system', text: 'Olá! Sou seu assistente do SIGAA Lite. Como posso ajudar hoje?' }]);
   userInput = signal<string>('');
-  isGenerating = signal<boolean>(false);
 
   atestadoDados = signal<AtestadoMatricula | null>(null);
 
@@ -68,7 +60,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   private async checkApiKey() {
     const key = await this.studyRepo.getApiKey();
     if (key) {
-      this.hasApiKey.set(true);
+      this.chatState.hasApiKey.set(true);
       this.initGenerativeAI(key);
     }
   }
@@ -81,10 +73,13 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   }
 
   private initGenerativeAI(apiKey: string) {
-    this.genAI = new GoogleGenerativeAI(apiKey);
+    if (this.chatState.chatSession) {
+      return; 
+    }
+    this.chatState.genAI = new GoogleGenerativeAI(apiKey);
     
     // Configuração do modelo e das ferramentas (Function Calling)
-    const model = this.genAI.getGenerativeModel({
+    const model = this.chatState.genAI.getGenerativeModel({
       model: "gemini-2.5-flash", // Use a versão mais recente/rápida para chats
       systemInstruction: `Você é o assistente virtual de alunos do SIGAA Lite. 
       Siga estas regras estritamente:
@@ -192,48 +187,47 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       }]
     });
 
-    this.chatSession = model.startChat({
+    this.chatState.chatSession = model.startChat({
       history: [],
     });
   }
 
   async sendMessage() {
     const text = this.userInput().trim();
-    if (!text || this.isGenerating()) return;
+    if (!text || this.chatState.isGenerating()) return;
 
-    this.messages.update(m => [...m, { role: 'user', text }]);
-    this.userInput.set('');
-    this.isGenerating.set(true);
+    this.chatState.addMessage({ role: 'user', text });
+    this.apiKeyInput.set(''); // limpa input
+    this.chatState.isGenerating.set(true);
 
-    this.messages.update(m => [...m, { role: 'model', text: '' }]);
+    this.chatState.addMessage({ role: 'model', text: '' });
 
     try {
       const dataAtual = new Date().toLocaleDateString('pt-BR');
       const horaAtual = new Date().toLocaleTimeString('pt-BR');
       const promptEnriquecido = `[Data e hora atual do sistema: ${dataAtual} ${horaAtual}]\n${text}`;
-      const result = await this.chatSession.sendMessageStream(promptEnriquecido);
+      const result = await this.chatState.chatSession!.sendMessageStream(promptEnriquecido);
       await this.processStream(result);
     } catch (error) {
       console.error("Erro no chat:", error);
-      this.updateLastMessage("\n*[Erro de conexão com a IA]*");
+      this.chatState.appendTextoUltimaMensagem("\n*[Erro de conexão com a IA]*");
     } finally {
-      this.isGenerating.set(false);
+      this.chatState.isGenerating.set(false);
     }
+    this.userInput.set('');
   }
 
   private async processStream(result: any) {
     for await (const chunk of result.stream) {
-      // 1. Verifica se a IA decidiu chamar uma função
       const functionCalls = chunk.functionCalls();
       if (functionCalls && functionCalls.length > 0) {
         await this.handleFunctionCall(functionCalls[0]);
-        return; // Interrompe este fluxo pois a função retomará a conversa
+        return; 
       }
 
-      // 2. Se for texto normal, adiciona via Stream
       const chunkText = chunk.text();
       if (chunkText) {
-        this.updateLastMessage(chunkText);
+        this.chatState.appendTextoUltimaMensagem(chunkText);
       }
     }
   }
@@ -324,11 +318,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         };
 
         if (arquivosEncontrados.length > 0) {
-          this.messages.update(m => {
-            const newMessages = [...m];
-            newMessages[newMessages.length - 1].arquivosAnexos = arquivosEncontrados;
-            return newMessages;
-          });
+          this.chatState.addArquivos(arquivosEncontrados)
         }
         break;
       case "baixar_calendario":
@@ -367,7 +357,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     }
 
     // Envia a resposta da função de volta para a IA para ela formular a resposta final
-    const result = await this.chatSession.sendMessageStream([{
+    const result = await this.chatState.chatSession!.sendMessageStream([{
       functionResponse: {
         name: call.name,
         response: functionResponseData
@@ -375,31 +365,13 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     }]);
 
     // Limpa o aviso de "buscando" e processa a resposta final
-    this.messages.update(m => {
-      const newMessages = [...m];
-      const lastIndex = newMessages.length - 1;
-      newMessages[lastIndex].text = newMessages[lastIndex].text.replace("\n*[Buscando dados no sistema...]*\n", "");
-      return newMessages;
-    });
+    this.chatState.removeBuscando();
     await this.processStream(result);
   }
 
   // Helpers visuais
   private updateLastMessage(text: string) {
-    this.messages.update(m => {
-      const newMessages = [...m];
-      const lastIndex = newMessages.length - 1;
-      newMessages[lastIndex].text += text;
-      return newMessages;
-    });
-  }
-
-  private replaceLastMessage(text: string) {
-    this.messages.update(m => {
-      const newMessages = [...m];
-      newMessages[newMessages.length - 1].text = text;
-      return newMessages;
-    });
+    this.chatState.appendTextoUltimaMensagem(text);
   }
 
   private scrollToBottom() {
@@ -500,5 +472,10 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         return newSet;
       });
     }
+  }
+
+  async limparConversa() {
+    this.chatState.limparHistorico();
+    await this.checkApiKey(); 
   }
 }

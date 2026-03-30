@@ -1,6 +1,6 @@
 <div class="max-w-3xl w-full mx-auto p-4 flex flex-col flex-1 h-full bg-slate-50/50">
   
-  @if (!hasApiKey()) {
+  @if (!chatState.hasApiKey()) {
     <div class="flex flex-col items-center justify-center flex-1 space-y-4">
       <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 max-w-lg w-full space-y-6">
         
@@ -68,9 +68,21 @@
       </div>
     </div>
   } @else {
+
+    <div class="flex justify-end mt-3 w-full">
+      <button 
+        (click)="chatState.limparHistorico()"
+        [disabled]="chatState.isGenerating() || chatState.messages().length === 0"
+        class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed border border-red-200 rounded-xl transition-colors shadow-sm"
+        title="Limpar histórico do chat"
+      >
+        <i class="pi pi-trash"></i>
+        Limpar Chat
+      </button>
+    </div>
     
-    <div class="h-[70dvh] overflow-y-auto mb-4 mt-4 bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-4" #chatContainer>
-      @for (msg of messages(); track $index) {
+    <div class="h-[60dvh] overflow-y-auto mb-4 mt-4 bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-4" #chatContainer>
+      @for (msg of chatState.messages(); track $index) {
         <div [class]="'flex ' + (msg.role === 'user' ? 'justify-end' : 'justify-start')">
             <div 
             [class]="'max-w-[85%] break-words rounded-2xl px-4 py-3 text-sm shadow-sm ' + 
@@ -109,7 +121,7 @@
         </div>
 }
       
-      @if (isGenerating()) {
+      @if (chatState.isGenerating()) {
         <div class="flex justify-start">
           <div class="bg-slate-100 border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1 shadow-sm">
             <span class="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span>
@@ -126,13 +138,13 @@
         [ngModel]="userInput()" 
         (ngModelChange)="userInput.set($event)"
         (keydown.enter)="sendMessage()"
-        [disabled]="isGenerating()"
+        [disabled]="chatState.isGenerating()"
         placeholder="Pergunte sobre suas aulas, datas ou notas..."
         class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-300 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all disabled:opacity-50 disabled:bg-slate-50"
       >
       <button 
         (click)="sendMessage()"
-        [disabled]="isGenerating() || !userInput().trim()"
+        [disabled]="chatState.isGenerating() || !userInput().trim()"
         class="absolute right-3 top-1/2 -translate-y-[70%] bg-blue-600 text-white w-10 h-10 flex items-center justify-center rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 transition-colors"
       >
         <i class="pi pi-send text-sm"></i>
