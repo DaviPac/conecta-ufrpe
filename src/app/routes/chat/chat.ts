@@ -8,6 +8,7 @@ import { StudyRepository } from '../turma-detail/study.repository';
 import { MarkdownModule } from 'ngx-markdown';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { CronogramaItem, Turma, TurmaInfo } from '../../models/sigaa.models';
+import { formatarHorarios } from '../../utils/formatters';
 
 interface ChatMessage {
   role: 'user' | 'model' | 'system';
@@ -251,6 +252,6 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
   private parseTurmaData(turma: Turma) {
     const { info, ...rest } = turma;
-    return { ...rest, cronograma: this.parseCronograma(rest.cronograma) };
+    return { ...rest, cronograma: this.parseCronograma(rest.cronograma), horarios: formatarHorarios(rest.horarios) };
   }
 }
