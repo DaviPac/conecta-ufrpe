@@ -390,9 +390,13 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   });
 }
 
+  private parseFaltas(faltas: number): string {
+    return faltas === -2 ? "Carregando" : faltas === -1 ? "Não lançada" : faltas.toString();
+  }
+
   private parseTurmaData(turma: Turma) {
     const { info, ...rest } = turma;
-    return { ...rest, cronograma: this.parseCronograma(rest.cronograma), horarios: formatarHorarios(rest.horarios) };
+    return { ...rest, cronograma: this.parseCronograma(rest.cronograma), horarios: formatarHorarios(rest.horarios), faltas: this.parseFaltas(rest.faltas) };
   }
 
   private baixarBlobNoNavegador(blob: Blob, nomeArquivo: string) {
