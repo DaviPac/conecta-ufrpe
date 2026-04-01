@@ -243,20 +243,6 @@
         }
 
         @if (linkedClassroomId() && !isLoadingClassroom() && !classroomError()) {
-          
-          @if (classroomTopics().length > 0) {
-            <div class="mb-6">
-              <h3 class="text-[10px] font-semibold tracking-wide text-slate-400 uppercase mb-3">Tópicos da Disciplina</h3>
-              <div class="flex flex-wrap gap-2">
-                @for (topic of classroomTopics(); track topic.topicId) {
-                  <span class="px-2.5 py-1 bg-slate-100 text-slate-700 text-xs rounded-md border border-slate-200 font-medium">
-                    {{ topic.name }}
-                  </span>
-                }
-              </div>
-            </div>
-          }
-
           <div class="mb-6">
             <h3 class="text-[10px] font-semibold tracking-wide text-slate-400 uppercase mb-3">Atividades</h3>
             @if (classroomAssignments().length > 0) {
@@ -270,7 +256,7 @@
                           {{ assignment.title }}
                         </h4>
                         @if (assignment.description) {
-                          <p class="text-xs text-slate-500 line-clamp-2 mt-1">{{ assignment.description }}</p>
+                          <p class="text-xm text-slate-500 line-clamp-2 mt-1 break-words" [innerHTML]="assignment.description | linkify"></p>
                         }
                       </div>
                       @if (assignment.due_date) {
@@ -296,7 +282,7 @@
               <div class="space-y-3">
                 @for (announcement of classroomAnnouncements(); track announcement.id) {
                   <div class="bg-blue-50/40 border border-blue-100 rounded-lg p-4">
-                    <p class="text-sm text-slate-700 whitespace-pre-wrap mb-3">{{ announcement.text }}</p>
+                    <p class="text-sm text-slate-700 whitespace-pre-wrap mb-3 break-words" [innerHTML]="announcement.text | linkify"></p>
                     <div class="flex items-center justify-between pt-3 border-t border-blue-100/50">
                       <span class="text-[10px] text-slate-400 font-medium">
                         <i class="pi pi-clock mr-1"></i> {{ announcement.creationTime | date:'short' }}
