@@ -20,6 +20,7 @@ const CACHE_KEY = 'sigaa_data_cache';
 interface DataCache {
   turmas: Turma[];
   nome: string;
+  matricula: string | null;
   avaliacoes: Avaliacao[];
   cargaHoraria: CargaHoraria | null;
   indices: IndicesAcademicos | null;
@@ -34,6 +35,7 @@ export class SigaaService {
   private domain = 'https://sigaa-ufrpe-api-production.up.railway.app';
   private jsessionid: WritableSignal<string> = signal('');
   private viewState: WritableSignal<string> = signal('');
+  
 
   /** Visível ao template para exibir indicador de reautenticação */
   isReauthenticating: WritableSignal<boolean> = signal(false);
@@ -47,6 +49,7 @@ export class SigaaService {
   private injector = inject(Injector);
   private router: Router = inject(Router);
 
+  matricula: WritableSignal<string | null> = signal(null);
   turmas: WritableSignal<Turma[]> = signal([]);
   freshTurmas: WritableSignal<Turma[]> = signal([]);
   nome: WritableSignal<string> = signal('');
@@ -94,6 +97,7 @@ export class SigaaService {
     const cache: DataCache = {
       turmas: this.turmas(),
       nome: this.nome(),
+      matricula: this.matricula(),
       avaliacoes: this.avaliacoes(),
       cargaHoraria: this.cargaHoraria(),
       indices: this.indices(),
@@ -114,6 +118,7 @@ export class SigaaService {
       const cache: DataCache = JSON.parse(raw);
       if (cache.turmas?.length) this.turmas.set(cache.turmas);
       if (cache.nome) this.nome.set(cache.nome);
+      if (cache.matricula) this.matricula.set(cache.matricula);
       if (cache.avaliacoes?.length) this.avaliacoes.set(cache.avaliacoes);
       if (cache.cargaHoraria) this.cargaHoraria.set(cache.cargaHoraria);
       if (cache.indices) this.indices.set(cache.indices);
@@ -312,6 +317,7 @@ export class SigaaService {
       this.jsessionid.set(mainDataRes.jsessionid);
       localStorage.setItem('jsessionid', mainDataRes.jsessionid);
       this.nome.set(mainDataRes.nome);
+      this.matricula.set(mainDataRes.matricula);
 
       const cached = this.turmas();
       this.freshTurmas.set(mainDataRes.turmas);

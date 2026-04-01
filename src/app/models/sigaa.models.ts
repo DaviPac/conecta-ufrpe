@@ -76,6 +76,7 @@ export interface MainDataResponse {
   turmas: Turma[];
   avaliacoes: Avaliacao[];
   nome: string;
+  matricula: string;
   indices: IndicesAcademicos;
   cargaHoraria: CargaHoraria;
   jsessionid: string;
