@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ClassroomAnnouncement, ClassroomAssignment, ClassroomCourse, ClassroomSubmission, ClassroomTopic } from './classroom.models';
+import { ClassroomAnnouncement, ClassroomAssignment, ClassroomCourse, ClassroomMaterial, ClassroomSubmission, ClassroomTopic } from './classroom.models';
 
 @Injectable({
   providedIn: 'root'
@@ -72,5 +72,13 @@ export class ClassroomService {
       course_id: courseId 
     };
     return this.http.post<ClassroomTopic[]>(`${this.apiUrl}/topics`, body);
+  }
+
+  getMaterials(matricula: string, courseId: string): Observable<ClassroomMaterial[]> {
+    const body = { 
+      matricula: matricula, 
+      course_id: courseId 
+    };
+    return this.http.post<ClassroomMaterial[]>(`${this.apiUrl}/materials`, body);
   }
 }

@@ -8,7 +8,7 @@ import { StudyAssistantComponent } from './study-assistant.component';
 import { Arquivo } from '../../models/sigaa.models';
 import { TurmaLocalService } from './turma-local.service';
 import { ClassroomService } from '../../services/classroomService/classroom.service';
-import { ClassroomCourse, ClassroomAssignment, ClassroomAnnouncement, ClassroomTopic } from '../../services/classroomService/classroom.models';
+import { ClassroomCourse, ClassroomAssignment, ClassroomAnnouncement, ClassroomTopic, ClassroomMaterial } from '../../services/classroomService/classroom.models';
 
 @Component({
   selector: 'app-turma-detalhes',
@@ -39,6 +39,7 @@ export class TurmaDetail implements OnInit {
   classroomAssignments = signal<ClassroomAssignment[]>([]); // Atividades da turma
   classroomAnnouncements = signal<ClassroomAnnouncement[]>([]); // Anúncios da turma
   classroomTopics = signal<ClassroomTopic[]>([]); // Tópicos da turma
+  classroomMaterials = signal<ClassroomMaterial[]>([]); // Materiais da turma
   isLinkingClassroom = signal(false); // Controle de UI para o modo de vínculo
   isLoadingClassroom = signal(false);
   classroomError = signal<string | null>(null);
@@ -121,6 +122,7 @@ export class TurmaDetail implements OnInit {
       this.carregarAtividadesClassroom(savedClassroomId);
       this.carregarAnunciosClassroom(savedClassroomId);
       this.carregarTopicosClassroom(savedClassroomId);
+      this.carregarMateriaisClassroom(savedClassroomId);
     }
   }
 
@@ -166,6 +168,7 @@ export class TurmaDetail implements OnInit {
     this.carregarAtividadesClassroom(classroomId);
     this.carregarAnunciosClassroom(classroomId);
     this.carregarTopicosClassroom(classroomId);
+    this.carregarMateriaisClassroom(classroomId);
   }
 
   // 4. Remove o vínculo
@@ -222,6 +225,19 @@ export class TurmaDetail implements OnInit {
       error: (err) => {
         console.error(err);
         this.showToast('Erro ao carregar tópicos do Google.', 'error');
+      }
+    });
+  }
+
+  carregarMateriaisClassroom(classroomId: string) {
+    const mat = this.matricula();
+    if (!mat) return;
+    
+    this.classroomService.getMaterials(mat, classroomId).subscribe({
+      next: (materials) => this.classroomMaterials.set(materials),
+      error: (err) => {
+        console.error(err);
+        this.showToast('Erro ao carregar materiais do Google.', 'error');
       }
     });
   }

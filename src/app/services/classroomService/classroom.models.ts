@@ -17,9 +17,9 @@ export interface AuthUrlResponse {
 
 export interface ClassroomSubmission {
   id: string;
+  courseWorkId: string;
   state: string;
-  assignedGrade?: number;
-  alternateLink?: string;
+  grade?: number;
 }
 
 export interface ClassroomAnnouncement {
@@ -32,4 +32,12 @@ export interface ClassroomAnnouncement {
 export interface ClassroomTopic {
   topicId: string;
   name: string;
+}
+
+export interface ClassroomMaterial {
+    id: string;
+    title: string;
+    description: string;
+    alternateLink: string;
+    creationTime: string;
 }
