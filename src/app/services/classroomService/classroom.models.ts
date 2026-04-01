@@ -8,6 +8,7 @@ export interface ClassroomAssignment {
   title: string;
   description?: string;
   due_date?: string;
+  alternateLink?: string;
 }
 
 export interface AuthUrlResponse {

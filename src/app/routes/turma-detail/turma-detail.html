@@ -248,11 +248,12 @@
             @if (classroomAssignments().length > 0) {
               <div class="space-y-3">
                 @for (assignment of classroomAssignments(); track assignment.title) {
-                  <div class="group border border-slate-200 rounded-lg p-4 hover:border-green-300 hover:shadow-sm transition-all bg-white relative">
+                  <div class="group border border-slate-200 rounded-lg p-4 hover:border-green-300 hover:shadow-sm transition-all bg-white flex flex-col gap-3">
+                    
                     <div class="flex justify-between items-start gap-4">
                       <div class="flex-1 min-w-0">
                         <h4 class="text-sm font-semibold text-slate-800 mb-1 flex items-center">
-                          <i class="pi pi-file-edit text-green-600 mr-2 text-xs flex-shrink-0"></i>
+                          <i class="pi pi-file-edit text-green-600 mr-2 text-xs flex-shrink-0"></i> 
                           <span class="truncate">{{ assignment.title }}</span>
                         </h4>
                         @if (assignment.description) {
@@ -260,11 +261,20 @@
                         }
                       </div>
                       @if (assignment.due_date) {
-                        <span class="text-[10px] font-medium px-2 py-1 rounded bg-slate-100 text-slate-600 whitespace-nowrap">
+                        <span class="text-[10px] font-medium px-2 py-1 rounded bg-slate-100 text-slate-600 whitespace-nowrap flex-shrink-0">
                           <i class="pi pi-calendar mr-1"></i> Entrega: {{ assignment.due_date }}
                         </span>
                       }
                     </div>
+
+                    @if (assignment.alternateLink) {
+                      <div class="flex items-center justify-end pt-2 border-t border-slate-100">
+                        <a [href]="assignment.alternateLink" target="_blank" class="text-green-600 hover:text-green-800 text-[11px] font-medium hover:underline flex items-center gap-1 transition-colors">
+                          Abrir Atividade <i class="pi pi-external-link text-[10px]"></i>
+                        </a>
+                      </div>
+                    }
+
                   </div>
                 }
               </div>
