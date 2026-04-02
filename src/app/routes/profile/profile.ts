@@ -3,7 +3,7 @@ import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { AtestadoMatricula } from '../../models/sigaa.models';
+import { AtestadoMatricula, ComponenteCurricular, EstruturaCurricular } from '../../models/sigaa.models';
 import { buildTabelaHorarios } from '../../utils/horarios.helper';
 import { ClickOutsideDirective } from '../../click-outside';
 
@@ -24,6 +24,69 @@ export class Profile {
   isDownloadingHistorico = signal(false);
   isDownloadingVinculo = signal(false);
   showIndicesDetails = signal(false);
+
+
+  showMatrizModal = signal(false);
+  filtroPeriodo = signal<string | null>(null);
+  isCarregandoMatriz = signal(false);
+  estruturaCurricular = signal<EstruturaCurricular | null>(null);
+  componentesAgrupados = computed(() => {
+    const estrutura = this.estruturaCurricular();
+    if (!estrutura) return [];
+
+    const grupos = estrutura.componentes.reduce((acc, comp) => {
+      const nivel = comp.nivel;
+      if (!acc[nivel]) {
+        acc[nivel] = [];
+      }
+      acc[nivel].push(comp);
+      return acc;
+    }, {} as Record<string, ComponenteCurricular[]>);
+
+    // Retorna um array ordenado (semestres numéricos primeiro, textos depois)
+    return Object.keys(grupos)
+      .sort((a, b) => {
+        const numA = parseInt(a);
+        const numB = parseInt(b);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        if (!isNaN(numA)) return -1;
+        if (!isNaN(numB)) return 1;
+        return a.localeCompare(b);
+      })
+      .map(key => ({
+        nivel: key,
+        titulo: this.formatarNivel(key),
+        disciplinas: grupos[key]
+      }));
+  });
+
+  async abrirMatrizCurricular() {
+    if (this.estruturaCurricular()) {
+      this.showMatrizModal.set(true);
+      return;
+    }
+
+    try {
+      this.isCarregandoMatriz.set(true);
+      // Substitua pela chamada real do seu serviço
+      const matriz = await this.sigaaService.getMatrizCurricular(); 
+      this.estruturaCurricular.set(matriz);
+      this.showMatrizModal.set(true);
+    } catch (error) {
+      console.error('Erro ao buscar matriz', error);
+      // Aqui você pode disparar um toast de erro
+    } finally {
+      this.isCarregandoMatriz.set(false);
+    }
+  }
+
+  formatarNivel(nivel: string): string {
+    if (!isNaN(parseInt(nivel))) {
+      return `${nivel}º Período`;
+    }
+    return nivel.charAt(0).toUpperCase() + nivel.slice(1);
+  }
+
 
   toastMessage = signal<{ text: string; type: 'success' | 'error' } | null>(null);
   // -------------------------------

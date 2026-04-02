@@ -9,6 +9,8 @@ import {
   TurmaDetailResponse,
   AtestadoMatricula,
   Arquivo,
+  EstruturaCurricular,
+  MatrizCurricularResponse,
 } from '../../models/sigaa.models';
 import { Router } from '@angular/router';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -411,49 +413,6 @@ export class SigaaService {
     return data.url as string;
   }
 
-  async getTurmaDetail(turma: Turma) {
-    if (!this.jsessionid().length || !this.viewState().length)
-      throw new Error('jsessionid ou viewstate inválidos');
-
-    const res = await this.fetchWithAuth(`${this.domain}/turma`, {
-      method: 'POST',
-      body: JSON.stringify({ turma, viewState: this.viewState() }),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Erro de conexão ao buscar turma');
-    }
-
-    const data = await res.json();
-
-    const turmaData = data as TurmaDetailResponse;
-    this.turmas.update((prev) =>
-      prev.map((t) =>
-        t.nome === turma.nome ? { ...turmaData.turma, local: t.local, notas: t.notas, isLoaded: true } : t,
-      ),
-    );
-
-    this.jsessionid.set(turmaData.jsessionid);
-    localStorage.setItem('jsessionid', turmaData.jsessionid);
-    this.viewState.set(turmaData.viewState);
-    localStorage.setItem('viewState', turmaData.viewState);
-  }
-
-  async fetchTurmas() {
-    await this.fetchNotas();
-    for (const turma of this.freshTurmas()) {
-      await this.getTurmaDetail(turma);
-      // Salva cache incrementalmente a cada turma carregada
-      this.saveToCache();
-    }
-    this.fullyLoaded.set(true);
-    this.isFetchingData.set(false);
-    // Cache final completo
-    this.saveToCache();
-    console.log('fetch turmas:', this.turmas());
-  }
-
   async getAtestadoDados(): Promise<AtestadoMatricula> {
     const res = await this.fetchWithAuth(`${this.domain}/matricula`, {
       method: 'POST',
@@ -657,5 +616,24 @@ export class SigaaService {
     } finally {
       this.hasOnlineData.set(true);
     }
+  }
+
+  async getMatrizCurricular(): Promise<EstruturaCurricular> {
+    if (!this.jsessionid().length || !this.viewState().length)
+      throw new Error('jsessionid ou viewstate inválidos');
+
+    const res = await this.fetchWithAuth(`${this.domain}/curriculo`);
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Erro ao buscar matriz curricular');
+    }
+
+    const data = await res.json() as MatrizCurricularResponse;
+    this.jsessionid.set(data.jsessionid);
+    localStorage.setItem('jsessionid', data.jsessionid);
+    this.viewState.set(data.viewState);
+    localStorage.setItem('viewState', data.viewState);
+    return data.estruturaCurricular;
   }
 }

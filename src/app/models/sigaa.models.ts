@@ -115,3 +115,31 @@ export interface AtestadoMatricula {
   turmas: TurmaMatricula[];
   codigoVerificacao: string;
 }
+
+export interface ComponenteCurricular {
+	codigo: string;
+  nome: string;
+  cargaHoraria: string;
+  tipo: string;  // Obrigatória, Optativa, Complementar
+  nivel: string; // Ex: "1", "2", "optativas", "complementares"
+  concluida?: boolean;
+}
+
+export interface EstruturaCurricular {
+	codigo: string;
+	matrizCurricular: string;
+	periodoVigor: string;
+	cargaHorariaTotalMin: string;
+	cargaHorariaOptativaMin: string;
+	cargaHorariaObrigatoria: string;
+	prazoMinimoSemestres: string;
+	prazoMedioSemestres: string;
+	prazoMaximoSemestres: string;
+	componentes: ComponenteCurricular[];
+}
+
+export interface MatrizCurricularResponse {
+  estruturaCurricular: EstruturaCurricular;
+  jsessionid: string;
+  viewState: string;
+}

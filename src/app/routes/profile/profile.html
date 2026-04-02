@@ -25,6 +25,18 @@
             <i class="pi pi-chart-pie text-blue-900"></i> Integralização Curricular
           </h2>
 
+          <button
+            (click)="abrirMatrizCurricular()"
+            [disabled]="isCarregandoMatriz()"
+            class="text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 py-1.5 px-4 rounded-full transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:opacity-50"
+          >
+            @if (isCarregandoMatriz()) {
+              <i class="pi pi-spinner pi-spin"></i> Carregando...
+            } @else {
+              <i class="pi pi-sitemap"></i> Ver Matriz Curricular
+            }
+          </button>
+
           <div class="mb-10">
             <div class="mb-3 flex items-end justify-between">
               <span class="text-4xl font-light text-slate-900">
@@ -625,5 +637,140 @@
       </div>
     </div>
     <!-- /corpo -->
+  </div>
+}
+
+@if (showMatrizModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-6 bg-slate-900/40 backdrop-blur-sm transition-opacity animate-fade-in">
+    <div class="bg-white w-full max-w-5xl h-full sm:max-h-[90vh] sm:h-auto sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+
+      <!-- Header -->
+      <div class="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50/50 shrink-0">
+        <div>
+          <h3 class="text-base sm:text-2xl font-light text-slate-800 leading-tight">
+            {{ estruturaCurricular()?.matrizCurricular }}
+          </h3>
+          <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-xs sm:text-sm text-slate-500">
+            <span class="flex items-center gap-1"><i class="pi pi-calendar text-xs"></i> {{ estruturaCurricular()?.periodoVigor }}</span>
+            <span class="flex items-center gap-1"><i class="pi pi-clock text-xs"></i> {{ estruturaCurricular()?.cargaHorariaTotalMin }}</span>
+            <span class="flex items-center gap-1"><i class="pi pi-hourglass text-xs"></i> {{ estruturaCurricular()?.prazoMedioSemestres }} sem.</span>
+          </div>
+        </div>
+        <button
+          (click)="showMatrizModal.set(false)"
+          class="text-slate-400 hover:text-red-500 p-2 rounded-full hover:bg-slate-100 transition-colors focus:outline-none shrink-0 ml-2"
+        >
+          <i class="pi pi-times text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Filtro por período — só aparece no mobile -->
+      <div class="sm:hidden overflow-x-auto shrink-0 border-b border-slate-100 bg-white">
+        <div class="flex gap-1.5 p-3 w-max">
+          <button
+            (click)="filtroPeriodo.set(null)"
+            [class.bg-blue-900]="filtroPeriodo() === null"
+            [class.text-white]="filtroPeriodo() === null"
+            [class.bg-slate-100]="filtroPeriodo() !== null"
+            [class.text-slate-600]="filtroPeriodo() !== null"
+            class="text-xs font-medium px-3 py-1.5 rounded-full transition-colors whitespace-nowrap"
+          >
+            Todos
+          </button>
+          @for (grupo of componentesAgrupados(); track grupo.nivel) {
+            <button
+              (click)="filtroPeriodo.set(grupo.nivel)"
+              [class.bg-blue-900]="filtroPeriodo() === grupo.nivel"
+              [class.text-white]="filtroPeriodo() === grupo.nivel"
+              [class.bg-slate-100]="filtroPeriodo() !== grupo.nivel"
+              [class.text-slate-600]="filtroPeriodo() !== grupo.nivel"
+              class="text-xs font-medium px-3 py-1.5 rounded-full transition-colors whitespace-nowrap"
+            >
+              {{ grupo.titulo }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Conteúdo -->
+      <div class="overflow-y-auto flex-1 bg-slate-50">
+
+        <!-- Mobile: lista compacta -->
+        <div class="sm:hidden">
+          @for (grupo of componentesAgrupados(); track grupo.nivel) {
+            @if (filtroPeriodo() === null || filtroPeriodo() === grupo.nivel) {
+              <div class="mb-1">
+                <div class="px-4 py-2 bg-slate-100 sticky top-0 z-10 flex items-center gap-2">
+                  <span class="bg-blue-900 w-1.5 h-1.5 rounded-full block"></span>
+                  <span class="text-xs font-bold text-slate-600 uppercase tracking-wide">{{ grupo.titulo }}</span>
+                  <span class="ml-auto text-xs text-slate-400">{{ grupo.disciplinas.length }} disc.</span>
+                </div>
+                <div class="divide-y divide-slate-100 bg-white">
+                  @for (comp of grupo.disciplinas; track comp.codigo) {
+                    <div class="flex items-center gap-3 px-4 py-2.5">
+                      <span class="text-xs font-mono text-slate-400 w-16 shrink-0">{{ comp.codigo }}</span>
+                      <span class="text-sm text-slate-800 flex-1 leading-tight">{{ comp.nome }}</span>
+                      <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-xs font-semibold text-slate-500">{{ comp.cargaHoraria }}</span>
+                        <span
+                          class="text-xs w-1.5 h-1.5 rounded-full"
+                          [class.bg-blue-500]="comp.tipo === 'Obrigatória'"
+                          [class.bg-emerald-500]="comp.tipo === 'Optativa'"
+                          [class.bg-purple-500]="comp.tipo === 'Complementar'"
+                          [title]="comp.tipo"
+                        ></span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          }
+          <!-- Legenda de cores mobile -->
+          <div class="flex gap-4 px-4 py-3 text-xs text-slate-500">
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500 block"></span>Obrigatória</span>
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 block"></span>Optativa</span>
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-500 block"></span>Complementar</span>
+          </div>
+        </div>
+
+        <!-- Desktop: grid de cards (original) -->
+        <div class="hidden sm:block p-6">
+          @for (grupo of componentesAgrupados(); track grupo.nivel) {
+            <div class="mb-10 last:mb-0">
+              <h4 class="text-sm font-bold text-slate-700 uppercase mb-4 border-b border-slate-200 pb-2 flex items-center gap-2">
+                <span class="bg-blue-900 w-2 h-2 rounded-full block"></span>
+                {{ grupo.titulo }}
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                @for (comp of grupo.disciplinas; track comp.codigo) {
+                  <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all flex flex-col justify-between group">
+                    <div>
+                      <span class="text-xs font-mono text-slate-400 mb-1 block group-hover:text-blue-500 transition-colors">{{ comp.codigo }}</span>
+                      <span class="text-sm font-medium text-slate-800 block leading-tight">{{ comp.nome }}</span>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center border-t border-slate-50 pt-3">
+                      <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md">{{ comp.cargaHoraria }}</span>
+                      <span
+                        class="text-xs font-medium px-2 py-1 rounded-md"
+                        [class.bg-blue-50]="comp.tipo === 'Obrigatória'"
+                        [class.text-blue-700]="comp.tipo === 'Obrigatória'"
+                        [class.bg-emerald-50]="comp.tipo === 'Optativa'"
+                        [class.text-emerald-700]="comp.tipo === 'Optativa'"
+                        [class.bg-purple-50]="comp.tipo === 'Complementar'"
+                        [class.text-purple-700]="comp.tipo === 'Complementar'"
+                      >
+                        {{ comp.tipo }}
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+      </div>
+    </div>
   </div>
 }
