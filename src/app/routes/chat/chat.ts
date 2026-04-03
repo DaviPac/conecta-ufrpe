@@ -1,18 +1,23 @@
-import { Component, OnInit, inject, signal, ViewChild, ElementRef, AfterViewChecked, computed } from '@angular/core';
+import {
+  Component, OnInit, inject, signal, ViewChild,
+  ElementRef, AfterViewChecked, computed
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { GoogleGenerativeAI, ChatSession, FunctionCall, SchemaType } from '@google/generative-ai';
-// Importe o seu repositório corretamente
-import { StudyRepository } from '../turma-detail/study.repository'; 
+import { StudyRepository } from '../turma-detail/study.repository';
 import { MarkdownModule } from 'ngx-markdown';
 import { SigaaService } from '../../services/sigaaService/sigaa.service';
-import { Arquivo, AtestadoMatricula, CronogramaItem, Turma, TurmaInfo } from '../../models/sigaa.models';
+import { Arquivo, AtestadoMatricula, CronogramaItem, Turma } from '../../models/sigaa.models';
 import { formatarHorarios } from '../../utils/formatters';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { buildTabelaHorarios } from '../../utils/horarios.helper';
-import { ChatStateService, ChatMessage } from '../../services/chatService/chat.service';
+import { ChatStateService } from '../../services/chatService/chat.service';
+import { ClassroomService } from '../../services/classroomService/classroom.service';
+import { TurmaLocalService } from '../turma-detail/turma-local.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-chat',
@@ -22,40 +27,35 @@ import { ChatStateService, ChatMessage } from '../../services/chatService/chat.s
   styleUrls: ['./chat.scss']
 })
 export class ChatComponent implements OnInit, AfterViewChecked {
-  private studyRepo = new StudyRepository();
-  private sigaaService = inject(SigaaService);
-  private http = inject(HttpClient);
-  public chatState = inject(ChatStateService)
+  private studyRepo     = new StudyRepository();
+  private sigaaService  = inject(SigaaService);
+  private classroomService = inject(ClassroomService);
+  private turmaLocal    = inject(TurmaLocalService);
+  private http          = inject(HttpClient);
+  public  chatState     = inject(ChatStateService);
 
   @ViewChild('chatContainer') private chatContainer!: ElementRef;
 
-  apiKeyInput = signal<string>('');
-  
-  userInput = signal<string>('');
-
-  atestadoDados = signal<AtestadoMatricula | null>(null);
-
+  apiKeyInput     = signal<string>('');
+  userInput       = signal<string>('');
+  atestadoDados   = signal<AtestadoMatricula | null>(null);
   downloadingFiles = signal<Set<string>>(new Set<string>());
 
   tabelaHorarios = computed(() => buildTabelaHorarios(this.atestadoDados()?.turmas ?? []));
-  dataEmissao = computed(() =>
-    new Date().toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }),
+  dataEmissao    = computed(() =>
+    new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
   );
 
-  private genAI!: GoogleGenerativeAI;
-  private chatSession!: ChatSession;
+  // ─────────────────────────────────────────────
+  // Lifecycle
+  // ─────────────────────────────────────────────
 
-  ngOnInit() {
-    this.checkApiKey();
-  }
+  ngOnInit() { this.checkApiKey(); }
+  ngAfterViewChecked() { this.scrollToBottom(); }
 
-  ngAfterViewChecked() {
-    this.scrollToBottom();
-  }
+  // ─────────────────────────────────────────────
+  // Inicialização
+  // ─────────────────────────────────────────────
 
   private async checkApiKey() {
     const key = await this.studyRepo.getApiKey();
@@ -73,421 +73,467 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   }
 
   private initGenerativeAI(apiKey: string) {
-    if (this.chatState.chatSession) {
-      return; 
-    }
+    if (this.chatState.chatSession) return;
+
     this.chatState.genAI = new GoogleGenerativeAI(apiKey);
-    
-    // Configuração do modelo e das ferramentas (Function Calling)
+
     const model = this.chatState.genAI.getGenerativeModel({
-      model: "gemini-2.5-flash", // Use a versão mais recente/rápida para chats
-      systemInstruction: `Você é o assistente virtual de alunos do SIGAA Lite. Lembre-se de termos como VA = Avaliação, existe 1VA, 2VA, 3VA e final. A 3VA substitui a menor nota entre 1VA e 2VA. A média é 7 para passar direto. Em caso de final, faz-se a média entre a final e a média das 2 maiores VA's. Essa média deve ser maior ou igual a 5.
-      Siga estas regras estritamente:
-      1. Seja direto, conciso e amigável.
-      2. Quando consultar o calendário, responda APENAS o que o usuário perguntou.
-      3. TRADUÇÃO DE TERMOS: Para os alunos, "férias" ou "recesso" também significa o intervalo entre o fim de um semestre letivo e o início do próximo.
-      4. NUNCA liste todos os feriados ou datas do ano, a menos que o usuário peça.
-      5. Se o usuário perguntar sobre "recesso" e não houver essa palavra no calendário, informe de forma resumida apenas as férias discentes mais próximas.
-      6. Você está falando com um DISCENTE. Não forneça informações sobre DOCENTES a menos que seja explicitamente solicitado.
-      7. Use negrito para destacar datas importantes.
-      8. PEDIDOS AMPLOS: Se o usuário pedir 'quero todos os materiais', 'ver todas as notas' ou 'qualquer turma', execute a ferramenta de busca imediatamente.
-      9. FLUXO OBRIGATÓRIO PARA MATERIAIS: Se o usuário pedir materiais, conteúdos ou assuntos de uma prova, você DEVE fazer as chamadas em cadeia:
-      - Passo 1: Use 'consultar_turmas' para obter o cronograma e descobrir os NOMES dos arquivos relevantes.
-      - Passo 2: Imediatamente após receber o resultado, chame a ferramenta 'buscar_arquivos' passando essa lista.
-      - Passo 3 (A Resposta Final): Após usar a ferramenta 'buscar_arquivos', **NÃO repita os nomes dos arquivos no texto da sua resposta**. Diga apenas algo curto e direto como "Aqui estão os materiais que encontrei para você baixar logo abaixo:".
-      - EXCEÇÃO: Você pode e deve retornar links, caso disponíveis, NÃO informe ao usuário para baixar os links, eles não são baixáveis. Apenas retorne a URL e uma breve descrição do que é o arquivo, se possível.
-      10. Para materiais de provas, filtre no cronograma os arquivos disponíveis com datas anteriores à data da prova, depois execute o Passo 2 descrito acima com esses arquivos.
-      11. Ao retornar uma URL, SEMPRE descreva o que sabe sobre o conteúdo do link.`,
+      model: 'gemini-2.5-flash',
+
+      // ── System prompt compacto ──────────────────────────────────────────
+      systemInstruction: `
+Assistente do SIGAA Lite. Regras:
+- VA = Avaliação (1VA, 2VA, 3VA). 3VA substitui a menor entre 1VA/2VA. Média ≥7 passa direto. Final: média(final, maior2VA) ≥5.
+- Seja direto e conciso. Responda APENAS o que foi perguntado.
+- Termos: "férias/recesso" = intervalo entre semestres letivos. Não liste todos os feriados salvo pedido explícito.
+- Você fala com um DISCENTE. Não forneça dados de docentes sem solicitação.
+- Use **negrito** para datas importantes.
+
+FLUXO DE MATERIAIS (obrigatório):
+1. Chame consultar_dados(tipo="turmas") para obter cronogramas e nomes de arquivos.
+2. Chame buscar_arquivos com os nomes encontrados.
+3. Resposta final: apenas "Aqui estão os materiais:". NÃO repita os nomes de arquivos.
+   - Exceção: links disponíveis devem ser retornados com breve descrição (não são baixáveis).
+4. Para materiais de prova, filtre no cronograma arquivos com data anterior à prova.
+
+Ao retornar URL, descreva brevemente o conteúdo do link.
+`.trim(),
+
+      // ── Ferramentas (reduzidas) ──────────────────────────────────────────
       tools: [{
         functionDeclarations: [
+
+          // 1. Calendário
           {
-            name: "consultar_calendario",
-            description: "Consulta o calendário acadêmico da universidade para buscar datas de feriados, recessos e períodos de matrícula.",
+            name: 'consultar_calendario',
+            description: 'Consulta o calendário acadêmico (feriados, recessos, períodos de matrícula).',
             parameters: {
               type: SchemaType.OBJECT,
               properties: {
-                termo_busca: { type: SchemaType.STRING, description: "Opcional. Ex: 'recesso', 'prova final'" }
+                termo_busca: { type: SchemaType.STRING, description: 'Opcional. Ex: "recesso", "prova final"' }
               }
             }
           },
+
+          // 2. Dados do aluno — turmas / notas / índices / matrícula unificados
           {
-            name: "consultar_turmas",
-            description: "Consulta as turmas disponíveis para o aluno e seus cronogramas. IMPORTANTE: Use esta função PRIMEIRO para descobrir os nomes dos arquivos de uma disciplina antes de usar 'buscar_arquivos'.",
+            name: 'consultar_dados',
+            description: `Consulta dados do aluno. Use o campo "tipo" para escolher:
+- "turmas"   → cronogramas, horários, faltas e dados do Google Classroom vinculado.
+- "notas"    → notas das disciplinas.
+- "indices"  → IRA, CR e outros índices.
+- "matricula"→ dados do atestado de matrícula.
+Prefira uma única chamada por assunto.`,
             parameters: {
               type: SchemaType.OBJECT,
               properties: {
-                termo_busca: { type: SchemaType.STRING, description: "Opcional. Ex: 'Cálculo I', 'Física II'" }
-              }
+                tipo: {
+                  type: SchemaType.STRING,
+                  description: '"turmas" | "notas" | "indices" | "matricula"'
+                },
+                termo_busca: { type: SchemaType.STRING, description: 'Opcional. Ex: "Cálculo I"' }
+              },
+              required: ['tipo']
             }
           },
+
+          // 3. Documentos oficiais
           {
-            name: "consultar_notas",
-            description: "Consulta as notas do aluno para as turmas em que está matriculado.",
+            name: 'baixar_documento',
+            description: 'Baixa documentos oficiais do aluno.',
             parameters: {
               type: SchemaType.OBJECT,
               properties: {
-                termo_busca: { type: SchemaType.STRING, description: "Opcional. Ex: 'Cálculo I', 'todas as notas'" }
-              }
-            }
-          },
-          {
-            name: "consultar_indices",
-            description: "Consulta os índices acadêmicos do aluno, como IRA, CR, etc.",
-            parameters: {
-              type: SchemaType.OBJECT,
-              properties: {
-                termo_busca: { type: SchemaType.STRING, description: "Opcional. Ex: 'IRA', 'CR'" }
-              }
-            }
-          },
-          {
-            name: "baixar_documento",
-            description: "Inicia o download de documentos oficiais do aluno. Use isso quando o usuário pedir para baixar ou gerar o histórico, vínculo ou atestado.",
-            parameters: {
-              type: SchemaType.OBJECT,
-              properties: {
-                tipo_documento: { 
-                  type: SchemaType.STRING, 
-                  description: "O tipo de documento. Valores permitidos: 'historico', 'vinculo', 'atestado'" 
+                tipo_documento: {
+                  type: SchemaType.STRING,
+                  description: '"historico" | "vinculo" | "atestado"'
                 }
               },
-              required: ["tipo_documento"]
+              required: ['tipo_documento']
             }
           },
+
+          // 4. Botões de download de materiais
           {
-            name: "consultar_matricula",
-            description: "Consulta dados da matrícula do aluno pelo atestado de matricula.",
+            name: 'buscar_arquivos',
+            description: 'Exibe botões de download de materiais. Sempre use após consultar_dados(tipo="turmas") quando o usuário pedir materiais.',
             parameters: {
               type: SchemaType.OBJECT,
               properties: {
-                termo_busca: { type: SchemaType.STRING, description: "Opcional. Ex: 'dados do atestado', 'matrícula'" }
-              }
-            }
-          },
-          {
-            name: "buscar_arquivos",
-            description: "Gera os botões de download de materiais na tela. Você DEVE acionar esta função sempre que encontrar arquivos no cronograma (após usar consultar_turmas) e o usuário tiver pedido materiais.",
-            parameters: {
-              type: SchemaType.OBJECT,
-              properties: {
-                nomes_arquivo: { 
-                  type: SchemaType.ARRAY, 
-                  description: "Lista exata dos nomes de arquivos obtidos previamente no cronograma da turma.", 
-                  items: { type: SchemaType.STRING } 
-                },
+                nomes_arquivo: {
+                  type: SchemaType.ARRAY,
+                  description: 'Nomes exatos dos arquivos obtidos no cronograma.',
+                  items: { type: SchemaType.STRING }
+                }
               },
-              required: ["nomes_arquivo"]
+              required: ['nomes_arquivo']
             }
           },
+
+          // 5. Download do calendário completo
           {
-            name: "baixar_calendario",
-            description: "Inicia o download do calendário acadêmico completo em PDF. Use isso apenas se o usuário pedir explicitamente para baixar o calendário inteiro."
+            name: 'baixar_calendario',
+            description: 'Baixa o calendário acadêmico completo em PDF. Use APENAS se o usuário pedir o calendário inteiro.'
           }
         ]
       }]
     });
 
-    this.chatState.chatSession = model.startChat({
-      history: [],
-    });
+    this.chatState.chatSession = model.startChat({ history: [] });
   }
+
+  // ─────────────────────────────────────────────
+  // Envio de mensagem
+  // ─────────────────────────────────────────────
 
   async sendMessage() {
     if (!this.chatState.chatSession) {
       await this.checkApiKey();
       const apiKey = await this.studyRepo.getApiKey();
-      if (!apiKey) {
-        return;
-      }
+      if (!apiKey) return;
       this.initGenerativeAI(apiKey);
     }
+
     const text = this.userInput().trim();
     if (!text || this.chatState.isGenerating()) return;
 
     this.chatState.addMessage({ role: 'user', text });
-    this.apiKeyInput.set(''); // limpa input
+    this.apiKeyInput.set('');
     this.chatState.isGenerating.set(true);
-
     this.chatState.addMessage({ role: 'model', text: '' });
 
     try {
       const dataAtual = new Date().toLocaleDateString('pt-BR');
       const horaAtual = new Date().toLocaleTimeString('pt-BR');
-      const promptEnriquecido = `[Data e hora atual do sistema: ${dataAtual} ${horaAtual}]\n${text}`;
-      const result = await this.chatState.chatSession!.sendMessageStream(promptEnriquecido);
+      const result = await this.chatState.chatSession!.sendMessageStream(
+        `[Data e hora: ${dataAtual} ${horaAtual}]\n${text}`
+      );
       await this.processStream(result);
     } catch (error) {
-      console.error("Erro no chat:", error);
-      this.chatState.appendTextoUltimaMensagem("\n*[Erro de conexão com a IA]*");
+      console.error('Erro no chat:', error);
+      this.chatState.appendTextoUltimaMensagem('\n*[Erro de conexão com a IA]*');
     } finally {
       this.chatState.isGenerating.set(false);
     }
     this.userInput.set('');
   }
 
+  // ─────────────────────────────────────────────
+  // Processamento de stream / function calls
+  // ─────────────────────────────────────────────
+
   private async processStream(result: any) {
     for await (const chunk of result.stream) {
-      const functionCalls = chunk.functionCalls();
-      if (functionCalls && functionCalls.length > 0) {
-        await this.handleFunctionCall(functionCalls[0]);
-        return; 
+      const calls = chunk.functionCalls();
+      if (calls?.length) {
+        await this.handleFunctionCall(calls[0]);
+        return;
       }
-
-      const chunkText = chunk.text();
-      if (chunkText) {
-        this.chatState.appendTextoUltimaMensagem(chunkText);
-      }
+      const txt = chunk.text();
+      if (txt) this.chatState.appendTextoUltimaMensagem(txt);
     }
   }
 
   private async handleFunctionCall(call: FunctionCall) {
-    this.updateLastMessage("\n*[Buscando dados no sistema...]*\n");
-    
-    let functionResponseData = {};
+    this.chatState.appendTextoUltimaMensagem('\n*[Buscando dados no sistema...]*\n');
+
+    let response: object = {};
 
     switch (call.name) {
-      case "consultar_calendario":
-        try {
-          // Busca o calendário local
-          const calData = await this.http.get('/calendario.json').toPromise();
-          // AQUI VOCÊ PODE FILTRAR BASEADO EM call.args.termo_busca se quiser
-          functionResponseData = { resultado: calData }; 
-        } catch (e) {
-          functionResponseData = { erro: "Não foi possível carregar o calendário." };
-        }
-        break;
-      case "consultar_turmas":
-        const turmas = this.sigaaService.turmas().map(t => this.parseTurmaData(t));
-        functionResponseData = { resultado: {
-            turmas: turmas,
-            avaliacoes: this.sigaaService.avaliacoes()
-          }
-        };
-        break;
-      case "consultar_notas":
-        const notas = this.sigaaService.turmas().map(t => ({
-          turma: t.nome,
-          notas: t.notas
-        }));
-        functionResponseData = { resultado: notas };
-        break;
-      case "consultar_indices":
-        const indices = this.sigaaService.indices();
-        functionResponseData = { resultado: indices };
-        break;
-      case "baixar_documento":
-        const args = call.args as { tipo_documento: string };
-        const tipo = args.tipo_documento;
-        try {
-          if (tipo === 'historico') {
-            const blob = await this.sigaaService.getHistoricoPdf();
-            this.baixarBlobNoNavegador(blob, 'Historico_Academico.pdf');
-            functionResponseData = { resultado: "Sucesso. Informe ao usuário que o download do histórico foi iniciado." };
-            
-          } else if (tipo === 'vinculo') {
-            const blob = await this.sigaaService.getVinculoPdf();
-            this.baixarBlobNoNavegador(blob, 'Declaracao_Vinculo.pdf');
-            functionResponseData = { resultado: "Sucesso. Informe ao usuário que o download do vínculo foi iniciado." };
-            
-          } else if (tipo === 'atestado') {
-            functionResponseData = await this.lidarComAtestado(); 
-          } else {
-            functionResponseData = { erro: "Tipo de documento inválido." };
-          }
-        } catch (e: any) {
-          functionResponseData = { erro: `Falha ao tentar baixar o documento: ${e.message}` };
-        }
-        break;
-      case "consultar_matricula":
-        try {
-          const dadosMatricula = await this.sigaaService.getAtestadoDados();
-          functionResponseData = { resultado: dadosMatricula };
-        } catch (e) {
-          functionResponseData = { erro: "Não foi possível consultar os dados da matrícula." };
-        }
-        break;
-      case "buscar_arquivos":
-        const argsBusca = call.args as { nomes_arquivo: string[] };
-        const arquivosEncontrados: { arquivo: Arquivo; turmaNome: string }[] = [];
 
-        const turmasParaBuscar = this.sigaaService.turmas();
-        for (const turma of turmasParaBuscar) {
+      // ── Calendário ─────────────────────────────────────────────────────
+      case 'consultar_calendario':
+        try {
+          const cal = await firstValueFrom(this.http.get('/calendario.json'));
+          response = { resultado: cal };
+        } catch {
+          response = { erro: 'Não foi possível carregar o calendário.' };
+        }
+        break;
+
+      // ── Dados unificados do aluno ───────────────────────────────────────
+      case 'consultar_dados':
+        response = await this.handleConsultarDados(call.args as { tipo: string; termo_busca?: string });
+        break;
+
+      // ── Download de documentos ──────────────────────────────────────────
+      case 'baixar_documento':
+        response = await this.handleBaixarDocumento((call.args as { tipo_documento: string }).tipo_documento);
+        break;
+
+      // ── Botões de materiais ─────────────────────────────────────────────
+      case 'buscar_arquivos': {
+        const { nomes_arquivo } = call.args as { nomes_arquivo: string[] };
+        const encontrados: { arquivo: Arquivo; turmaNome: string }[] = [];
+
+        for (const turma of this.sigaaService.turmas()) {
           for (const item of turma.cronograma ?? []) {
             for (const arq of item.arquivos ?? []) {
-              if (argsBusca.nomes_arquivo.includes(arq.nome)) {
-                arquivosEncontrados.push({ arquivo: arq, turmaNome: turma.nome });
+              if (nomes_arquivo.includes(arq.nome)) {
+                encontrados.push({ arquivo: arq, turmaNome: turma.nome });
               }
             }
           }
         }
 
-        functionResponseData = { 
-          resultado: `Foram encontrados ${arquivosEncontrados.length} arquivos. Já foi dito ao usuário que os botões de download estão logo abaixo.` 
+        if (encontrados.length) this.chatState.addArquivos(encontrados);
+        response = {
+          resultado: `${encontrados.length} arquivo(s) encontrado(s). Botões de download exibidos ao usuário.`
         };
+        break;
+      }
 
-        if (arquivosEncontrados.length > 0) {
-          this.chatState.addArquivos(arquivosEncontrados)
+      // ── Download do calendário ──────────────────────────────────────────
+      case 'baixar_calendario':
+        try {
+          const url   = this.sigaaService.getCalendarioUrl();
+          const blob  = await (await fetch(url)).blob();
+          const blobUrl = URL.createObjectURL(blob);
+          const a = Object.assign(document.createElement('a'), {
+            href: blobUrl, download: 'calendario-academico.pdf', style: 'display:none'
+          });
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+          response = { resultado: 'Download do calendário iniciado.' };
+        } catch {
+          response = { erro: 'Erro ao baixar o calendário (CORS ou link indisponível).' };
         }
         break;
-      case "baixar_calendario":
-    try {
-        const url = this.sigaaService.getCalendarioUrl();
-        
-        // 1. Baixa o arquivo via fetch
-        const response = await fetch(url);
-        const blob = await response.blob();
-        
-        // 2. Cria uma URL temporária local para o arquivo
-        const blobUrl = window.URL.createObjectURL(blob);
-        
-        // 3. Cria o link e dispara o download
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = blobUrl;
-        a.download = 'calendario-academico.pdf';
-        
-        // É boa prática adicionar ao DOM antes de clicar
-        document.body.appendChild(a); 
-        a.click();
-        
-        // 4. Limpeza
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(blobUrl); 
 
-        functionResponseData = { resultado: "Sucesso. Informe ao usuário que o download do calendário foi iniciado." };
-    } catch (e) {
-        console.error("Erro no download:", e);
-        functionResponseData = { erro: "Erro ao baixar o calendário. Pode ser um problema de CORS ou link indisponível." };
-    }
-    break;
-    default:
-        functionResponseData = { erro: "Função desconhecida." };
+      default:
+        response = { erro: 'Função desconhecida.' };
     }
 
-    // Envia a resposta da função de volta para a IA para ela formular a resposta final
-    const result = await this.chatState.chatSession!.sendMessageStream([{
-      functionResponse: {
-        name: call.name,
-        response: functionResponseData
-      }
-    }]);
-
-    // Limpa o aviso de "buscando" e processa a resposta final
     this.chatState.removeBuscando();
-    await this.processStream(result);
+
+    const next = await this.chatState.chatSession!.sendMessageStream([{
+      functionResponse: { name: call.name, response }
+    }]);
+    await this.processStream(next);
   }
 
-  // Helpers visuais
-  private updateLastMessage(text: string) {
-    this.chatState.appendTextoUltimaMensagem(text);
+  // ─────────────────────────────────────────────
+  // Handlers especializados
+  // ─────────────────────────────────────────────
+
+  /** Retorna dados conforme o tipo solicitado pela IA */
+  private async handleConsultarDados(args: { tipo: string; termo_busca?: string }): Promise<object> {
+    switch (args.tipo) {
+
+      case 'turmas': {
+        const turmas = await Promise.all(
+          this.sigaaService.turmas().map(t => this.parseTurmaComClassroom(t))
+        );
+        return {
+          resultado: {
+            turmas,
+            avaliacoes: this.sigaaService.avaliacoes()
+          }
+        };
+      }
+
+      case 'notas':
+        return {
+          resultado: this.sigaaService.turmas().map(t => ({
+            turma: t.nome,
+            notas: t.notas
+          }))
+        };
+
+      case 'indices':
+        return { resultado: this.sigaaService.indices() };
+
+      case 'matricula':
+        try {
+          return { resultado: await this.sigaaService.getAtestadoDados() };
+        } catch {
+          return { erro: 'Não foi possível consultar os dados da matrícula.' };
+        }
+
+      default:
+        return { erro: `Tipo desconhecido: "${args.tipo}". Use turmas, notas, indices ou matricula.` };
+    }
   }
+
+  /** Monta os dados de uma turma incluindo informações do Classroom vinculado */
+  private async parseTurmaComClassroom(turma: Turma): Promise<object> {
+    const base = this.parseTurmaData(turma);
+
+    // Tenta buscar o classroom_id sem bloquear em caso de erro
+    try {
+      const classroomId = await this.turmaLocal.getClassroomId(turma.nome);
+      if (!classroomId) return base;
+
+      const matricula = this.sigaaService.matricula(); // adapte ao seu serviço
+
+      // Busca em paralelo: atividades, materiais e anúncios
+      const [assignments, materials, announcements] = matricula ? await Promise.allSettled([
+        firstValueFrom(this.classroomService.getAssignments(matricula, classroomId)),
+        firstValueFrom(this.classroomService.getMaterials(matricula, classroomId)),
+        firstValueFrom(this.classroomService.getAnnouncements(matricula, classroomId))
+      ]) : [undefined, undefined, undefined];
+
+      return {
+        ...base,
+        classroom: {
+          // Atividades: título, prazo e link (sem descrições longas)
+          atividades: assignments?.status === 'fulfilled'
+            ? assignments.value.map(a => ({
+                titulo:    a.title,
+                prazo:     a.due_date ?? null,
+                link:      a.alternateLink ?? null
+              }))
+            : [],
+
+          // Materiais: título, link e data
+          materiais: materials?.status === 'fulfilled'
+            ? materials.value.map(m => ({
+                titulo: m.title,
+                link:   m.alternateLink,
+                data:   m.creationTime
+              }))
+            : [],
+
+          // Anúncios: texto (truncado em 300 chars) + link
+          anuncios: announcements?.status === 'fulfilled'
+            ? announcements.value.map(a => ({
+                texto: a.text.slice(0, 300),
+                data:  a.creationTime,
+                link:  a.alternateLink ?? null
+              }))
+            : []
+        }
+      };
+    } catch {
+      // Classroom não configurado ou offline — retorna só os dados do SIGAA
+      return base;
+    }
+  }
+
+  private async handleBaixarDocumento(tipo: string): Promise<object> {
+    try {
+      if (tipo === 'historico') {
+        const blob = await this.sigaaService.getHistoricoPdf();
+        this.baixarBlobNoNavegador(blob, 'Historico_Academico.pdf');
+        return { resultado: 'Download do histórico iniciado.' };
+      }
+      if (tipo === 'vinculo') {
+        const blob = await this.sigaaService.getVinculoPdf();
+        this.baixarBlobNoNavegador(blob, 'Declaracao_Vinculo.pdf');
+        return { resultado: 'Download do vínculo iniciado.' };
+      }
+      if (tipo === 'atestado') {
+        return await this.lidarComAtestado();
+      }
+      return { erro: 'Tipo de documento inválido. Use: historico, vinculo ou atestado.' };
+    } catch (e: any) {
+      return { erro: `Falha ao baixar o documento: ${e.message}` };
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // Helpers de parsing
+  // ─────────────────────────────────────────────
+
+  /** Serializa cronograma enviando apenas os campos usados pela IA */
+  private parseCronograma(cronograma?: CronogramaItem[]) {
+    return cronograma?.map(item => ({
+      titulo:   item.titulo,
+      conteudo: item.conteudo,
+      arquivos: item.arquivos?.map(f => ({ id: f.id, nome: f.nome }))
+    }));
+  }
+
+  private parseFaltas(faltas: number): string {
+    if (faltas === -2) return 'Carregando';
+    if (faltas === -1) return 'Não lançada';
+    return faltas.toString();
+  }
+
+  /** Retorna apenas os campos relevantes para a IA (sem `info` e campos redundantes) */
+  private parseTurmaData(turma: Turma) {
+    return {
+      nome:       turma.nome,
+      horarios:   formatarHorarios(turma.horarios),
+      faltas:     this.parseFaltas(turma.faltas),
+      cronograma: this.parseCronograma(turma.cronograma)
+    };
+  }
+
+  // ─────────────────────────────────────────────
+  // Helpers de UI / download
+  // ─────────────────────────────────────────────
 
   private scrollToBottom() {
     try {
-      this.chatContainer.nativeElement.scrollTop = this.chatContainer.nativeElement.scrollHeight;
-    } catch(err) { }
+      this.chatContainer.nativeElement.scrollTop =
+        this.chatContainer.nativeElement.scrollHeight;
+    } catch { }
   }
 
-  private parseCronograma(cronograma?: CronogramaItem[]) {
-  return cronograma?.map(item => { 
-    return {
-      titulo: item.titulo, 
-      conteudo: item.conteudo, 
-      arquivos: item.arquivos?.map(f => ({ id: f.id, nome: f.nome })) 
-    }; 
-  });
-}
-
-  private parseFaltas(faltas: number): string {
-    return faltas === -2 ? "Carregando" : faltas === -1 ? "Não lançada" : faltas.toString();
-  }
-
-  private parseTurmaData(turma: Turma) {
-    const { info, ...rest } = turma;
-    return { ...rest, cronograma: this.parseCronograma(rest.cronograma), horarios: formatarHorarios(rest.horarios), faltas: this.parseFaltas(rest.faltas) };
-  }
-
-  private baixarBlobNoNavegador(blob: Blob, nomeArquivo: string) {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = nomeArquivo;
+  private baixarBlobNoNavegador(blob: Blob, nome: string) {
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'), {
+      href: url, download: nome
+    });
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    URL.revokeObjectURL(url);
   }
 
-  private async lidarComAtestado() {
+  private async lidarComAtestado(): Promise<object> {
     const dados = await this.sigaaService.getAtestadoDados();
-      this.atestadoDados.set(dados);
-      await new Promise<void>((resolve, reject) => {
-        setTimeout(async () => {
-          try {
-            const data = document.getElementById('template-atestado-ufrpe');
-            if (!data) throw new Error('Template não encontrado');
+    this.atestadoDados.set(dados);
 
-            const canvas = await html2canvas(data, {
-              scale: 3,
-              useCORS: true,
-              logging: false,
-            });
+    await new Promise<void>((resolve, reject) => {
+      setTimeout(async () => {
+        try {
+          const el = document.getElementById('template-atestado-ufrpe');
+          if (!el) throw new Error('Template não encontrado');
 
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
+          const canvas = await html2canvas(el, { scale: 3, useCORS: true, logging: false });
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const pw = pdf.internal.pageSize.getWidth();
+          const ph = pdf.internal.pageSize.getHeight();
 
-            let finalWidth = pdfWidth;
-            let finalHeight = (canvas.height * pdfWidth) / canvas.width;
+          let w = pw;
+          let h = (canvas.height * pw) / canvas.width;
+          if (h > ph) { h = ph - 10; w = (canvas.width * h) / canvas.height; }
 
-            if (finalHeight > pdfHeight) {
-              finalHeight = pdfHeight - 10;
-              finalWidth = (canvas.width * finalHeight) / canvas.height;
-            }
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', (pw - w) / 2, 5, w, h);
+          pdf.save(`Atestado_Matricula_${dados.matricula}.pdf`);
+          this.atestadoDados.set(null);
+          resolve();
+        } catch (e) { reject(e); }
+      }, 100);
+    });
 
-            const xOffset = (pdfWidth - finalWidth) / 2;
-            pdf.addImage(imgData, 'PNG', xOffset, 5, finalWidth, finalHeight);
-            pdf.save(`Atestado_Matricula_${dados.matricula}.pdf`);
-
-            this.atestadoDados.set(null);
-            resolve();
-          } catch (e) {
-            reject(e);
-          }
-        }, 100);
-      });
-    return { resultado: "Sucesso. Informe ao usuário que o download do atestado de matrícula foi iniciado." };
+    return { resultado: 'Download do atestado de matrícula iniciado.' };
   }
+
+  // ─────────────────────────────────────────────
+  // Ações públicas (template)
+  // ─────────────────────────────────────────────
 
   async baixarArquivo(turmaNome: string, arquivo: Arquivo): Promise<void> {
     const turma = this.sigaaService.turmas().find(t => t.nome === turmaNome);
-    if (!turma) {
-      alert('Turma não encontrada para baixar o arquivo.');
-      return;
-    }
-    this.downloadingFiles.update(set => {
-      const newSet = new Set(set);
-      newSet.add(arquivo.id);
-      return newSet;
-    });
+    if (!turma) { alert('Turma não encontrada.'); return; }
 
+    this.downloadingFiles.update(s => new Set([...s, arquivo.id]));
     try {
       await this.sigaaService.baixarArquivoTurma(turma, arquivo);
-    } catch (error) {
-      console.error('Erro ao baixar o arquivo:', error);
+    } catch {
       alert('Erro ao baixar o arquivo.');
     } finally {
-      this.downloadingFiles.update(set => {
-        const newSet = new Set(set);
-        newSet.delete(arquivo.id);
-        return newSet;
-      });
+      this.downloadingFiles.update(s => { const n = new Set(s); n.delete(arquivo.id); return n; });
     }
   }
 
   async limparConversa() {
     this.chatState.limparHistorico();
-    await this.checkApiKey(); 
+    await this.checkApiKey();
   }
 }

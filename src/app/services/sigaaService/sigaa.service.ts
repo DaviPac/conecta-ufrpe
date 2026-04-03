@@ -264,7 +264,8 @@ export class SigaaService {
         res.status === 403 ||
         errorMessage.toLowerCase().includes('sessão expirada') ||
         errorMessage.toLowerCase().includes('sessão inválida') ||
-        errorMessage.toLowerCase().includes('session');
+        errorMessage.toLowerCase().includes('session') ||
+        (res.status === 500 && (url.includes('/vinculo') || url.includes('/historico'))); // backend retorna 500 em vez de 401/403 para endpoints de PDF
 
       if (isSessionError) {
         const reauthed = await this.tryReauthenticate();
