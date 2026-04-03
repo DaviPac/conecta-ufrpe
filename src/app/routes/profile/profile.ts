@@ -3,7 +3,7 @@ import { SigaaService } from '../../services/sigaaService/sigaa.service';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { AtestadoMatricula, ComponenteCurricular, EstruturaCurricular } from '../../models/sigaa.models';
+import { AtestadoMatricula, ComponenteCurricular, DetalhesComponente, EstruturaCurricular } from '../../models/sigaa.models';
 import { buildTabelaHorarios } from '../../utils/horarios.helper';
 import { ClickOutsideDirective } from '../../click-outside';
 
@@ -28,13 +28,20 @@ export class Profile {
 
   showMatrizModal = signal(false);
   filtroPeriodo = signal<string | null>(null);
+  filtroStatus = signal<'todas' | 'concluidas' | 'faltantes'>('todas');
   isCarregandoMatriz = signal(false);
   estruturaCurricular = signal<EstruturaCurricular | null>(null);
   componentesAgrupados = computed(() => {
     const estrutura = this.estruturaCurricular();
     if (!estrutura) return [];
 
+    const status = this.filtroStatus(); // Pegamos o valor do filtro atual
+
     const grupos = estrutura.componentes.reduce((acc, comp) => {
+      // Aplica a regra do filtro antes de agrupar
+      if (status === 'concluidas' && !comp.concluida) return acc;
+      if (status === 'faltantes' && comp.concluida) return acc;
+
       const nivel = comp.nivel;
       if (!acc[nivel]) {
         acc[nivel] = [];
@@ -43,7 +50,7 @@ export class Profile {
       return acc;
     }, {} as Record<string, ComponenteCurricular[]>);
 
-    // Retorna um array ordenado (semestres numéricos primeiro, textos depois)
+    // Retorna um array ordenado e remove grupos que ficaram vazios após o filtro
     return Object.keys(grupos)
       .sort((a, b) => {
         const numA = parseInt(a);
@@ -57,7 +64,8 @@ export class Profile {
         nivel: key,
         titulo: this.formatarNivel(key),
         disciplinas: grupos[key]
-      }));
+      }))
+      .filter(grupo => grupo.disciplinas.length > 0); // Garante que não teremos cabeçalhos vazios
   });
 
   async abrirMatrizCurricular() {
@@ -87,6 +95,39 @@ export class Profile {
     return nivel.charAt(0).toUpperCase() + nivel.slice(1);
   }
 
+  detalhesComponenteSelecionado = signal<DetalhesComponente | null>(null);
+  isLoadingDetalhes = signal<boolean>(false);
+
+  async abrirDetalhes(comp: ComponenteCurricular) {
+    this.isLoadingDetalhes.set(true);
+    try {
+      const detalhes = await this.buscarComponenteCurricular(comp);
+      this.detalhesComponenteSelecionado.set(detalhes);
+      console.log(this.detalhesComponenteSelecionado());
+    } finally {
+      this.isLoadingDetalhes.set(false);
+    }
+  }
+
+  fecharDetalhes() {
+    this.detalhesComponenteSelecionado.set(null);
+  }
+
+  async buscarComponenteCurricular(componente: ComponenteCurricular): Promise<DetalhesComponente> {
+    try {
+      const detalhes = await this.sigaaService.buscarComponenteCurricular(this.estruturaCurricular()!.codigo, componente.id);
+      return detalhes;
+    } catch (error) {
+      console.error('Erro ao buscar detalhes do componente', error);
+      this.showToast('Erro ao buscar detalhes do componente.', 'error');
+      throw error;
+    }
+  }
+
+  buscarNomeComponente(codigo: string): string {
+    const componente = this.estruturaCurricular()?.componentes.find(c => c.codigo === codigo);
+    return componente ? componente.nome : codigo;
+  }
 
   toastMessage = signal<{ text: string; type: 'success' | 'error' } | null>(null);
   // -------------------------------

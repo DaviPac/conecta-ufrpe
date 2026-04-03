@@ -1,4 +1,4 @@
-<div class="bg-slate-50 min-h-screen pt-24 md:pt-28 pb-10 px-4 md:px-8 font-sans">
+@if (!showMatrizModal()) { <div class="bg-slate-50 min-h-screen pt-24 md:pt-28 pb-10 px-4 md:px-8 font-sans">
   <div class="max-w-7xl mx-auto">
     <header class="flex justify-between items-center mb-8 border-b border-slate-200 pb-4">
       <div>
@@ -262,7 +262,7 @@
       </button>
     </div>
   </div>
-</div>
+</div> }
 
 @if (toastMessage()) {
   <div
@@ -642,11 +642,10 @@
 
 @if (showMatrizModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-6 bg-slate-900/40 backdrop-blur-sm transition-opacity animate-fade-in">
-    <div class="bg-white w-full max-w-5xl h-full sm:max-h-[90vh] sm:h-auto sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+    <div class="bg-white w-full max-w-5xl h-full sm:max-h-[90vh] sm:h-auto sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up relative">
 
-      <!-- Header -->
-      <div class="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50/50 shrink-0">
-        <div>
+      <div class="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-50/50 shrink-0 gap-4">
+        <div class="flex-1">
           <h3 class="text-base sm:text-2xl font-light text-slate-800 leading-tight">
             {{ estruturaCurricular()?.matrizCurricular }}
           </h3>
@@ -656,15 +655,38 @@
             <span class="flex items-center gap-1"><i class="pi pi-hourglass text-xs"></i> {{ estruturaCurricular()?.prazoMedioSemestres }} sem.</span>
           </div>
         </div>
-        <button
-          (click)="showMatrizModal.set(false)"
-          class="text-slate-400 hover:text-red-500 p-2 rounded-full hover:bg-slate-100 transition-colors focus:outline-none shrink-0 ml-2"
-        >
-          <i class="pi pi-times text-xl"></i>
-        </button>
+
+        <div class="flex items-center justify-between w-full sm:w-auto gap-3">
+          <div class="flex bg-slate-200/60 p-1 rounded-lg w-full sm:w-auto">
+            <button 
+              (click)="filtroStatus.set('todas')"
+              [class]="filtroStatus() === 'todas' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+              class="flex-1 sm:flex-none text-xs font-medium px-3 py-1.5 rounded-md transition-all">
+              Todas
+            </button>
+            <button 
+              (click)="filtroStatus.set('concluidas')"
+              [class]="filtroStatus() === 'concluidas' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+              class="flex-1 sm:flex-none text-xs font-medium px-3 py-1.5 rounded-md transition-all">
+              Concluídas
+            </button>
+            <button 
+              (click)="filtroStatus.set('faltantes')"
+              [class]="filtroStatus() === 'faltantes' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+              class="flex-1 sm:flex-none text-xs font-medium px-3 py-1.5 rounded-md transition-all">
+              Faltantes
+            </button>
+          </div>
+
+          <button
+            (click)="showMatrizModal.set(false)"
+            class="text-slate-400 hover:text-red-500 p-2 rounded-full hover:bg-slate-100 transition-colors focus:outline-none shrink-0"
+          >
+            <i class="pi pi-times text-xl"></i>
+          </button>
+        </div>
       </div>
 
-      <!-- Filtro por período — só aparece no mobile -->
       <div class="sm:hidden overflow-x-auto shrink-0 border-b border-slate-100 bg-white">
         <div class="flex gap-1.5 p-3 w-max">
           <button
@@ -692,10 +714,8 @@
         </div>
       </div>
 
-      <!-- Conteúdo -->
       <div class="overflow-y-auto flex-1 bg-slate-50">
-
-        <!-- Mobile: lista compacta -->
+        
         <div class="sm:hidden">
           @for (grupo of componentesAgrupados(); track grupo.nivel) {
             @if (filtroPeriodo() === null || filtroPeriodo() === grupo.nivel) {
@@ -707,9 +727,22 @@
                 </div>
                 <div class="divide-y divide-slate-100 bg-white">
                   @for (comp of grupo.disciplinas; track comp.codigo) {
-                    <div class="flex items-center gap-3 px-4 py-2.5">
-                      <span class="text-xs font-mono text-slate-400 w-16 shrink-0">{{ comp.codigo }}</span>
-                      <span class="text-sm text-slate-800 flex-1 leading-tight">{{ comp.nome }}</span>
+                    <div (click)="abrirDetalhes(comp)"
+                         class="flex items-center gap-3 px-4 py-2.5 transition-colors cursor-pointer hover:bg-slate-50"
+                         [class.bg-emerald-50]="comp.concluida">
+                      <span class="text-xs font-mono w-16 shrink-0"
+                            [class.text-slate-400]="!comp.concluida"
+                            [class.text-emerald-600]="comp.concluida">
+                        {{ comp.codigo }}
+                      </span>
+                      <span class="text-sm flex-1 leading-tight flex items-center gap-1.5"
+                            [class.text-slate-800]="!comp.concluida"
+                            [class.text-emerald-900]="comp.concluida">
+                        {{ comp.nome }}
+                        @if (comp.concluida) {
+                          <i class="pi pi-check-circle text-emerald-600 text-xs" title="Concluída"></i>
+                        }
+                      </span>
                       <div class="flex items-center gap-2 shrink-0">
                         <span class="text-xs font-semibold text-slate-500">{{ comp.cargaHoraria }}</span>
                         <span
@@ -726,7 +759,6 @@
               </div>
             }
           }
-          <!-- Legenda de cores mobile -->
           <div class="flex gap-4 px-4 py-3 text-xs text-slate-500">
             <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500 block"></span>Obrigatória</span>
             <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 block"></span>Optativa</span>
@@ -734,7 +766,6 @@
           </div>
         </div>
 
-        <!-- Desktop: grid de cards (original) -->
         <div class="hidden sm:block p-6">
           @for (grupo of componentesAgrupados(); track grupo.nivel) {
             <div class="mb-10 last:mb-0">
@@ -744,21 +775,50 @@
               </h4>
               <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 @for (comp of grupo.disciplinas; track comp.codigo) {
-                  <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all flex flex-col justify-between group">
+                  <div (click)="abrirDetalhes(comp)"
+                       class="p-4 rounded-xl shadow-sm border transition-all flex flex-col justify-between group hover:shadow-md cursor-pointer"
+                       [class.bg-white]="!comp.concluida"
+                       [class.border-slate-200]="!comp.concluida"
+                       [class.hover:border-blue-200]="!comp.concluida"
+                       [class.bg-emerald-50]="comp.concluida"
+                       [class.border-emerald-200]="comp.concluida">
                     <div>
-                      <span class="text-xs font-mono text-slate-400 mb-1 block group-hover:text-blue-500 transition-colors">{{ comp.codigo }}</span>
-                      <span class="text-sm font-medium text-slate-800 block leading-tight">{{ comp.nome }}</span>
+                      <div class="flex justify-between items-start mb-1">
+                        <span class="text-xs font-mono block transition-colors"
+                              [class.text-slate-400]="!comp.concluida"
+                              [class.group-hover:text-blue-500]="!comp.concluida"
+                              [class.text-emerald-600]="comp.concluida">
+                            {{ comp.codigo }}
+                        </span>
+                        @if (comp.concluida) {
+                          <i class="pi pi-check-circle text-emerald-500" title="Concluída"></i>
+                        }
+                      </div>
+                      <span class="text-sm font-medium block leading-tight"
+                            [class.text-slate-800]="!comp.concluida"
+                            [class.text-emerald-900]="comp.concluida">
+                        {{ comp.nome }}
+                      </span>
                     </div>
-                    <div class="mt-4 flex justify-between items-center border-t border-slate-50 pt-3">
-                      <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md">{{ comp.cargaHoraria }}</span>
+                    <div class="mt-4 flex justify-between items-center border-t border-slate-50 pt-3"
+                         [class.border-emerald-100]="comp.concluida">
+                      <span class="text-xs font-semibold px-2 py-1 rounded-md"
+                            [class.text-slate-600]="!comp.concluida"
+                            [class.bg-slate-100]="!comp.concluida"
+                            [class.text-emerald-700]="comp.concluida"
+                            [class.bg-emerald-100/50]="comp.concluida">
+                        {{ comp.cargaHoraria }}
+                      </span>
                       <span
                         class="text-xs font-medium px-2 py-1 rounded-md"
-                        [class.bg-blue-50]="comp.tipo === 'Obrigatória'"
-                        [class.text-blue-700]="comp.tipo === 'Obrigatória'"
-                        [class.bg-emerald-50]="comp.tipo === 'Optativa'"
-                        [class.text-emerald-700]="comp.tipo === 'Optativa'"
-                        [class.bg-purple-50]="comp.tipo === 'Complementar'"
-                        [class.text-purple-700]="comp.tipo === 'Complementar'"
+                        [class.bg-blue-50]="comp.tipo === 'Obrigatória' && !comp.concluida"
+                        [class.text-blue-700]="comp.tipo === 'Obrigatória' && !comp.concluida"
+                        [class.bg-emerald-50]="comp.tipo === 'Optativa' && !comp.concluida"
+                        [class.text-emerald-700]="comp.tipo === 'Optativa' && !comp.concluida"
+                        [class.bg-purple-50]="comp.tipo === 'Complementar' && !comp.concluida"
+                        [class.text-purple-700]="comp.tipo === 'Complementar' && !comp.concluida"
+                        [class.bg-white/60]="comp.concluida"
+                        [class.text-emerald-800]="comp.concluida"
                       >
                         {{ comp.tipo }}
                       </span>
@@ -769,8 +829,133 @@
             </div>
           }
         </div>
-
       </div>
     </div>
   </div>
+
+  @if (detalhesComponenteSelecionado() || isLoadingDetalhes()) {
+    <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div class="bg-white w-full max-w-2xl h-full sm:max-h-[85vh] sm:h-auto sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+        
+        @if (isLoadingDetalhes()) {
+          <div class="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
+            <div class="w-full">
+              <div class="h-6 sm:h-7 bg-slate-200 rounded animate-pulse w-3/4 mb-2"></div>
+              <div class="h-4 bg-slate-200 rounded animate-pulse w-32"></div>
+            </div>
+            <button (click)="fecharDetalhes()" class="text-slate-400 hover:text-red-500 p-2 rounded-full hover:bg-slate-100 transition-colors shrink-0">
+              <i class="pi pi-times text-xl"></i>
+            </button>
+          </div>
+
+          <div class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <div class="h-3 w-16 bg-slate-200 rounded animate-pulse mb-2"></div>
+                <div class="h-4 w-24 bg-slate-200 rounded animate-pulse"></div>
+              </div>
+              <div>
+                <div class="h-3 w-20 bg-slate-200 rounded animate-pulse mb-2"></div>
+                <div class="h-4 w-32 bg-slate-200 rounded animate-pulse"></div>
+              </div>
+              <div class="col-span-2 sm:col-span-1">
+                <div class="h-3 w-32 bg-slate-200 rounded animate-pulse mb-2"></div>
+                <div class="h-4 w-16 bg-slate-200 rounded animate-pulse"></div>
+              </div>
+              <div class="col-span-2">
+                <div class="h-3 w-40 bg-slate-200 rounded animate-pulse mb-2"></div>
+                <div class="h-4 w-full sm:w-2/3 bg-slate-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="h-3 w-28 bg-slate-200 rounded animate-pulse mb-3"></div>
+              <div class="flex gap-2">
+                <div class="h-7 w-24 bg-slate-200 rounded-md animate-pulse"></div>
+                <div class="h-7 w-32 bg-slate-200 rounded-md animate-pulse"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="h-3 w-20 bg-slate-200 rounded animate-pulse mb-3"></div>
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+                <div class="h-4 w-full bg-slate-200 rounded animate-pulse"></div>
+                <div class="h-4 w-full bg-slate-200 rounded animate-pulse"></div>
+                <div class="h-4 w-5/6 bg-slate-200 rounded animate-pulse"></div>
+                <div class="h-4 w-4/6 bg-slate-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        } @else if (detalhesComponenteSelecionado(); as detalhes) {
+          <div class="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
+            <div>
+              <h3 class="text-lg sm:text-xl font-bold text-slate-800 leading-tight">{{ detalhes.nome }}</h3>
+              <p class="text-sm font-mono text-slate-500 mt-1">{{ detalhes.codigo }}</p>
+            </div>
+            <button (click)="fecharDetalhes()" class="text-slate-400 hover:text-red-500 p-2 rounded-full hover:bg-slate-100 transition-colors shrink-0">
+              <i class="pi pi-times text-xl"></i>
+            </button>
+          </div>
+
+          <div class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6">
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <span class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Tipo</span>
+                <span class="text-sm font-medium text-slate-700">{{ detalhes.tipo }}</span>
+              </div>
+              <div>
+                <span class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Modalidade</span>
+                <span class="text-sm font-medium text-slate-700">{{ detalhes.modalidade }}</span>
+              </div>
+              <div class="col-span-2 sm:col-span-1">
+                <span class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Carga Horária Total</span>
+                <span class="text-sm font-medium text-slate-700">{{ detalhes.cargaHorariaTotal }}</span>
+              </div>
+              <div class="col-span-2">
+                <span class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Unidade Responsável</span>
+                <span class="text-sm font-medium text-slate-700">{{ detalhes.unidade }}</span>
+              </div>
+            </div>
+
+            @if (detalhes.preRequisitos && detalhes.preRequisitos.length > 0) {
+              <div>
+                <span class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Pré-requisitos</span>
+                <div class="flex flex-wrap gap-2">
+                  @for (req of detalhes.preRequisitos; track req) {
+                    <span class="inline-flex items-center bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md text-xs font-medium border border-blue-100">
+                      <i class="pi pi-link text-[10px] mr-1.5 opacity-70"></i>
+                      {{ buscarNomeComponente(req) }}
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (detalhes.equivalencias && detalhes.equivalencias.length > 0) {
+              <div>
+                <span class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Equivalências</span>
+                <div class="flex flex-wrap gap-2">
+                  @for (eq of detalhes.equivalencias; track eq) {
+                    <span class="inline-flex items-center bg-purple-50 text-purple-700 px-2.5 py-1 rounded-md text-xs font-medium border border-purple-100">
+                      <i class="pi pi-arrows-h text-[10px] mr-1.5 opacity-70"></i>
+                      {{ buscarNomeComponente(eq) }}
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+
+            <div>
+              <span class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Ementa</span>
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <p class="whitespace-pre-wrap text-sm text-slate-600 leading-relaxed">{{ detalhes.ementa || 'Ementa não disponibilizada pelo departamento.' }}</p>
+              </div>
+            </div>
+
+          </div>
+        }
+      </div>
+    </div>
+  }
 }

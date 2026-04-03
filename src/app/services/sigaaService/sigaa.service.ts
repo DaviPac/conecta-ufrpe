@@ -6,11 +6,13 @@ import {
   MainDataResponse,
   NotasResponse,
   Turma,
-  TurmaDetailResponse,
   AtestadoMatricula,
   Arquivo,
   EstruturaCurricular,
   MatrizCurricularResponse,
+  Notas,
+  DetalhesComponenteResponse,
+  DetalhesComponente,
 } from '../../models/sigaa.models';
 import { Router } from '@angular/router';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -62,6 +64,8 @@ export class SigaaService {
   currentTurmaIdx: WritableSignal<number | null> = signal(null);
   fullyLoaded: WritableSignal<boolean> = signal(false);
   hasOnlineData: WritableSignal<boolean> = signal(false);
+
+  notasAnteriores: WritableSignal<(Notas | null)[]> = signal([]);
 
   pdfCache: WritableSignal<Uint8Array | undefined> = signal(undefined);
 
@@ -376,6 +380,7 @@ export class SigaaService {
 
     const notasData = data as NotasResponse;
     console.log(data);
+    this.notasAnteriores.set(notasData.anteriores?.length ? notasData.anteriores : []);
 
     this.turmas.update((prev) => {
       notasData.notas.forEach((n) => {
@@ -634,6 +639,33 @@ export class SigaaService {
     localStorage.setItem('jsessionid', data.jsessionid);
     this.viewState.set(data.viewState);
     localStorage.setItem('viewState', data.viewState);
+    data.estruturaCurricular.componentes.forEach(c => {
+      if (this.notasAnteriores().find(n => n?.codigo === c.codigo && n.situacao.toUpperCase().includes('APROVADO'))) {
+        c.concluida = true;
+      }
+    });
     return data.estruturaCurricular;
+  }
+
+  async buscarComponenteCurricular(curriculo: string, idComponente: string): Promise<DetalhesComponente> {
+    if (!this.jsessionid().length || !this.viewState().length)
+      throw new Error('jsessionid ou viewstate inválidos');
+
+    const res = await this.fetchWithAuth(`${this.domain}/componente`, {
+      method: 'POST',
+      body: JSON.stringify({ viewState: this.viewState(), curriculo, idComponente }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Erro ao buscar componente curricular');
+    }
+
+    const data = await res.json() as DetalhesComponenteResponse;
+    this.jsessionid.set(data.jsessionid);
+    localStorage.setItem('jsessionid', data.jsessionid);
+    this.viewState.set(data.viewState);
+    localStorage.setItem('viewState', data.viewState);
+    return data.componente;
   }
 }

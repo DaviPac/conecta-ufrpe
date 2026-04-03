@@ -91,6 +91,7 @@ export interface TurmaDetailResponse {
 
 export interface NotasResponse {
   notas: Array<Notas | null>;
+  anteriores: Array<Notas | null>;
   jsessionid: string;
   viewState: string;
 }
@@ -118,6 +119,7 @@ export interface AtestadoMatricula {
 
 export interface ComponenteCurricular {
 	codigo: string;
+  id: string;
   nome: string;
   cargaHoraria: string;
   tipo: string;  // Obrigatória, Optativa, Complementar
@@ -142,4 +144,22 @@ export interface MatrizCurricularResponse {
   estruturaCurricular: EstruturaCurricular;
   jsessionid: string;
   viewState: string;
+}
+
+export interface DetalhesComponenteResponse {
+  componente: DetalhesComponente;
+  jsessionid: string;
+  viewState: string;
+}
+
+export interface DetalhesComponente {
+  codigo: string;
+  nome: string;
+  tipo: string;       // Ex: MÓDULO
+  modalidade: string; // Ex: PRESENCIAL
+  unidade: string;    // Ex: DEPARTAMENTO DE COMPUTAÇÃO-DC - RECIFE - 11.01.60
+  ementa: string;
+  cargaHorariaTotal: string; // Ex: 60h
+  preRequisitos: string[];
+  equivalencias: string[];
 }
