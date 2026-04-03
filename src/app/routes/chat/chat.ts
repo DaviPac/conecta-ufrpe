@@ -123,15 +123,16 @@ Ao retornar URL, descreva brevemente o conteúdo do link.
 - "notas"    → notas das disciplinas.
 - "indices"  → IRA, CR e outros índices.
 - "matricula"→ dados do atestado de matrícula.
+- "curriculo"→ dados da matriz curricular.
 Prefira uma única chamada por assunto.`,
             parameters: {
               type: SchemaType.OBJECT,
               properties: {
                 tipo: {
                   type: SchemaType.STRING,
-                  description: '"turmas" | "notas" | "indices" | "matricula"'
+                  description: '"turmas" | "notas" | "indices" | "matricula" | "curriculo"'
                 },
-                termo_busca: { type: SchemaType.STRING, description: 'Opcional. Ex: "Cálculo I"' }
+                termo_busca: { type: SchemaType.STRING, description: 'Opcional. Nome EXATO da turma requisitada.' }
               },
               required: ['tipo']
             }
@@ -320,15 +321,19 @@ Prefira uma única chamada por assunto.`,
 
   /** Retorna dados conforme o tipo solicitado pela IA */
   private async handleConsultarDados(args: { tipo: string; termo_busca?: string }): Promise<object> {
+    let turmas = args.termo_busca ? this.sigaaService.turmas().filter(t => t.nome.toLowerCase() === args.termo_busca?.toLowerCase()) : this.sigaaService.turmas();
+    if (args.termo_busca && turmas?.length === 0) {
+      turmas = this.sigaaService.turmas()
+    }
     switch (args.tipo) {
 
       case 'turmas': {
-        const turmas = await Promise.all(
-          this.sigaaService.turmas().map(t => this.parseTurmaComClassroom(t))
+        const turmasFinal = await Promise.all(
+          turmas.map(t => this.parseTurmaComClassroom(t))
         );
         return {
           resultado: {
-            turmas,
+            turmasFinal,
             avaliacoes: this.sigaaService.avaliacoes()
           }
         };
@@ -336,7 +341,7 @@ Prefira uma única chamada por assunto.`,
 
       case 'notas':
         return {
-          resultado: this.sigaaService.turmas().map(t => ({
+          resultado: turmas.map(t => ({
             turma: t.nome,
             notas: t.notas
           }))
@@ -352,6 +357,14 @@ Prefira uma única chamada por assunto.`,
           return { erro: 'Não foi possível consultar os dados da matrícula.' };
         }
 
+      case 'curriculo':
+        try {
+          const curriculo = await this.sigaaService.getMatrizCurricular();
+          return { resultado: curriculo };
+        } catch {
+          return { erro: 'Não foi possível consultar os dados da matriz curricular.' };
+        }
+        
       default:
         return { erro: `Tipo desconhecido: "${args.tipo}". Use turmas, notas, indices ou matricula.` };
     }
