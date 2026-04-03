@@ -185,9 +185,40 @@
                         <td class="py-1.5 px-1.5 align-top" [class.bg-blue-950/[0.03]]="isHoje(dia.jsDay)">
                           @let aula = aulaEmSlot(dia.jsDay, si);
                           @if (aula) {
-                            <div class="rounded-lg px-2 py-1.5 text-left transition-all duration-200 hover:scale-[1.02] cursor-default" ...>
-                              <p class="text-[10px] font-bold leading-snug line-clamp-2" ...>{{ nomeCurto(aula.turma.nome) }}</p>
-                              <p class="text-[9px] mt-0.5 font-medium tabular-nums" ...>{{ aula.inicio }}–{{ aula.fim }}</p>
+                            <div class="rounded-lg px-2 py-1.5 text-left transition-all duration-200 hover:scale-[1.02] cursor-default border"
+                                [ngClass]="{
+                                  'bg-blue-50 border-blue-100': aula.cor === 'blue',
+                                  'bg-teal-50 border-teal-100': aula.cor === 'teal',
+                                  'bg-amber-50 border-amber-100': aula.cor === 'amber',
+                                  'bg-purple-50 border-purple-100': aula.cor === 'purple',
+                                  'bg-rose-50 border-rose-100': aula.cor === 'coral',
+                                  'bg-green-50 border-green-100': aula.cor === 'green',
+                                  'bg-pink-50 border-pink-100': aula.cor === 'pink'
+                                }">
+                              <p class="text-[10px] font-bold leading-snug line-clamp-2"
+                                [ngClass]="{
+                                  'text-blue-800': aula.cor === 'blue',
+                                  'text-teal-800': aula.cor === 'teal',
+                                  'text-amber-800': aula.cor === 'amber',
+                                  'text-purple-800': aula.cor === 'purple',
+                                  'text-rose-800': aula.cor === 'coral',
+                                  'text-green-800': aula.cor === 'green',
+                                  'text-pink-800': aula.cor === 'pink'
+                                }">
+                                {{ nomeCurto(aula.turma.nome) }}
+                              </p>
+                              <p class="text-[9px] mt-0.5 font-medium tabular-nums opacity-80"
+                                [ngClass]="{
+                                  'text-blue-600': aula.cor === 'blue',
+                                  'text-teal-600': aula.cor === 'teal',
+                                  'text-amber-600': aula.cor === 'amber',
+                                  'text-purple-600': aula.cor === 'purple',
+                                  'text-rose-600': aula.cor === 'coral',
+                                  'text-green-600': aula.cor === 'green',
+                                  'text-pink-600': aula.cor === 'pink'
+                                }">
+                                {{ aula.inicio }}–{{ aula.fim }}
+                              </p>
                             </div>
                           }
                         </td>
