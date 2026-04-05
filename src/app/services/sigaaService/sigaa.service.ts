@@ -1,4 +1,8 @@
 import { Injectable, Injector, WritableSignal, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { filter, firstValueFrom } from 'rxjs';
+
 import {
   Avaliacao,
   CargaHoraria,
@@ -14,11 +18,7 @@ import {
   DetalhesComponenteResponse,
   DetalhesComponente,
 } from '../../models/sigaa.models';
-import { Router } from '@angular/router';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { filter, firstValueFrom } from 'rxjs';
 
-// Chave do cache geral de dados da sessão
 const CACHE_KEY = 'sigaa_data_cache';
 
 interface DataCache {
@@ -36,58 +36,60 @@ interface DataCache {
   providedIn: 'root',
 })
 export class SigaaService {
-  private domain = 'https://sigaa-ufrpe-api-production.up.railway.app';
-  private jsessionid: WritableSignal<string> = signal('');
-  private viewState: WritableSignal<string> = signal('');
-  
-
-  /** Visível ao template para exibir indicador de reautenticação */
-  isReauthenticating: WritableSignal<boolean> = signal(false);
-
-  /**
-   * True enquanto os dados estão sendo buscados/renovados da API.
-   * Fica false assim que os dados frescos (ou do cache) estiverem prontos.
-   */
-  isFetchingData: WritableSignal<boolean> = signal(false);
+  private readonly domain = 'https://sigaa-ufrpe-api-production.up.railway.app';
+  private readonly CRED_KEY = 'sigaa_cred';
 
   private injector = inject(Injector);
-  private router: Router = inject(Router);
+  private router = inject(Router);
 
-  matricula: WritableSignal<string | null> = signal(null);
-  turmas: WritableSignal<Turma[]> = signal([]);
-  freshTurmas: WritableSignal<Turma[]> = signal([]);
-  nome: WritableSignal<string> = signal('');
-  avaliacoes: WritableSignal<Avaliacao[]> = signal([]);
-  cargaHoraria: WritableSignal<CargaHoraria | null> = signal(null);
-  indices: WritableSignal<IndicesAcademicos | null> = signal(null);
-  currentTurma: WritableSignal<Turma | null> = signal(null);
-  currentTurmaIdx: WritableSignal<number | null> = signal(null);
+  // ─── Signals Privados ──────────────────────────────────────────────────────
+  private jsessionid: WritableSignal<string> = signal('');
+  private viewState: WritableSignal<string> = signal('');
+
+  // ─── Signals Públicos (Estado e UI) ────────────────────────────────────────
+  isReauthenticating: WritableSignal<boolean> = signal(false);
+  isFetchingData: WritableSignal<boolean> = signal(false);
   fullyLoaded: WritableSignal<boolean> = signal(false);
   hasOnlineData: WritableSignal<boolean> = signal(false);
 
+  // ─── Signals Públicos (Dados do Usuário) ───────────────────────────────────
+  matricula: WritableSignal<string | null> = signal(null);
+  nome: WritableSignal<string> = signal('');
+  turmas: WritableSignal<Turma[]> = signal([]);
+  freshTurmas: WritableSignal<Turma[]> = signal([]);
+  avaliacoes: WritableSignal<Avaliacao[]> = signal([]);
+  cargaHoraria: WritableSignal<CargaHoraria | null> = signal(null);
+  indices: WritableSignal<IndicesAcademicos | null> = signal(null);
   notasAnteriores: WritableSignal<(Notas | null)[]> = signal([]);
-
+  
+  // ─── Signals Públicos (Navegação/Contexto) ─────────────────────────────────
+  currentTurma: WritableSignal<Turma | null> = signal(null);
+  currentTurmaIdx: WritableSignal<number | null> = signal(null);
   pdfCache: WritableSignal<Uint8Array | undefined> = signal(undefined);
 
-  username: string = '';
-  password: string = '';
-
-  private readonly CRED_KEY = 'sigaa_cred';
+  username = '';
+  password = '';
 
   constructor() {
+    this.init();
+  }
+
+  // ─── Inicialização e Cache ─────────────────────────────────────────────────
+
+  private init(): void {
     const jsessionid = localStorage.getItem('jsessionid');
     const viewState = localStorage.getItem('viewState');
+    
     if (jsessionid && viewState) {
       this.jsessionid.set(jsessionid);
       this.viewState.set(viewState);
     }
+    
     this.restoreCredentials();
-
-    // Carrega dados do cache imediatamente — UI não fica vazia
     this.loadFromCache();
 
     // Dispara busca de dados frescos em background
-    if (this.jsessionid().length && this.viewState().length) {
+    if (this.isAuthenticated()) {
       if (navigator.onLine) {
         this.isFetchingData.set(true);
         this.fetchMainData();
@@ -97,7 +99,16 @@ export class SigaaService {
     }
   }
 
-  // ─── Cache helpers ─────────────────────────────────────────────────────────
+  private updateSession(newJsessionId?: string, newViewState?: string): void {
+    if (newJsessionId) {
+      this.jsessionid.set(newJsessionId);
+      localStorage.setItem('jsessionid', newJsessionId);
+    }
+    if (newViewState) {
+      this.viewState.set(newViewState);
+      localStorage.setItem('viewState', newViewState);
+    }
+  }
 
   private saveToCache(): void {
     const cache: DataCache = {
@@ -122,6 +133,7 @@ export class SigaaService {
       const raw = localStorage.getItem(CACHE_KEY);
       if (!raw) return;
       const cache: DataCache = JSON.parse(raw);
+      
       if (cache.turmas?.length) this.turmas.set(cache.turmas);
       if (cache.nome) this.nome.set(cache.nome);
       if (cache.matricula) this.matricula.set(cache.matricula);
@@ -134,21 +146,16 @@ export class SigaaService {
     }
   }
 
-  private clearCache(): void {
-    localStorage.removeItem(CACHE_KEY);
-  }
-
-  // ─── Credential helpers ────────────────────────────────────────────────────
+  // ─── Credenciais e Autenticação ────────────────────────────────────────────
 
   private saveCredentials(username: string, password: string): void {
-    const encoded = btoa(JSON.stringify({ username, password }));
-    sessionStorage.setItem(this.CRED_KEY, encoded);
+    sessionStorage.setItem(this.CRED_KEY, btoa(JSON.stringify({ username, password })));
   }
 
   private restoreCredentials(): void {
-    const raw = sessionStorage.getItem(this.CRED_KEY);
-    if (!raw) return;
     try {
+      const raw = sessionStorage.getItem(this.CRED_KEY);
+      if (!raw) return;
       const { username, password } = JSON.parse(atob(raw));
       this.username = username;
       this.password = password;
@@ -157,43 +164,40 @@ export class SigaaService {
     }
   }
 
-  private clearCredentials(): void {
-    sessionStorage.removeItem(this.CRED_KEY);
-  }
-
-  // ─── Auth ──────────────────────────────────────────────────────────────────
-
-  isAuthenticated() {
+  isAuthenticated(): boolean {
     return this.jsessionid().length > 0 && this.viewState().length > 0;
   }
 
-  logout() {
+  logout(): void {
     const hasAcceptedPrivacy = localStorage.getItem('privacyAccepted');
+    
+    // Reset signals
     this.turmas.set([]);
     this.nome.set('');
     this.avaliacoes.set([]);
     this.cargaHoraria.set(null);
     this.indices.set(null);
     this.currentTurma.set(null);
-    this.viewState.set('');
-    this.currentTurma.set(null);
     this.currentTurmaIdx.set(null);
+    this.viewState.set('');
     this.jsessionid.set('');
     this.fullyLoaded.set(false);
     this.isFetchingData.set(false);
-    this.clearCredentials();
-    this.clearCache();
+    
+    sessionStorage.removeItem(this.CRED_KEY);
     localStorage.clear();
-    this.router.navigate(['/login']);
     localStorage.setItem('privacyAccepted', hasAcceptedPrivacy ?? 'false');
+    
+    this.router.navigate(['/login']);
   }
 
-  async login(username: string, password: string) {
+  async login(username: string, password: string): Promise<string> {
     const res = await fetch(`${this.domain}/login`, {
       method: 'POST',
       body: JSON.stringify({ username, password }),
       headers: { 'Content-Type': 'application/json' },
     });
+    
     const data = await res.json();
     console.log(data);
 
@@ -201,11 +205,11 @@ export class SigaaService {
       throw new Error(data.error || 'Erro desconhecido na API');
     }
 
-    this.jsessionid.set(data.jsessionid);
-    localStorage.setItem('jsessionid', data.jsessionid);
+    this.updateSession(data.jsessionid);
     this.username = username;
     this.password = password;
     this.saveCredentials(username, password);
+    
     return data.jsessionid;
   }
 
@@ -213,18 +217,17 @@ export class SigaaService {
     const storedUsername = localStorage.getItem('username');
     const storedPassword = localStorage.getItem('password');
 
-    const credentials =
-      this.username && this.password
-        ? { username: this.username, password: this.password }
-        : storedUsername && storedPassword
-          ? { username: storedUsername, password: storedPassword }
-          : null;
+    const creds = (this.username && this.password) 
+      ? { u: this.username, p: this.password } 
+      : (storedUsername && storedPassword) 
+        ? { u: storedUsername, p: storedPassword } 
+        : null;
 
-    if (!credentials) return false;
+    if (!creds) return false;
 
     try {
       this.isReauthenticating.set(true);
-      await this.login(credentials.username, credentials.password);
+      await this.login(creds.u, creds.p);
       await this.fetchMainData();
       return true;
     } catch {
@@ -234,17 +237,13 @@ export class SigaaService {
     }
   }
 
-  // ─── Fetch centralizado com retry ─────────────────────────────────────────
+  // ─── Fetch Base e Utilitários ──────────────────────────────────────────────
 
-  private async fetchWithAuth(
-    url: string,
-    options: RequestInit = {},
-    retried = false,
-  ): Promise<Response> {
-    const headers: Record<string, string> = {
+  private async fetchWithAuth(url: string, options: RequestInit = {}, retried = false): Promise<Response> {
+    const headers = {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + this.jsessionid(),
-      ...((options.headers as Record<string, string>) ?? {}),
+      Authorization: `Bearer ${this.jsessionid()}`,
+      ...(options.headers as Record<string, string> || {}),
     };
 
     const res = await fetch(url, { ...options, headers });
@@ -252,36 +251,29 @@ export class SigaaService {
     if (!res.ok && !retried) {
       let errorMessage = '';
       try {
-        const cloned = res.clone();
-        const data = await cloned.json();
-        errorMessage = data?.error ?? '';
-      } catch {
-        /* body não era JSON */
-      }
+        const data = await res.clone().json();
+        errorMessage = (data?.error ?? '').toLowerCase();
+      } catch { /* Ignore */ }
 
       const isSessionError =
         res.status === 401 ||
         res.status === 403 ||
-        errorMessage.toLowerCase().includes('sessão expirada') ||
-        errorMessage.toLowerCase().includes('sessão inválida') ||
-        errorMessage.toLowerCase().includes('session') ||
-        (res.status === 500 && (url.includes('/vinculo') || url.includes('/historico'))); // backend retorna 500 em vez de 401/403 para endpoints de PDF
+        errorMessage.includes('sessão expirada') ||
+        errorMessage.includes('sessão inválida') ||
+        errorMessage.includes('session') ||
+        (res.status === 500 && (url.includes('/vinculo') || url.includes('/historico')));
 
       if (isSessionError) {
-        const reauthed = await this.tryReauthenticate();
-        if (reauthed) {
-          if (options.body && typeof options.body === 'string' && options.body.includes('viewState')) {
+        if (await this.tryReauthenticate()) {
+          // Atualiza o viewState no payload, se aplicável
+          if (typeof options.body === 'string' && options.body.includes('viewState')) {
             try {
               const bodyParsed = JSON.parse(options.body);
               if (bodyParsed.viewState) {
-                // Injeta o novo viewState recém-obtido no reauth
                 bodyParsed.viewState = this.viewState();
                 options.body = JSON.stringify(bodyParsed);
               }
-            } catch (e) {
-              // Ignora caso o body não seja um JSON válido
-              console.warn('Não foi possível fazer o parse do body no retry', e);
-            }
+            } catch { console.warn('Falha no parse do body no retry'); }
           }
           return this.fetchWithAuth(url, options, true);
         } else {
@@ -294,78 +286,68 @@ export class SigaaService {
     return res;
   }
 
-  // ─── Métodos de dados ──────────────────────────────────────────────────────
+  private handleOfflineError(error: Error, fallbackMsg: string): void {
+    this.isFetchingData.set(false);
+    const isOffline = !navigator.onLine || error.message.includes('fetch') || error.message.includes('conexão');
 
-  async fetchMainData() {
-    try {
-      if (!this.jsessionid().length) throw new Error('jsessionid inválido');
-
-      this.isFetchingData.set(true);
-
-      const res = await this.fetchWithAuth(`${this.domain}/main-data`);
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        // Mudamos a mensagem para facilitar a identificação de erro de rede
-        throw new Error(errorData.error || 'Erro de conexão ou servidor indisponível.');
-      }
-
-      const data = await res.json();
-      console.log('fetch main data:', data);
-
-      if (!data.jsessionid) {
-        throw new Error('Erro desconhecido na API: jsessionid ausente');
-      }
-
-      const mainDataRes = data as MainDataResponse;
-      this.avaliacoes.set(mainDataRes.avaliacoes);
-      this.cargaHoraria.set(mainDataRes.cargaHoraria);
-      this.indices.set(mainDataRes.indices);
-      this.jsessionid.set(mainDataRes.jsessionid);
-      localStorage.setItem('jsessionid', mainDataRes.jsessionid);
-      this.nome.set(mainDataRes.nome);
-      this.matricula.set(mainDataRes.matricula);
-
-      const cached = this.turmas();
-      this.freshTurmas.set(mainDataRes.turmas);
-      const merged = mainDataRes.turmas.map((fresh) => {
-        const old = cached.find((c) => c.nome === fresh.nome);
-        return old ? { ...old, local: fresh.local, isLoaded: true } : { ...fresh, isLoaded: false };
-      });
-      this.turmas.set(merged);
-
-      this.viewState.set(mainDataRes.viewState);
-      localStorage.setItem('viewState', mainDataRes.viewState);
-
-      this.saveToCache();
-
-      this.fetchTurmasStream();
-    } catch (e) {
-      const error = e as Error;
-      this.isFetchingData.set(false);
-
-      // ✅ VERIFICA SE É ERRO DE REDE/OFFLINE
-      const isOffline =
-        !navigator.onLine || error.message.includes('fetch') || error.message.includes('conexão');
-
-      if (isOffline) {
-        console.warn(
-          'Falha de conexão no fetchMainData. O app continuará usando os dados em cache.',
-        );
-        this.fullyLoaded.set(true); // Libera a UI para mostrar os dados salvos
-      } else {
-        // Se não for problema de internet, aí sim desloga
-        this.logout();
-        if (!this.router.url.includes('login')) {
-          alert(error.message);
-        }
+    if (isOffline) {
+      console.warn(`Falha de conexão: ${fallbackMsg}. Usando cache.`);
+      this.fullyLoaded.set(true);
+    } else {
+      this.logout();
+      if (!this.router.url.includes('login')) {
+        alert(error.message || fallbackMsg);
       }
     }
   }
 
-  async fetchNotas() {
-    if (!this.jsessionid().length || !this.viewState().length)
-      throw new Error('jsessionid ou viewstate inválidos');
+  private validateSession(): void {
+    if (!this.isAuthenticated()) throw new Error('Sessão inválida ou expirada');
+  }
+
+  // ─── API Endpoints ─────────────────────────────────────────────────────────
+
+  async fetchMainData(): Promise<void> {
+    try {
+      if (!this.jsessionid()) throw new Error('jsessionid inválido');
+      this.isFetchingData.set(true);
+
+      const res = await this.fetchWithAuth(`${this.domain}/main-data`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Erro de conexão ou servidor indisponível.');
+      }
+
+      const data = await res.json() as MainDataResponse;
+      console.log('fetch main data:', data);
+
+      if (!data.jsessionid) throw new Error('Erro na API: jsessionid ausente');
+
+      // Atualiza Estado
+      this.avaliacoes.set(data.avaliacoes);
+      this.cargaHoraria.set(data.cargaHoraria);
+      this.indices.set(data.indices);
+      this.nome.set(data.nome);
+      this.matricula.set(data.matricula);
+      this.updateSession(data.jsessionid, data.viewState);
+
+      // Merge Turmas com Cache
+      const cached = this.turmas();
+      this.freshTurmas.set(data.turmas);
+      this.turmas.set(data.turmas.map((fresh) => {
+        const old = cached.find((c) => c.nome === fresh.nome);
+        return old ? { ...old, local: fresh.local, isLoaded: true } : { ...fresh, isLoaded: false };
+      }));
+
+      this.saveToCache();
+      this.fetchTurmasStream();
+    } catch (e) {
+      this.handleOfflineError(e as Error, 'O app continuará usando os dados em cache.');
+    }
+  }
+
+  async fetchNotas(): Promise<void> {
+    this.validateSession();
 
     const res = await this.fetchWithAuth(`${this.domain}/notas`, {
       method: 'POST',
@@ -377,32 +359,21 @@ export class SigaaService {
       throw new Error(errorData.error || 'Erro de conexão ao buscar notas');
     }
 
-    const data = await res.json();
-
-    const notasData = data as NotasResponse;
+    const data = await res.json() as NotasResponse;
     console.log(data);
-    this.notasAnteriores.set(notasData.anteriores?.length ? notasData.anteriores : []);
+    
+    this.notasAnteriores.set(data.anteriores?.length ? data.anteriores : []);
+    this.updateSession(data.jsessionid, data.viewState);
 
     this.turmas.update((prev) => {
-      notasData.notas.forEach((n) => {
-        if (!n) return;
-        const turma = prev.find((t) => t.nome === n?.nome);
-        if (turma) turma.notas = n;
-        if (turma && turma.nome === this.currentTurma()?.nome)
-          this.turmas.update((prev) =>
-            prev.map((t) => {
-              const n = notasData.notas.find((x) => x?.nome === t.nome);
-              return n ? { ...t, notas: n } : t;
-            }),
-          );
+      const novasTurmas = [...prev];
+      data.notas.forEach((nota) => {
+        if (!nota) return;
+        const turma = novasTurmas.find((t) => t.nome === nota.nome);
+        if (turma) turma.notas = nota;
       });
-      return prev;
+      return novasTurmas;
     });
-
-    this.jsessionid.set(notasData.jsessionid);
-    localStorage.setItem('jsessionid', notasData.jsessionid);
-    this.viewState.set(notasData.viewState);
-    localStorage.setItem('viewState', notasData.viewState);
   }
 
   getCalendarioUrl(): string {
@@ -410,16 +381,15 @@ export class SigaaService {
   }
 
   async getOgCalendarioUrl(): Promise<string> {
-    if (!this.jsessionid().length || !this.viewState().length)
-      throw new Error('jsessionid ou viewstate inválidos');
-
+    this.validateSession();
     const res = await this.fetchWithAuth(`${this.domain}/calendario/url`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'erro ao buscar url do calendário');
-    return data.url as string;
+    return data.url;
   }
 
   async getAtestadoDados(): Promise<AtestadoMatricula> {
+    this.validateSession();
     const res = await this.fetchWithAuth(`${this.domain}/matricula`, {
       method: 'POST',
       body: JSON.stringify({ viewState: this.viewState() }),
@@ -427,150 +397,97 @@ export class SigaaService {
 
     if (!res.ok) {
       const errorData = await res.json();
-      throw new Error(errorData.error || 'Erro desconhecido ao buscar atestado de matrícula');
+      throw new Error(errorData.error || 'Erro ao buscar atestado de matrícula');
     }
-
-    return res.json() as Promise<AtestadoMatricula>;
+    return res.json();
   }
 
   async getVinculoPdf(): Promise<Blob> {
-    if (!this.jsessionid() || !this.viewState()) throw new Error('Sessão inválida ou expirada');
-
+    this.validateSession();
     const res = await this.fetchWithAuth(`${this.domain}/vinculo`, {
       method: 'POST',
       body: JSON.stringify({ viewState: this.viewState() }),
     });
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Erro ao baixar declaração de vínculo');
-    }
-
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Erro ao baixar declaração de vínculo');
     return res.blob();
   }
 
   async getHistoricoPdf(): Promise<Blob> {
-    if (!this.jsessionid() || !this.viewState()) throw new Error('Sessão inválida ou expirada');
-
+    this.validateSession();
     const res = await this.fetchWithAuth(`${this.domain}/historico`, {
       method: 'POST',
       body: JSON.stringify({ viewState: this.viewState() }),
     });
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Erro ao baixar histórico');
-    }
-
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Erro ao baixar histórico');
     return res.blob();
   }
 
-  // Adicione a novaAba como parâmetro opcional
   async baixarArquivoTurma(turma: Turma, arquivo: Arquivo): Promise<void> {
     if (this.isFetchingData()) {
       const isFetching$ = toObservable(this.isFetchingData, { injector: this.injector });
-      await firstValueFrom(isFetching$.pipe(filter(isFetching => isFetching === false)));
+      await firstValueFrom(isFetching$.pipe(filter(isFetching => !isFetching)));
     }
-    if (!this.jsessionid() || !this.viewState()) {
-      throw new Error('Sessão inválida ou expirada');
-    }
+    this.validateSession();
 
-    const payload = {
-      viewState: this.viewState(),
-      chave: arquivo.chave,
-      id: arquivo.id,
-      turma: turma
-    };
     const res = await this.fetchWithAuth(`${this.domain}/turma/arquivo/preparar`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ viewState: this.viewState(), chave: arquivo.chave, id: arquivo.id, turma })
     });
 
-    if (!res.ok) {
-      throw new Error('Erro ao preparar arquivo da turma');
-    }
+    if (!res.ok) throw new Error('Erro ao preparar arquivo da turma');
 
     const data = await res.json();
-    if (data.newJsessionid) {
-      this.jsessionid.set(data.newJsessionid);
-      localStorage.setItem('jsessionid', data.newJsessionid);
-    }
-    if (data.newViewState) {
-      this.viewState.set(data.newViewState);
-      localStorage.setItem('viewState', data.newViewState);
-      this.saveToCache();
-    }
-    const downloadUrl = `${this.domain}/turma/arquivo/download?ticket=${data.ticket}`;
-    window.location.href = downloadUrl;
+    this.updateSession(data.newJsessionid, data.newViewState);
+    if (data.newViewState) this.saveToCache();
+
+    window.location.href = `${this.domain}/turma/arquivo/download?ticket=${data.ticket}`;
   }
 
-  async fetchTurmasStream() {
+  async fetchTurmasStream(): Promise<void> {
     try {
-      // Se você ainda precisa das notas globais antes das turmas, mantenha esta chamada
       await this.fetchNotas();
 
-      // Usamos fetch ao invés de new EventSource() para podermos injetar o BearerAuth
       const res = await this.fetchWithAuth(`${this.domain}/turmas-stream`, {
         method: 'GET',
-        headers: {
-          'Accept': 'text/event-stream',
-        },
+        headers: { 'Accept': 'text/event-stream' },
       });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Erro de conexão ao iniciar stream de turmas');
-      }
-
-      if (!res.body) {
-        throw new Error('ReadableStream não é suportado pelo seu navegador.');
-      }
+      if (!res.ok) throw new Error('Erro de conexão ao iniciar stream de turmas');
+      if (!res.body) throw new Error('ReadableStream não é suportado pelo seu navegador.');
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
 
-      // Lê o stream continuamente até o backend encerrar a conexão
       while (true) {
         const { done, value } = await reader.read();
-        
         if (done) break;
 
-        // Decodifica o chunk recebido e adiciona ao buffer
         buffer += decoder.decode(value, { stream: true });
-        
-        // SSE usa '\n\n' para separar as mensagens
         const parts = buffer.split('\n\n');
-        
-        // Mantém a última parte incompleta no buffer (caso o chunk tenha sido cortado na rede)
         buffer = parts.pop() || '';
 
         for (const part of parts) {
           if (!part.trim()) continue;
 
-          // Faz o parse do evento SSE
-          const lines = part.split('\n');
           let eventType = 'message';
           let dataStr = '';
 
-          for (const line of lines) {
+          part.split('\n').forEach((line) => {
             if (line.startsWith('event:')) eventType = line.substring(6).trim();
             else if (line.startsWith('data:')) dataStr = line.substring(5).trim();
-          }
+          });
 
           if (!dataStr) continue;
-
           const parsedData = JSON.parse(dataStr);
 
-          // Roteia a ação de acordo com o evento enviado pelo Gin
           switch (eventType) {
             case 'start':
               console.log(`Iniciando stream: ${parsedData.total} turmas na fila.`);
               break;
-
             case 'turma':
-              // Atualiza o Signal da turma específica mantendo dados de cache importantes
               this.turmas.update((prev) =>
                 prev.map((t) =>
                   t.nome === parsedData.nome
@@ -578,95 +495,58 @@ export class SigaaService {
                     : t
                 )
               );
-              this.saveToCache(); // Cache incremental a cada turma raspada
+              this.saveToCache();
               break;
-
             case 'error':
-              console.error('Falha em uma turma específica:', parsedData.error);
-              // Como o backend vai dar return, o loop vai encerrar no próximo ciclo
+              console.error('Falha em uma turma:', parsedData.error);
               break;
-
             case 'done':
-              // Finaliza a atualização dos tokens baseados no último estado válido
-              this.jsessionid.set(parsedData.jsessionid);
-              this.viewState.set(parsedData.viewState);
-              localStorage.setItem('jsessionid', parsedData.jsessionid);
-              localStorage.setItem('viewState', parsedData.viewState);
-
+              this.updateSession(parsedData.jsessionid, parsedData.viewState);
               this.fullyLoaded.set(true);
               this.isFetchingData.set(false);
               this.saveToCache();
-              console.log('Stream de turmas concluído:', this.turmas());
+              console.log('Stream concluído:', this.turmas());
               break;
           }
         }
       }
     } catch (err) {
-      const error = err as Error;
-      console.error('Erro ao consumir stream de turmas:', error);
-      this.isFetchingData.set(false);
-
-      // ✅ VERIFICA SE É ERRO DE REDE/OFFLINE DURANTE O STREAM
-      const isOffline =
-        !navigator.onLine || error.message.includes('fetch') || error.message.includes('conexão');
-
-      if (isOffline) {
-        console.warn('Conexão perdida ao buscar turmas. Mantendo cache disponível.');
-        this.fullyLoaded.set(true); // Libera a UI com o que conseguiu carregar
-      } else {
-        this.logout();
-        if (!this.router.url.includes('login')) {
-          alert('Erro ao carregar dados das turmas. Por favor, faça login novamente.');
-        }
-      }
+      console.error('Erro ao consumir stream de turmas:', err);
+      this.handleOfflineError(err as Error, 'Erro ao carregar dados das turmas. Por favor, faça login novamente.');
     } finally {
       this.hasOnlineData.set(true);
     }
   }
 
   async getMatrizCurricular(): Promise<EstruturaCurricular> {
-    if (!this.jsessionid().length || !this.viewState().length)
-      throw new Error('jsessionid ou viewstate inválidos');
-
+    this.validateSession();
     const res = await this.fetchWithAuth(`${this.domain}/curriculo`);
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Erro ao buscar matriz curricular');
-    }
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Erro ao buscar matriz curricular');
 
     const data = await res.json() as MatrizCurricularResponse;
-    this.jsessionid.set(data.jsessionid);
-    localStorage.setItem('jsessionid', data.jsessionid);
-    this.viewState.set(data.viewState);
-    localStorage.setItem('viewState', data.viewState);
-    data.estruturaCurricular.componentes.forEach(c => {
-      if (this.notasAnteriores().find(n => n?.codigo === c.codigo && n.situacao.toUpperCase().includes('APROVADO'))) {
+    this.updateSession(data.jsessionid, data.viewState);
+
+    data.estruturaCurricular.componentes.forEach((c) => {
+      if (this.notasAnteriores().some((n) => n?.codigo === c.codigo && n.situacao.toUpperCase().includes('APROVADO'))) {
         c.concluida = true;
       }
     });
+
     return data.estruturaCurricular;
   }
 
   async buscarComponenteCurricular(curriculo: string, idComponente: string): Promise<DetalhesComponente> {
-    if (!this.jsessionid().length || !this.viewState().length)
-      throw new Error('jsessionid ou viewstate inválidos');
-
+    this.validateSession();
     const res = await this.fetchWithAuth(`${this.domain}/componente`, {
       method: 'POST',
       body: JSON.stringify({ viewState: this.viewState(), curriculo, idComponente }),
     });
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Erro ao buscar componente curricular');
-    }
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Erro ao buscar componente');
 
     const data = await res.json() as DetalhesComponenteResponse;
-    this.jsessionid.set(data.jsessionid);
-    localStorage.setItem('jsessionid', data.jsessionid);
-    this.viewState.set(data.viewState);
-    localStorage.setItem('viewState', data.viewState);
+    this.updateSession(data.jsessionid, data.viewState);
     return data.componente;
   }
 }
