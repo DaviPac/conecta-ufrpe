@@ -123,7 +123,7 @@ Ao retornar URL, descreva brevemente o conteúdo do link.
 - "notas"    → notas das disciplinas.
 - "indices"  → IRA, CR e outros índices.
 - "matricula"→ dados do atestado de matrícula.
-- "curriculo"→ dados da matriz curricular (cadeiras por semestre + optativas).
+- "curriculo"→ dados da matriz curricular (cadeiras por semestre + optativas, + concluidas).
 Prefira uma única chamada por assunto.`,
             parameters: {
               type: SchemaType.OBJECT,
