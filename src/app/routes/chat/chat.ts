@@ -349,7 +349,7 @@ Prefira uma única chamada por assunto.`,
         };
 
       case 'indices':
-        return { resultado: this.sigaaService.indices() };
+        return { resultado: { indices: this.sigaaService.indices(), cargaHoraria: this.sigaaService.cargaHoraria() };
 
       case 'matricula':
         try {
