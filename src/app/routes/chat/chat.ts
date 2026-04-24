@@ -15,7 +15,6 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { buildTabelaHorarios } from '../../utils/horarios.helper';
 import { ChatStateService } from '../../services/chatService/chat.service';
-import { ClassroomService } from '../../services/classroomService/classroom.service';
 import { TurmaLocalService } from '../turma-detail/turma-local.service';
 import { firstValueFrom } from 'rxjs';
 
@@ -29,7 +28,6 @@ import { firstValueFrom } from 'rxjs';
 export class ChatComponent implements OnInit, AfterViewChecked {
   private studyRepo     = new StudyRepository();
   private sigaaService  = inject(SigaaService);
-  private classroomService = inject(ClassroomService);
   private turmaLocal    = inject(TurmaLocalService);
   private http          = inject(HttpClient);
   public  chatState     = inject(ChatStateService);
@@ -330,7 +328,7 @@ Prefira uma única chamada por assunto.`,
 
       case 'turmas': {
         const turmasFinal = await Promise.all(
-          turmas.map(t => this.parseTurmaComClassroom(t))
+          turmas.map(t => this.parseTurmaData(t))
         );
         return {
           resultado: {
@@ -368,61 +366,6 @@ Prefira uma única chamada por assunto.`,
         
       default:
         return { erro: `Tipo desconhecido: "${args.tipo}". Use turmas, notas, indices ou matricula.` };
-    }
-  }
-
-  /** Monta os dados de uma turma incluindo informações do Classroom vinculado */
-  private async parseTurmaComClassroom(turma: Turma): Promise<object> {
-    const base = this.parseTurmaData(turma);
-
-    // Tenta buscar o classroom_id sem bloquear em caso de erro
-    try {
-      const classroomId = await this.turmaLocal.getClassroomId(turma.nome);
-      if (!classroomId) return base;
-
-      const matricula = this.sigaaService.matricula(); // adapte ao seu serviço
-
-      // Busca em paralelo: atividades, materiais e anúncios
-      const [assignments, materials, announcements] = matricula ? await Promise.allSettled([
-        firstValueFrom(this.classroomService.getAssignments(matricula, classroomId)),
-        firstValueFrom(this.classroomService.getMaterials(matricula, classroomId)),
-        firstValueFrom(this.classroomService.getAnnouncements(matricula, classroomId))
-      ]) : [undefined, undefined, undefined];
-
-      return {
-        ...base,
-        classroom: {
-          // Atividades: título, prazo e link (sem descrições longas)
-          atividades: assignments?.status === 'fulfilled'
-            ? assignments.value.map(a => ({
-                titulo:    a.title,
-                prazo:     a.due_date ?? null,
-                link:      a.alternateLink ?? null
-              }))
-            : [],
-
-          // Materiais: título, link e data
-          materiais: materials?.status === 'fulfilled'
-            ? materials.value.map(m => ({
-                titulo: m.title,
-                link:   m.alternateLink,
-                data:   m.creationTime
-              }))
-            : [],
-
-          // Anúncios: texto (truncado em 300 chars) + link
-          anuncios: announcements?.status === 'fulfilled'
-            ? announcements.value.map(a => ({
-                texto: a.text.slice(0, 300),
-                data:  a.creationTime,
-                link:  a.alternateLink ?? null
-              }))
-            : []
-        }
-      };
-    } catch {
-      // Classroom não configurado ou offline — retorna só os dados do SIGAA
-      return base;
     }
   }
 
