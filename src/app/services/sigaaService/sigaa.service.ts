@@ -36,7 +36,7 @@ interface DataCache {
   providedIn: 'root',
 })
 export class SigaaService {
-  private readonly domain = 'https://sigaa-ufrpe-api-production.up.railway.app';
+  private readonly domain = 'https://sigaa-ufrpe-api-production-fe29.up.railway.app';
   private readonly CRED_KEY = 'sigaa_cred';
 
   private injector = inject(Injector);

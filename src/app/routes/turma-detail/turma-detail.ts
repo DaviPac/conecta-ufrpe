@@ -7,8 +7,6 @@ import { LinkifyPipe } from '../../utils/linkify.pipe';
 import { StudyAssistantComponent } from './study-assistant.component';
 import { Arquivo } from '../../models/sigaa.models';
 import { TurmaLocalService } from './turma-local.service';
-import { ClassroomService } from '../../services/classroomService/classroom.service';
-import { ClassroomCourse, ClassroomAssignment, ClassroomAnnouncement, ClassroomTopic, ClassroomMaterial } from '../../services/classroomService/classroom.models';
 
 @Component({
   selector: 'app-turma-detalhes',
@@ -20,7 +18,6 @@ export class TurmaDetail implements OnInit {
   private sigaaService: SigaaService = inject(SigaaService);
   private router: Router = inject(Router);
   private indexedDbService = inject(TurmaLocalService);
-  private classroomService = inject(ClassroomService); // <-- Serviço Injetado
 
   formatarHorarios = formatarHorarios;
   parseFaltas = parseFaltas;
@@ -33,16 +30,6 @@ export class TurmaDetail implements OnInit {
   customLocal = signal<string | null>(null);
   matricula: Signal<string | null> = this.sigaaService.matricula;
 
-  // --- NOVOS SIGNALS PARA O CLASSROOM ---
-  linkedClassroomId = signal<string | null>(null);
-  classroomCourses = signal<ClassroomCourse[]>([]); // Lista para o dropdown de vínculo
-  classroomAssignments = signal<ClassroomAssignment[]>([]); // Atividades da turma
-  classroomAnnouncements = signal<ClassroomAnnouncement[]>([]); // Anúncios da turma
-  classroomTopics = signal<ClassroomTopic[]>([]); // Tópicos da turma
-  classroomMaterials = signal<ClassroomMaterial[]>([]); // Materiais da turma
-  isLinkingClassroom = signal(false); // Controle de UI para o modo de vínculo
-  isLoadingClassroom = signal(false);
-  classroomError = signal<string | null>(null);
   // --------------------------------------
 
   turma = computed(() => {
@@ -66,7 +53,6 @@ export class TurmaDetail implements OnInit {
     }
     
     await this.carregarLocalCustomizado();
-    await this.carregarVinculoClassroom(); // <-- Busca o vínculo ao iniciar
   }
 
   // ==========================================
@@ -105,154 +91,6 @@ export class TurmaDetail implements OnInit {
       this.customLocal.set(null);
       this.isEditingLocal.set(false);
     }
-  }
-
-  // ==========================================
-  // NOVA LÓGICA: INTEGRAÇÃO CLASSROOM
-  // ==========================================
-
-  // 1. Verifica se já existe um vínculo salvo no IndexedDB para esta turma do SIGAA
-  async carregarVinculoClassroom() {
-    const turmaId = this.turma()?.nome;
-    if (!turmaId) return;
-
-    const savedClassroomId = await this.indexedDbService.getClassroomId(turmaId);
-    if (savedClassroomId) {
-      this.linkedClassroomId.set(savedClassroomId);
-      this.carregarAtividadesClassroom(savedClassroomId);
-      this.carregarAnunciosClassroom(savedClassroomId);
-      this.carregarTopicosClassroom(savedClassroomId);
-      this.carregarMateriaisClassroom(savedClassroomId);
-    }
-  }
-
-  // 2. O usuário clicou em "Vincular ao Classroom"
-  iniciarVinculoClassroom() {
-    const mat = this.matricula();
-    if (!mat) {
-      this.showToast('Matrícula não encontrada', 'error');
-      return;
-    }
-
-    this.isLinkingClassroom.set(true);
-    this.isLoadingClassroom.set(true);
-    this.classroomError.set(null);
-
-    // Busca as turmas do aluno no Google para ele escolher qual é a correspondente
-    this.classroomService.getCourses(mat).subscribe({
-      next: (courses) => {
-        this.classroomCourses.set(courses);
-        this.isLoadingClassroom.set(false);
-      },
-      error: (err) => {
-        this.isLoadingClassroom.set(false);
-        if (err.status === 401) {
-          this.classroomError.set('necessita_login'); // Flag para mostrar botão de login do Google
-        } else {
-          this.classroomError.set('Erro ao carregar turmas do Google.');
-        }
-      }
-    });
-  }
-
-  // 3. O usuário selecionou a turma do Google no dropdown
-  async salvarVinculoClassroom(classroomId: string) {
-    const turmaId = this.turma()?.nome;
-    if (!turmaId) return;
-
-    await this.indexedDbService.salvarClassroomId(turmaId, classroomId);
-    this.linkedClassroomId.set(classroomId);
-    this.isLinkingClassroom.set(false);
-    
-    this.showToast('Turma do Google vinculada!', 'success');
-    this.carregarAtividadesClassroom(classroomId);
-    this.carregarAnunciosClassroom(classroomId);
-    this.carregarTopicosClassroom(classroomId);
-    this.carregarMateriaisClassroom(classroomId);
-  }
-
-  // 4. Remove o vínculo
-  async desvincularClassroom() {
-    const turmaId = this.turma()?.nome;
-    if (!turmaId) return;
-
-    await this.indexedDbService.removerClassroomId(turmaId);
-    this.linkedClassroomId.set(null);
-    this.classroomAssignments.set([]);
-    this.classroomAnnouncements.set([]);
-    this.classroomTopics.set([]);
-    this.showToast('Vínculo removido.', 'success');
-  }
-
-  // 5. Busca as atividades da turma vinculada
-  carregarAtividadesClassroom(classroomId: string) {
-    const mat = this.matricula();
-    if (!mat) return;
-
-    this.isLoadingClassroom.set(true);
-    this.classroomService.getAssignments(mat, classroomId).subscribe({
-      next: (assignments) => {
-        this.classroomAssignments.set(assignments);
-        this.isLoadingClassroom.set(false);
-      },
-      error: (err) => {
-        console.error(err);
-        this.classroomError.set('Erro ao carregar atividades do Google.');
-        this.isLoadingClassroom.set(false);
-      }
-    });
-  }
-
-  carregarAnunciosClassroom(classroomId: string) {
-    const mat = this.matricula();
-    if (!mat) return;
-    
-    this.classroomService.getAnnouncements(mat, classroomId).subscribe({
-      next: (announcements) => this.classroomAnnouncements.set(announcements),
-      error: (err) => {
-        console.error(err);
-        this.showToast('Erro ao carregar anúncios do Google.', 'error');
-      }
-    });
-  }
-
-  carregarTopicosClassroom(classroomId: string) {
-    const mat = this.matricula();
-    if (!mat) return;
-    
-    this.classroomService.getTopics(mat, classroomId).subscribe({
-      next: (topics) => this.classroomTopics.set(topics),
-      error: (err) => {
-        console.error(err);
-        this.showToast('Erro ao carregar tópicos do Google.', 'error');
-      }
-    });
-  }
-
-  carregarMateriaisClassroom(classroomId: string) {
-    const mat = this.matricula();
-    if (!mat) return;
-    
-    this.classroomService.getMaterials(mat, classroomId).subscribe({
-      next: (materials) => this.classroomMaterials.set(materials),
-      error: (err) => {
-        console.error(err);
-        this.showToast('Erro ao carregar materiais do Google.', 'error');
-      }
-    });
-  }
-
-  // 6. Redireciona para login no Google (Caso retorne 401)
-  fazerLoginGoogle() {
-    const mat = this.matricula();
-    if (!mat) return;
-
-    this.classroomService.getGoogleAuthUrl(mat).subscribe({
-      next: (res) => {
-        window.location.href = res.auth_url;
-      },
-      error: () => this.showToast('Erro ao gerar URL do Google', 'error')
-    });
   }
 
   // ==========================================
