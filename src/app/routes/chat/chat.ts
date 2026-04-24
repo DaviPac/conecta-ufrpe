@@ -318,7 +318,7 @@ Prefira uma única chamada por assunto.`,
   // Handlers especializados
   // ─────────────────────────────────────────────
 
-  /** Retorna dados conforme o tipo solicitado pela IA */
+  // Retorna dados conforme o tipo solicitado pela IA
   private async handleConsultarDados(args: { tipo: string; termo_busca?: string }): Promise<object> {
     let turmas = args.termo_busca ? this.sigaaService.turmas().filter(t => t.nome.toLowerCase() === args.termo_busca?.toLowerCase()) : this.sigaaService.turmas();
     if (args.termo_busca && turmas?.length === 0) {
