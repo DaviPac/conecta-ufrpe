@@ -76,9 +76,9 @@
 .custom-checkbox {
   @apply text-slate-400;
 
-  /* 1. Estilos base da caixinha (Adicionado .p-checkbox para aumentar a especificidade e !important no base) */
-  ::ng-deep .p-checkbox .p-checkbox-box {
-    @apply bg-white border border-slate-300 rounded transition-colors !important;
+  /* 1. Estilos base da caixinha */
+  ::ng-deep .p-checkbox-box {
+    @apply bg-white border border-slate-300 rounded transition-colors;
 
     /* Estado de Foco (Acessibilidade via Teclado) */
     &.p-focus {
@@ -89,22 +89,20 @@
     &.p-highlight {
       @apply bg-blue-900 border-blue-900 text-white !important;
 
-      /* Garante que o ícone de check apareça nas versões antigas (font) e recentes (svg) */
-      .p-checkbox-icon,
-      svg.p-icon {
+      /* Garante que o ícone de check (V) fique branco */
+      .p-checkbox-icon {
         @apply text-white !important;
-        fill: currentColor;
       }
     }
   }
 
   /* 2. Hover QUANDO NÃO está marcado */
-  &:hover ::ng-deep .p-checkbox .p-checkbox-box:not(.p-highlight) {
+  &:hover ::ng-deep .p-checkbox-box:not(.p-highlight) {
     @apply bg-slate-50 border-slate-400 !important;
   }
 
   /* 3. Hover QUANDO ESTÁ marcado (A regra que mata o verde!) */
-  &:hover ::ng-deep .p-checkbox .p-checkbox-box.p-highlight {
+  &:hover ::ng-deep .p-checkbox-box.p-highlight {
     @apply bg-blue-800 border-blue-800 !important;
   }
 }
