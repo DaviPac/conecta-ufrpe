@@ -1,13 +1,16 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
-import { Sigaa } from './sigaa';
+import { SigaaService } from './sigaa.service';
 
-describe('Sigaa', () => {
-  let service: Sigaa;
+describe('SigaaService', () => {
+  let service: SigaaService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(Sigaa);
+    TestBed.configureTestingModule({
+      providers: [provideRouter([])],
+    });
+    service = TestBed.inject(SigaaService);
   });
 
   it('should be created', () => {

@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ClassroomAnnouncement, ClassroomAssignment, ClassroomCourse, ClassroomMaterial, ClassroomSubmission, ClassroomTopic } from './classroom.models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ClassroomService {
-  private apiUrl = 'https://sigaa-ufrpe-api-production.up.railway.app/classroom'; 
+  private apiUrl = `${environment.apiUrl}/classroom`;
 
   constructor(private http: HttpClient) { }
 

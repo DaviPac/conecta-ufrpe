@@ -286,7 +286,7 @@ export class Calendario implements OnInit {
       const url = this.sigaaService.getCalendarioUrl();
       this.rawUrlSignal.set(url);
       const res = await fetch(url, {
-        headers: { Authorization: 'Bearer ' + (this.sigaaService as any).jsessionid() },
+        headers: { Authorization: this.sigaaService.authHeader },
       });
       if (!res.ok) throw new Error('Falha ao buscar PDF');
       const arrayBuffer = await res.arrayBuffer();
